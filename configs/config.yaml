@@ -1,0 +1,47 @@
+database:
+  type: "mysql"  # Example database type
+  postgresql:
+    user: "postgres"
+    password: "your_password"
+    host: "localhost"
+    port: 5432
+    dbname: "dataraise_test"
+  mysql:
+    user: "root"
+    password: "Sa*201299"
+    host: "127.0.0.1"
+    port: 3306
+    dbname: "sqops_dataraise"
+  sqlite:
+    filepath: "path/to/your/sqlite.db"
+
+queries:
+  LOCAL_TO_DBBRUT_QUERY: "select distinct PROJECT_NAME, JOB_NAME, JOB_PATH, JOB_VERSION, Talend_Version from audit_jobs_delta where talend_version is not null and niveau is not null"
+  LOCAL_TO_DBBRUT_FILTER_name_elementNode: "where aud_nameElementNode in ('DBNAME','TYPE','QUERY','TABLE','FILENAME','TEMPDIR','sql','query')"
+  LOCAL_TO_DBBRUT_FILTER_columnName_metadata: "where aud_columnName not in ('errorCode','errorMessage')"
+  LOCAL_TO_DBBRUT_QUERY_ROUTINES: "select distinct PROJECT_NAME, ROUTINE_NAME, ROUTINE_PATH, ROUTINE_VERSION, Talend_Version from audit_routines where talend_version is not null"
+  LOCAL_TO_DBBRUT_QUERY_CONTEXTGROUP: "select distinct PROJECT_NAME, CONTEXT_NAME, CONTEXT_PATH, CONTEXT_VERSION, Talend_Version from audit_contextgroup where talend_version is not null"
+  LOCAL_TO_DBBRUT_QUERY_METADATA: "select distinct PROJECT_NAME, METADATA_NAME, METADATA_PATH, METADATA_VERSION, Talend_Version from audit_metadata where talend_version is not null"
+  TRANSVERSE_QUERY_LASTEXECUTIONDATE: "SELECT MAX(lastexecutiondate) as lastexecutiondate FROM executiondate"
+  LOCAL_TO_DBBRUT_QUERY_JOBLETS: "select distinct PROJECT_NAME, JOBLET_NAME, JOBLET_PATH, JOBLET_VERSION, Talend_Version from audit_joblets where talend_version is not null"
+  NOT_AUDITED_JOBS_QUERY: "select distinct namejob, nameproject from aud_elementnode where NameJob not in (select job_name from audit_jobs)"
+insert_queries:
+  aud_agg_aggregate: "INSERT INTO aud_agg_aggregate (NameProject, namejob, aud_componentValue, aud_valueElementRef_input, aud_valueElementRef_output, aud_valueElementRef_function) SELECT a.NameProject, a.namejob, a.aud_componentValue, a.aud_valueElementRef as aud_valueElementRef_input, b.aud_valueElementRef as aud_valueElementRef_output, 'GROUPBY' as aud_valueElementRef_function FROM aud_elementvaluenode a INNER JOIN aud_elementvaluenode b ON a.aud_id : b.aud_id WHERE a.aud_typeField IN ('GROUPBYS') AND b.aud_typeField IN ('GROUPBYS') AND a.aud_elementRef : 'INPUT_COLUMN' AND b.aud_elementRef : 'OUTPUT_COLUMN' AND a.aud_componentName LIKE 'tAggregate%' AND b.aud_componentName LIKE 'tAggregate%' UNION ALL SELECT a.NameProject, a.namejob, a.aud_componentValue, a.aud_valueElementRef as aud_valueElementRef_input, b.aud_valueElementRef as aud_valueElementRef_output , c.aud_valueElementRef as aud_valueElementRef_function FROM aud_elementvaluenode a INNER JOIN aud_elementvaluenode b ON a.aud_id : b.aud_id INNER JOIN aud_elementvaluenode c ON a.aud_id : c.aud_id WHERE a.aud_componentName LIKE 'tAggregate%' AND a.aud_typeField : 'OPERATIONS' AND b.aud_componentName LIKE 'tAggregate%' AND b.aud_typeField : 'OPERATIONS' AND c.aud_componentName LIKE 'tAggregate%' AND c.aud_typeField : 'OPERATIONS' AND a.aud_elementRef : 'INPUT_COLUMN' AND b.aud_elementRef : 'OUTPUT_COLUMN' AND c.aud_elementRef : 'FUNCTION'"
+
+ORA_ECH_ADMECH:
+  CTX_ORA_ECH_ADMECH_Server: "echdfr.cfo1dl4btaz7.eu-west-1.rds.amazonaws.com"
+  CTX_ORA_ECH_ADMECH_Password: ""
+  CTX_ORA_ECH_ADMECH_Login: "ADM_ECH"
+  CTX_ORA_ECH_ADMECH_Port: "1521"
+  CTX_ORA_ECH_ADMECH_AdditionalParams: ""
+  CTX_ORA_ECH_ADMECH_Schema: "ADM_ECH"
+  CTX_ORA_ECH_ADMECH_Sid: "echdfr"
+
+Audit_JDBC:
+  AUDIT_JDBC_connection_userPassword_password: "Sa*201299"
+  AUDIT_JDBC_drivers: "C:/Users/sonia/Downloads/mysql-connector-j-9.0.0/mysql-connector-j-9.0.0/mysql-connector-j-9.0.0.jar"
+  AUDIT_JDBC_connection_driverClass: "com.mysql.cj.jdbc.Driver"
+  AUDIT_JDBC_mappingFile: "mysql_id"
+  AUDIT_JDBC_connection_userPassword_userId: "root"
+  AUDIT_JDBC_connection_jdbcUrl: "jdbc:mysql://localhost:3306/sqops_dataraise"
+
