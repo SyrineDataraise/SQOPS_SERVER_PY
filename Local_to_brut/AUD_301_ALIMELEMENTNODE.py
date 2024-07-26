@@ -1,9 +1,12 @@
+import os
 from config import Config  # Assuming Config class is defined in config.py
 from database import Database  # Assuming Database class is defined in database.py
+from XML_parse import XMLParser  # Importing the XMLParser class
 
 def main():
     config_file = "configs/config.yaml"
     config = Config(config_file)
+    items_directory = "C:/Users/sonia/Desktop/sqops/process"
 
     try:
         # Retrieve JDBC parameters and create a Database instance
@@ -42,6 +45,14 @@ def main():
             project_name, job_name = result
             db.delete_records(project_name, job_name)
             print(f"Deleted records for PROJECT_NAME: {project_name}, JOB_NAME: {job_name}")
+
+        # Step 6: Loop over `.item` files in the items_directory and parse them
+        for filename in os.listdir(items_directory):
+            if filename.endswith('.item'):
+                file_path = os.path.join(items_directory, filename)
+                print(f"Parsing file: {file_path}")
+                xml_parser = XMLParser(file_path)
+                xml_parser.parse_nodes()  # Assuming this method will be enhanced to store data for further processing
 
     except Exception as e:
         print(f"An error occurred: {str(e)}")
