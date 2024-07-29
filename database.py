@@ -183,6 +183,29 @@ class Database:
 
             print(f"Error committing transaction: {str(e)}")
 
+ 
+    def insert_into_aud_element_node(self, componentName, field, name, show, value, Componement_UniqueName, project_name, job_name, execution_date):
+        insert_query = """
+        INSERT INTO aud_elementnode (
+            aud_componentName,
+            aud_field,
+            aud_nameElementNode,
+            aud_show,
+            aud_valueElementNode,
+            aud_ComponementValue,
+            NameProject,
+            NameJob,
+            exec_date
+        ) VALUES (
+            ?, ?, ?, ?, ?, ?, ?, ?, ?
+        )
+        """
+        params = (componentName, field, name, show, value, Componement_UniqueName, project_name, job_name, execution_date)
+        print('params:', params)
+        self.cursor.execute(insert_query, params)
+        self.connection.commit()
+
+        
     def close(self):
         """
         Closes the cursor and database connection.
