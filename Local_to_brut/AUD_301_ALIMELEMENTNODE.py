@@ -69,7 +69,7 @@ def main():
                 value = data['value']
                 
                 # Adjust the value of `Componement_UniqueName` as needed, if it's derived from `componentName`
-                Componement_UniqueName = value if field == 'TEXT' and name == 'UNIQUE_NAME' else None
+                Componement_UniqueName = value if field == 'TEXT' and name == 'UNIQUE_NAME' else Componement_UniqueName
 
                 db.insert_into_aud_element_node(
                     componentName,
