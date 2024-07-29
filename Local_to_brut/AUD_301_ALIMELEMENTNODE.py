@@ -6,7 +6,7 @@ from XML_parse import XMLParser  # Importing the XMLParser class
 def main():
     config_file = "configs/config.yaml"
     config = Config(config_file)
-    items_directory = "C:/Users/sonia/Desktop/sqops/process"
+    items_directory = config.get_param('Directories', 'items_directory')
 
     # Retrieve JDBC parameters and create a Database instance
     jdbc_params = config.get_jdbc_parameters()
@@ -17,12 +17,12 @@ def main():
     db.connect_JDBC()  # Test the JDBC connection
 
     # Step 1: Get the execution date
-    execution_date_query = config.get_query('queries', 'TRANSVERSE_QUERY_LASTEXECUTIONDATE')
+    execution_date_query = config.get_param('queries', 'TRANSVERSE_QUERY_LASTEXECUTIONDATE')
     execution_date = db.get_execution_date(execution_date_query)
     print("Execution Date:", execution_date)
 
     # Step 2: Execute LOCAL_TO_DBBRUT_QUERY
-    local_to_dbbrut_query = config.get_query('queries', 'LOCAL_TO_DBBRUT_QUERY')
+    local_to_dbbrut_query = config.get_param('queries', 'LOCAL_TO_DBBRUT_QUERY')
     print("Executing query:", local_to_dbbrut_query)  # Print the query before execution
     local_to_dbbrut_query_results = db.execute_query(local_to_dbbrut_query)
     print("local_to_dbbrut_query_results:", local_to_dbbrut_query_results)
@@ -34,7 +34,7 @@ def main():
         print(f"Deleted records for PROJECT_NAME: {project_name}, JOB_NAME: {job_name}")
 
     # Step 4: Execute NOT_AUDITED_JOBS_QUERY
-    not_audited_jobs_query = config.get_query('queries', 'NOT_AUDITED_JOBS_QUERY')
+    not_audited_jobs_query = config.get_param('queries', 'NOT_AUDITED_JOBS_QUERY')
     print("Executing query:", not_audited_jobs_query)  # Print the query before execution
     not_audited_jobs_query_results = db.execute_query(not_audited_jobs_query)
     print("not_audited_jobs_query_results:", not_audited_jobs_query_results)
