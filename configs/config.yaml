@@ -45,3 +45,5 @@ Audit_JDBC:
   AUDIT_JDBC_connection_userPassword_userId: "root"
   AUDIT_JDBC_connection_jdbcUrl: "jdbc:mysql://localhost:3306/sqops_dataraise"
 
+Directories:
+  items_directory: "C:/Users/sonia/Desktop/sqops/process"

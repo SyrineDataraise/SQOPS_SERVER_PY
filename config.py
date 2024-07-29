@@ -54,12 +54,12 @@ class Config:
         except KeyError:
             raise KeyError("No JDBC configuration found in the configuration file")
 
-    def get_query(self, query_type , query_name):
+    def get_param(self, key , value):
         try:
-            query = self.config[query_type][query_name]
-            print("Query found:", query_name, "->", query)
-            return query
+            parameter = self.config[key][value]
+            print("parameter:", value, "->", parameter)
+            return parameter
         except KeyError:
-            raise KeyError(f"No query found with name '{query_name}'")
+            raise KeyError(f"No parameter found with name '{value}'")
     def get_audit_jdbc_config(self):
             return self.config.get('Audit_JDBC', {})
