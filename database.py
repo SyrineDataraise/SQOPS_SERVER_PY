@@ -148,19 +148,25 @@ class Database:
             print(f"Error executing SELECT query: {e}")
             raise  # Re-raise the exception for further handling or debugging
 
-    def delete_records(self,table, project_name, job_name):
-        delete_query = f"""
-        DELETE FROM {table}
-        WHERE NameProject = '{project_name}' AND NameJob = '{job_name}'
+    def delete_records(self, table, **conditions):
         """
+        Delete records from the specified table based on the given conditions.
+        
+        :param table: The name of the table.
+        :param conditions: A dictionary where keys are column names and values are the values to match.
+        """
+        condition_clauses = " AND ".join([f"{column} = '{value}'" for column, value in conditions.items()])
+        delete_query = f"DELETE FROM {table} WHERE {condition_clauses}"
+
         try:
-            # Use parameterized queries to avoid SQL injection
             self.cursor.execute(delete_query)
             self.connection.commit()
-            print(f"Successfully deleted records for PROJECT_NAME: {project_name}, JOB_NAME: {job_name}")
+            print(f"Successfully deleted records from {table} with conditions: {conditions}")
         except Exception as e:
-            print(f"Error deleting records for PROJECT_NAME: {project_name}, JOB_NAME: {job_name}: {e}")
+            print(f"Error deleting records from {table} with conditions {conditions}: {e}")
             raise
+
+
 
     def get_execution_date(self, query,params=None):    
         """

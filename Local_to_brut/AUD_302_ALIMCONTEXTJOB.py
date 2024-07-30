@@ -33,21 +33,29 @@ def main():
         # Step 3: Delete the output from aud_contextjob based on the query results
         for result in local_to_dbbrut_query_results:
             project_name, job_name, _, _, _ = result  # Assuming result contains these fields in order
-            table='aud_contextjob'
-            db.delete_records(table,project_name, job_name)
-            print(f"Deleted records for PROJECT_NAME from  {table} : {project_name}, JOB_NAME: {job_name}")
+            table = 'aud_contextjob'
+            conditions = {
+                'NameProject': project_name,
+                'NameJob': job_name
+            }
+            db.delete_records(table, **conditions)
+            print(f"Deleted records for PROJECT_NAME from {table}: {project_name}, JOB_NAME: {job_name}")
 
         # Step 4: Execute aud_contextjob query
-        aud_contextjob = config.get_param('queries', 'aud_contextjob')
-        print("Executing query:", aud_contextjob)  # Print the query before execution
-        aud_contextjob_results = db.execute_query(aud_contextjob)
-        print("aud_elementnode_results:", aud_contextjob_results)
+        aud_contextjob_query = config.get_param('queries', 'aud_contextjob')
+        print("Executing query:", aud_contextjob_query)  # Print the query before execution
+        aud_contextjob_results = db.execute_query(aud_contextjob_query)
+        print("aud_contextjob_results:", aud_contextjob_results)
 
         # Step 5: Delete the output from aud_contextjob based on the query results
         for result in aud_contextjob_results:
             project_name, job_name = result
-            db.delete_records(table,project_name, job_name)
-            print(f"Deleted records for PROJECT_NAME from {table}: {project_name}, JOB_NAME: {job_name}")
+            conditions = {
+                'NameProject': project_name,
+                'NameJob': job_name
+            }
+            db.delete_records('aud_contextjob', **conditions)
+            print(f"Deleted records for PROJECT_NAME from aud_contextjob: {project_name}, JOB_NAME: {job_name}")
 
         # Step 6: Loop over `.item` files in the items_directory and parse them
         for filename in os.listdir(items_directory):

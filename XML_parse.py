@@ -27,6 +27,11 @@ class XMLParser:
                 for elem_param in node.findall('.//elementParameter'):
                     elem_data = {
                         'componentName': comp_data['componentName'],
+                        'componentVersion': comp_data['componentVersion'],
+                        'offsetLabelX': comp_data['offsetLabelX'],
+                        'offsetLabelY': comp_data['offsetLabelY'],
+                        'posX': comp_data['posX'],
+                        'posY': comp_data['posY'],
                         'field': elem_param.get('field'),
                         'name': elem_param.get('name'),
                         'show': elem_param.get('show'),
