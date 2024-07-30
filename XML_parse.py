@@ -7,15 +7,6 @@ class XMLParser:
         self.tree = ET.parse(file_path)
         self.root = self.tree.getroot()
 
-import xml.etree.ElementTree as ET
-
-class XMLParser:
-    def __init__(self, file_path):
-        """Initialize the XMLParser with the path to the XML file."""
-        self.file_path = file_path
-        self.tree = ET.parse(file_path)
-        self.root = self.tree.getroot()
-
     def parse_nodes(self):
         """Parse and return data from `node` elements."""
         parsed_data = []
@@ -55,3 +46,30 @@ class XMLParser:
                     
         return parsed_data
 
+    def parse_context(self):
+        """Parse and return data from `context` elements."""
+        context_data = []
+
+        for context in self.root.iter('context'):
+            context_entry = {
+                'confirmationNeeded': context.get('confirmationNeeded'),
+                'name': context.get('name'),
+                'contextParameters': []
+            }
+
+            # Loop through context parameters
+            for context_param in context.findall('contextParameter'):
+                param_data = {
+                    'comment': context_param.get('comment'),
+                    'name': context_param.get('name'),
+                    'prompt': context_param.get('prompt'),
+                    'promptNeeded': context_param.get('promptNeeded'),
+                    'type': context_param.get('type'),
+                    'value': context_param.get('value'),
+                    'repositoryContextId': context_param.get('repositoryContextId')
+                }
+                context_entry['contextParameters'].append(param_data)
+
+            context_data.append(context_entry)
+        
+        return context_data

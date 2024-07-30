@@ -33,17 +33,18 @@ def main():
         # Step 3: Delete the output from aud_elementvaluenode based on the query results
         for result in local_to_dbbrut_query_results:
             project_name, job_name, _, _, _ = result  # Assuming result contains these fields in order
-            db.delete_records(project_name, job_name)
+            table='aud_elemntnode'
+            db.delete_records(table,project_name, job_name)
             print(f"Deleted records for PROJECT_NAME: {project_name}, JOB_NAME: {job_name}")
 
-        # Step 4: Execute NOT_AUDITED_JOBS_QUERY
-        not_audited_jobs_query = config.get_param('queries', 'NOT_AUDITED_JOBS_QUERY')
-        print("Executing query:", not_audited_jobs_query)  # Print the query before execution
-        not_audited_jobs_query_results = db.execute_query(not_audited_jobs_query)
-        print("not_audited_jobs_query_results:", not_audited_jobs_query_results)
+        # Step 4: Execute aud_elementnode query
+        aud_elementnode = config.get_param('queries', 'aud_elementnode')
+        print("Executing query:", aud_elementnode)  # Print the query before execution
+        aud_elementnode_results = db.execute_query(aud_elementnode)
+        print("aud_elementnode_results:", aud_elementnode_results)
 
         # Step 5: Delete the output from aud_elementvaluenode based on the query results
-        for result in not_audited_jobs_query_results:
+        for result in aud_elementnode_results:
             project_name, job_name = result
             db.delete_records(project_name, job_name)
             print(f"Deleted records for PROJECT_NAME: {project_name}, JOB_NAME: {job_name}")

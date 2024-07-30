@@ -113,7 +113,7 @@ class Database:
         try:
             self.cursor.execute(query,params or ())
             self.connection.commit()
-            print(f"query {query} successfully inserted into {table}")
+            print(f"query  successfully inserted into {table}")
         except Exception as e:
             print(f"Error inserting data into {table}: {str(e)}")
             try:
@@ -148,9 +148,9 @@ class Database:
             print(f"Error executing SELECT query: {e}")
             raise  # Re-raise the exception for further handling or debugging
 
-    def delete_records(self, project_name, job_name):
+    def delete_records(self,table, project_name, job_name):
         delete_query = f"""
-        DELETE FROM aud_elementnode
+        DELETE FROM {table}
         WHERE NameProject = '{project_name}' AND NameJob = '{job_name}'
         """
         try:
