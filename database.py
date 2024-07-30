@@ -98,7 +98,7 @@ class Database:
 
         self.cursor = self.connection.cursor()
 
-    def insert_data(self, query, table):
+    def insert_data(self, query, table, params=None):
         """
         Executes an insert query on the connected database.
 
@@ -111,13 +111,15 @@ class Database:
         - Error message upon insertion failure.
         """
         try:
-            self.cursor.execute(query)
+            self.cursor.execute(query,params or ())
             self.connection.commit()
-            print(f"Data successfully inserted into {table}")
+            print(f"query {query} successfully inserted into {table}")
         except Exception as e:
             print(f"Error inserting data into {table}: {str(e)}")
-
-
+            try:
+                self.connection.rollback()
+            except Exception as rollback_e:
+                print(f"Error rolling back transaction: {rollback_e}")
     def execute_query(self, query, params=None):
         """
         Executes a SELECT SQL query and returns the results.
@@ -160,7 +162,7 @@ class Database:
             print(f"Error deleting records for PROJECT_NAME: {project_name}, JOB_NAME: {job_name}: {e}")
             raise
 
-    def get_execution_date(self, query):    
+    def get_execution_date(self, query,params=None):    
         """
         Retrieves the last execution date using the provided query.
 
@@ -183,27 +185,6 @@ class Database:
 
             print(f"Error committing transaction: {str(e)}")
 
- 
-    def insert_into_aud_element_node(self, componentName, field, name, show, value, Componement_UniqueName, project_name, job_name, execution_date):
-        insert_query = """
-        INSERT INTO aud_elementnode (
-            aud_componentName,
-            aud_field,
-            aud_nameElementNode,
-            aud_show,
-            aud_valueElementNode,
-            aud_ComponementValue,
-            NameProject,
-            NameJob,
-            exec_date
-        ) VALUES (
-            ?, ?, ?, ?, ?, ?, ?, ?, ?
-        )
-        """
-        params = (componentName, field, name, show, value, Componement_UniqueName, project_name, job_name, execution_date)
-        print('params:', params)
-        self.cursor.execute(insert_query, params)
-        self.connection.commit()
 
         
     def close(self):
