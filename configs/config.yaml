@@ -28,6 +28,7 @@ insert_queries:
   aud_contextgroupdetail : "INSERT INTO aud_contextgroupdetail (aud_nameContext,aud_commentContext,NameProject,NameContextGroup,exec_date) VALUES (?, ?, ?, ?, ?)"
   aud_node : "INSERT INTO aud_node (aud_componentName , aud_componentVersion , aud_offsetLabelX , aud_offsetLabelY , aud_posX , aud_posY , aud_componentValue , NameProject , NameJob , exec_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?)"
   aud_bigdata : "INSERT INTO aud_bigdata (aud_field,aud_name,aud_show,aud_value,NameProject,NameJob,exec_date) VALUES (?, ?, ?, ?, ?, ?, ?)"
+  aud_bigdata_elementvalue : "INSERT INTO aud_bigdata_elementvalue (aud_elementRef,aud_value,aud_name,NameProject,NameJob,exec_date) VALUES (?, ?, ?, ?, ?, ?)"
 
 Directories:
   items_directory: "C:/Users/sonia/Desktop/TOS_ESB/Studio/workspace/SERVER/process/ANALYSE/LOCAL_TO_BRUT"

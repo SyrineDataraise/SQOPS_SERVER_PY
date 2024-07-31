@@ -84,6 +84,18 @@ def main():
                     params = (field, name, show, value, project_name, job_name, execution_date)
                     db.insert_data(insert_query, 'aud_bigdata', params)
                     print(f"Inserted parameter data into aud_bigdata: {param_data}")
+
+                    # Step 8: Insert element values into the `aud_bigdata_elementvalue` table
+                    elementValues = param_data['elementValues']
+                    for elementValue in elementValues:
+                        elementRef = elementValue['elementRef']
+                        elementRef_value = elementValue['value']
+                        
+                        insert_query = config.get_param('insert_queries', 'aud_bigdata_elementvalue')
+                        params = (elementRef, elementRef_value, name, project_name, job_name, execution_date)
+                        db.insert_data(insert_query, 'aud_bigdata_elementvalue', params)
+                        print(f"Inserted element value data into aud_bigdata_elementvalue: {elementValue}")
+
     except Exception as e:
         print(f"An error occurred: {str(e)}")
     finally:
