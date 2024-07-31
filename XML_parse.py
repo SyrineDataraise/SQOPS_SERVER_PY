@@ -76,5 +76,35 @@ class XMLParser:
                 context_entry['contextParameters'].append(param_data)
 
             context_data.append(context_entry)
-        
+       
         return context_data
+    
+    def parse_parameters(self):
+        parameters_data = []
+        
+        for parameters in self.root.findall('.//parameters'):
+            for elementParameter in parameters.findall('.//elementParameter'):
+                param_data = {
+                    'field': elementParameter.get('field'),
+                    'name': elementParameter.get('name'),
+                    'show': elementParameter.get('show'),
+                    'value': elementParameter.get('value')
+                }
+                
+                element_values = []
+                for elementValue in elementParameter.findall('.//elementValue'):
+                    element_values.append({
+                        'elementRef': elementValue.get('elementRef'),
+                        'value': elementValue.get('value')
+                    })
+                param_data['elementValues'] = element_values
+
+                parameters_data.append(param_data)
+                
+            # for routinesParameter in parameters.findall('.//routinesParameter'):
+            #     routine_param_data = {
+            #         'name': routinesParameter.get('name')
+            #     }
+            #     parameters_data.append(routine_param_data)
+
+        return parameters_data

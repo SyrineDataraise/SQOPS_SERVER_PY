@@ -1,4 +1,3 @@
-
 Audit_JDBC:
   AUDIT_JDBC_connection_userPassword_password: "Sa*201299"
   AUDIT_JDBC_drivers: "C:/Users/sonia/Downloads/mysql-connector-j-9.0.0/mysql-connector-j-9.0.0/mysql-connector-j-9.0.0.jar"
@@ -20,12 +19,15 @@ queries:
   aud_contextjob: "select distinct namejob, nameproject from aud_contextjob where NameJob not in (select job_name from audit_jobs)"
   aud_node : "select distinct namejob, nameproject from aud_node where NameJob not in (select job_name from audit_jobs)"
   NodeJoinElementnode : "select distinct N.NameProject, N.NameJob, N.aud_componentValue from aud_node N inner join aud_elementnode E on (N.namejob = E.namejob and N.nameproject = E.nameproject and N.aud_componentValue = E.aud_ComponementValue) where E.aud_nameElementNode = 'ACTIVATE' and E.aud_valueElementNode = 'false' and E.exec_date = (select max(lastexecutiondate) from executiondate)"
+  aud_bigdata : "select distinct namejob, nameproject from aud_bigdata where NameJob not in (select job_name from audit_jobs)"
+
 insert_queries:
   aud_agg_aggregate: "INSERT INTO aud_agg_aggregate (NameProject, namejob, aud_componentValue, aud_valueElementRef_input, aud_valueElementRef_output, aud_valueElementRef_function) SELECT a.NameProject, a.namejob, a.aud_componentValue, a.aud_valueElementRef as aud_valueElementRef_input, b.aud_valueElementRef as aud_valueElementRef_output, 'GROUPBY' as aud_valueElementRef_function FROM aud_elementvaluenode a INNER JOIN aud_elementvaluenode b ON a.aud_id : b.aud_id WHERE a.aud_typeField IN ('GROUPBYS') AND b.aud_typeField IN ('GROUPBYS') AND a.aud_elementRef : 'INPUT_COLUMN' AND b.aud_elementRef : 'OUTPUT_COLUMN' AND a.aud_componentName LIKE 'tAggregate%' AND b.aud_componentName LIKE 'tAggregate%' UNION ALL SELECT a.NameProject, a.namejob, a.aud_componentValue, a.aud_valueElementRef as aud_valueElementRef_input, b.aud_valueElementRef as aud_valueElementRef_output , c.aud_valueElementRef as aud_valueElementRef_function FROM aud_elementvaluenode a INNER JOIN aud_elementvaluenode b ON a.aud_id : b.aud_id INNER JOIN aud_elementvaluenode c ON a.aud_id : c.aud_id WHERE a.aud_componentName LIKE 'tAggregate%' AND a.aud_typeField : 'OPERATIONS' AND b.aud_componentName LIKE 'tAggregate%' AND b.aud_typeField : 'OPERATIONS' AND c.aud_componentName LIKE 'tAggregate%' AND c.aud_typeField : 'OPERATIONS' AND a.aud_elementRef : 'INPUT_COLUMN' AND b.aud_elementRef : 'OUTPUT_COLUMN' AND c.aud_elementRef : 'FUNCTION'"
   aud_elementnode : "INSERT INTO aud_elementnode (aud_componentName,aud_field,aud_nameElementNode,aud_show,aud_valueElementNode,aud_ComponementValue,NameProject,NameJob,exec_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
   aud_contextjob : "INSERT INTO aud_contextjob (aud_environementContext,aud_nameContext,aud_prompt,aud_promptNeeded,aud_typeContext,aud_valueContext,aud_repositoryContextId,NameProject,NameJob,exec_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?)"
   aud_contextgroupdetail : "INSERT INTO aud_contextgroupdetail (aud_nameContext,aud_commentContext,NameProject,NameContextGroup,exec_date) VALUES (?, ?, ?, ?, ?)"
   aud_node : "INSERT INTO aud_node (aud_componentName , aud_componentVersion , aud_offsetLabelX , aud_offsetLabelY , aud_posX , aud_posY , aud_componentValue , NameProject , NameJob , exec_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?)"
+  aud_bigdata : "INSERT INTO aud_bigdata (aud_field,aud_name,aud_show,aud_value,NameProject,NameJob,exec_date) VALUES (?, ?, ?, ?, ?, ?, ?)"
 
 Directories:
   items_directory: "C:/Users/sonia/Desktop/TOS_ESB/Studio/workspace/SERVER/process/ANALYSE/LOCAL_TO_BRUT"
