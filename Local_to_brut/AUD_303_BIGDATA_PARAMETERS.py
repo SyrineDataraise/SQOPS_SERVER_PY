@@ -60,41 +60,33 @@ def main():
             print(f"Deleted records for PROJECT_NAME from aud_bigdata: {project_name}, JOB_NAME: {job_name}")
 
         # Step 6: Loop over `.item` files in the items_directory and parse them
-        for filename in os.listdir(items_directory):
-            if filename.endswith('.item'):
-                file_path = os.path.join(items_directory, filename)
-                parts = filename.split('.', 1)  # Split at the first dot
-                project_name = parts[0]
-                job_name = parts[1].replace('.item', '') if len(parts) > 1 else None
-                print("parts:", parts)
-                print("project_name:", project_name)
-                print("job_name:", job_name)
-                print(f"Parsing file: {file_path}")
-                xml_parser = XMLParser(file_path)
-                parameters_data = xml_parser.parse_parameters()
+        xml_parser = XMLParser("")
+        filenames = [f for f in os.listdir(items_directory) if f.endswith('.item')]
+        for filename in filenames:
+            project_name,job_name,parsed_data = xml_parser.loop_parse(filename, items_directory)
                 
-                # Step 7: Insert parsed parameters data into the `aud_bigdata` table
-                for param_data in parameters_data:
-                    field = param_data['field']
-                    name = param_data['name']
-                    show = param_data['show']
-                    value = param_data['value']
-                    
-                    insert_query = config.get_param('insert_queries', 'aud_bigdata')
-                    params = (field, name, show, value, project_name, job_name, execution_date)
-                    db.insert_data(insert_query, 'aud_bigdata', params)
-                    print(f"Inserted parameter data into aud_bigdata: {param_data}")
+            # Step 7: Insert parsed parameters data into the `aud_bigdata` table
+            for param_data in parsed_data['parameters']:
+                field = param_data['field']
+                name = param_data['name']
+                show = param_data['show']
+                value = param_data['value']
+                
+                insert_query = config.get_param('insert_queries', 'aud_bigdata')
+                params = (field, name, show, value, project_name, job_name, execution_date)
+                db.insert_data(insert_query, 'aud_bigdata', params)
+                print(f"Inserted parameter data into aud_bigdata: {param_data}")
 
-                    # Step 8: Insert element values into the `aud_bigdata_elementvalue` table
-                    elementValues = param_data['elementValues']
-                    for elementValue in elementValues:
-                        elementRef = elementValue['elementRef']
-                        elementRef_value = elementValue['value']
-                        
-                        insert_query = config.get_param('insert_queries', 'aud_bigdata_elementvalue')
-                        params = (elementRef, elementRef_value, name, project_name, job_name, execution_date)
-                        db.insert_data(insert_query, 'aud_bigdata_elementvalue', params)
-                        print(f"Inserted element value data into aud_bigdata_elementvalue: {elementValue}")
+                # Step 8: Insert element values into the `aud_bigdata_elementvalue` table
+                elementValues = param_data['elementValues']
+                for elementValue in elementValues:
+                    elementRef = elementValue['elementRef']
+                    elementRef_value = elementValue['value']
+                    
+                    insert_query = config.get_param('insert_queries', 'aud_bigdata_elementvalue')
+                    params = (elementRef, elementRef_value, name, project_name, job_name, execution_date)
+                    db.insert_data(insert_query, 'aud_bigdata_elementvalue', params)
+                    print(f"Inserted element value data into aud_bigdata_elementvalue: {elementValue}")
 
     except Exception as e:
         print(f"An error occurred: {str(e)}")

@@ -1,25 +1,25 @@
 import xml.etree.ElementTree as ET
+import os
+
 
 class XMLParser:
-    def __init__(self, file_path):
-        """Initialize the XMLParser with the path to the XML file."""
-        self.file_path = file_path
-        self.tree = ET.parse(file_path)
-        self.root = self.tree.getroot()
-    
+    def __init__(self):
+        """Initialize the XMLParser without a specific file path."""
+        self.file_path = ""
+
     def _parse_file(self):
         """Parse the XML file and return a list of data from nodes, contexts, and parameters."""
         nodes_data = self._parse_nodes()
         contexts_data = self._parse_contexts()
         parameters_data = self._parse_parameters()
-        
+
         # Return combined data as a list of dictionaries
-        return ({
+        return {
             'nodes': nodes_data,
             'contexts': contexts_data,
             'parameters': parameters_data
-        })
-    
+        }
+
     def _parse_nodes(self):
         """Parse and return data from `node` elements."""
         parsed_data = []
@@ -84,7 +84,7 @@ class XMLParser:
                 comp_data['metadata'].append(meta_data)
 
             parsed_data.append(comp_data)
-        
+
         return parsed_data
 
     def _parse_contexts(self):
@@ -111,9 +111,9 @@ class XMLParser:
                 context_entry['contextParameters'].append(param_data)
 
             context_data.append(context_entry)
-        
+
         return context_data
-    
+
     def _parse_parameters(self):
         """Parse `parameters` elements and store the data."""
         parameters_data = []
@@ -136,9 +136,32 @@ class XMLParser:
                     param_data['elementValues'].append(value_data)
 
                 parameters_data.append(param_data)
-        
+
         return parameters_data
 
     def get_data(self):
         """Return all parsed data from the XML file."""
         return self._parse_file()
+
+    def loop_parse(self, items_directory):
+        parsed_files_data = []
+        filenames = [f for f in os.listdir(items_directory) if f.endswith('.item')]
+        for filename in filenames:
+            file_path = os.path.join(items_directory, filename)
+            parts = filename.split('.', 1)  # Split at the first dot
+            project_name = parts[0]
+            job_name = parts[1].replace('.item', '') if len(parts) > 1 else None
+            print("parts:", parts)
+            print("project_name:", project_name)
+            print("job_name:", job_name)
+            print(f"Parsing file: {file_path}")
+
+            # Update the file_path for the current file and parse it
+            self.file_path = file_path
+            self.tree = ET.parse(file_path)
+            self.root = self.tree.getroot()
+            parsed_data = self._parse_file()
+            print('parsed data:', parsed_data)
+            parsed_files_data.append((project_name, job_name, parsed_data))
+
+        return parsed_files_data

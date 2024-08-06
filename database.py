@@ -192,6 +192,15 @@ class Database:
             print(f"Error committing transaction: {str(e)}")
 
 
+    def insert_data_batch(self, insert_query, table_name, data_batch):
+        try:
+            # Assuming you are using a cursor for executing queries
+            with self.connection.cursor() as cursor:
+                cursor.executemany(insert_query, data_batch)
+            self.connection.commit()
+        except Exception as e:
+            print(f"Error during batch insert: {e}")
+            self.connection.rollback()
         
     def close(self):
         """

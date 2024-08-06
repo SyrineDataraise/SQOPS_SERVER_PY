@@ -58,43 +58,34 @@ def main():
             print(f"Deleted records for PROJECT_NAME from aud_contextjob: {project_name}, JOB_NAME: {job_name}")
 
         # Step 6: Loop over `.item` files in the items_directory and parse them
-        for filename in os.listdir(items_directory):
-            if filename.endswith('.item'):
-                file_path = os.path.join(items_directory, filename)
-                parts = filename.split('.', 1)  # Split at the first dot
-                project_name = parts[0]
-                job_name = parts[1].replace('.item', '') if len(parts) > 1 else None
-                print("parts:", parts)
-                print("project_name:", project_name)
-                print("job_name:", job_name)
-                print(f"Parsing file: {file_path}")
-                xml_parser = XMLParser(file_path)
-                parsed_data = xml_parser.parse_context()
-                print('parsed context:', parsed_data)
+        xml_parser = XMLParser("")
+        filenames = [f for f in os.listdir(items_directory) if f.endswith('.item')]
+        for filename in filenames:
+            project_name,job_name,parsed_data = xml_parser.loop_parse(filename, items_directory)
                 
-                # Step 7: Insert parsed data into the `aud_contextjob` table
-                for context in parsed_data:
-                    environementContextName = context['name']
-                    for param in context['contextParameters']:
-                        comment = param['comment']
-                        nameContext = param['name']
-                        prompt = param['prompt']
-                        promptNeeded = 0 if param['promptNeeded'] == 'false' else 1
-                        typeContext = param['type']
-                        valueContext = param['value']
-                        repositoryContextId = param['repositoryContextId']
-                        
-                        # Insert into aud_contextjob
-                        insert_query = config.get_param('insert_queries', 'aud_contextjob')
-                        params = (environementContextName, nameContext, prompt, promptNeeded, typeContext, valueContext, repositoryContextId, project_name, job_name, execution_date)
-                        db.insert_data(insert_query, 'aud_contextjob', params)
-                        print(f"Inserted data for context: {environementContextName}, param: {nameContext} into aud_contextjob")
-                        
-                        # Step 8: Insert context metadata into aud_contextgroupdetail
-                        insert_query = config.get_param('insert_queries', 'aud_contextgroupdetail')
-                        params = (nameContext, comment, project_name, environementContextName, execution_date)
-                        db.insert_data(insert_query, 'aud_contextgroupdetail', params)
-                        print(f"Inserted data for context: {environementContextName}, param: {nameContext} into aud_contextgroupdetail")
+            # Step 7: Insert parsed data into the `aud_contextjob` table
+            for context in parsed_data['contexts']:
+                environementContextName = context['name']
+                for param in context['contextParameters']:
+                    comment = param['comment']
+                    nameContext = param['name']
+                    prompt = param['prompt']
+                    promptNeeded = 0 if param['promptNeeded'] == 'false' else 1
+                    typeContext = param['type']
+                    valueContext = param['value']
+                    repositoryContextId = param['repositoryContextId']
+                    
+                    # Insert into aud_contextjob
+                    insert_query = config.get_param('insert_queries', 'aud_contextjob')
+                    params = (environementContextName, nameContext, prompt, promptNeeded, typeContext, valueContext, repositoryContextId, project_name, job_name, execution_date)
+                    db.insert_data(insert_query, 'aud_contextjob', params)
+                    print(f"Inserted data for context: {environementContextName}, param: {nameContext} into aud_contextjob")
+                    
+                    # Step 8: Insert context metadata into aud_contextgroupdetail
+                    insert_query = config.get_param('insert_queries', 'aud_contextgroupdetail')
+                    params = (nameContext, comment, project_name, environementContextName, execution_date)
+                    db.insert_data(insert_query, 'aud_contextgroupdetail', params)
+                    print(f"Inserted data for context: {environementContextName}, param: {nameContext} into aud_contextgroupdetail")
 
     except Exception as e:
         print(f"An error occurred: {str(e)}")

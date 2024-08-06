@@ -1,89 +1,54 @@
-import os
+import logging
+import time
+import gc
 from config import Config  # Assuming Config class is defined in config.py
 from database import Database  # Assuming Database class is defined in database.py
 from XML_parse import XMLParser  # Importing the XMLParser class
-import time
+from typing import List, Tuple
 
-def main():
-    config_file = "configs/config.yaml"
-    config = Config(config_file)
-    items_directory = config.get_param('Directories', 'items_directory')
+# Configure logging
+logging.basicConfig(filename='database_operations.log',
+                    level=logging.DEBUG,  # Changed to DEBUG to capture all messages
+                    format='%(asctime)s - %(levelname)s - %(message)s',
+                    filemode='w')  # Ensure the file is overwritten each time for clean logs
 
-    db = None
+def process_database_operations(config, db, parsed_files_data: List[Tuple[str, str, dict]]):
+    """
+    Perform various database operations including retrieving JDBC parameters, 
+    executing queries, deleting records, and inserting data.
 
+    Args:
+        config (Config): An instance of the Config class for retrieving configuration parameters.
+        db (Database): An instance of the Database class for executing database operations.
+        parsed_files_data (list of tuples): A list where each tuple contains (project_name, job_name, parsed_data).
+    """
     try:
-        # Retrieve JDBC parameters and create a Database instance
-        jdbc_params = config.get_jdbc_parameters()
-        print("JDBC Parameters:", jdbc_params)  # Print JDBC parameters to debug
-
-        db = Database(jdbc_params)
-        db.set_jdbc_parameters(jdbc_params)  # Set JDBC parameters if needed
-        db.connect_JDBC()  # Test the JDBC connection
-
         # Step 1: Get the execution date
         execution_date_query = config.get_param('queries', 'TRANSVERSE_QUERY_LASTEXECUTIONDATE')
         execution_date = db.get_execution_date(execution_date_query)
-        print("Execution Date:", execution_date)
+        logging.info(f"Execution Date: {execution_date}")
 
-        # Step 2: Execute LOCAL_TO_DBBRUT_QUERY
+        # Step 2: Execute LOCAL_TO_DBBRUT_QUERY and delete records from aud_metadata
         local_to_dbbrut_query = config.get_param('queries', 'LOCAL_TO_DBBRUT_QUERY')
-        print("Executing query:", local_to_dbbrut_query)  # Print the query before execution
         local_to_dbbrut_query_results = db.execute_query(local_to_dbbrut_query)
-        print("local_to_dbbrut_query_results:", local_to_dbbrut_query_results)
+        for project_name, job_name, *_ in local_to_dbbrut_query_results:
+            db.delete_records('aud_metadata', NameProject=project_name, NameJob=job_name)
+            logging.info(f"Deleted records from aud_metadata: PROJECT_NAME={project_name}, JOB_NAME={job_name}")
 
-        # Step 3: Delete the output from aud_metadata based on the query results
-        for result in local_to_dbbrut_query_results:
-            project_name, job_name, _, _, _ = result  # Assuming result contains these fields in order
-            
-            # Prepare the conditions dictionary
-            conditions = {
-                'NameProject': project_name,
-                'NameJob': job_name
-            }
-            
-            db.delete_records('aud_metadata', **conditions)
-            print(f"Deleted records for PROJECT_NAME from aud_metadata: {project_name}, JOB_NAME: {job_name}")
-
-        # Step 4: Execute aud_metadata query
+        # Step 4: Execute aud_metadata query and delete records from aud_contextjob
         aud_metadata_query = config.get_param('queries', 'aud_metadata')
-        print("Executing query:", aud_metadata_query)  # Print the query before execution
         aud_metadata_results = db.execute_query(aud_metadata_query)
-        print("aud_metadata_results:", aud_metadata_results)
+        for project_name, job_name in aud_metadata_results:
+            db.delete_records('aud_contextjob', NameProject=project_name, NameJob=job_name)
+            logging.info(f"Deleted records from aud_contextjob: PROJECT_NAME={project_name}, JOB_NAME={job_name}")
 
-        # Step 5: Delete the output from aud_contextjob based on the query results
-        for result in aud_metadata_results:
-            project_name, job_name = result
-            conditions = {
-                'NameProject': project_name,
-                'NameJob': job_name
-            }
-            db.delete_records('aud_contextjob', **conditions)
-            print(f"Deleted records for PROJECT_NAME from aud_metadata: {project_name}, JOB_NAME: {job_name}")
+        # Step 7: Insert parsed parameters data into the `aud_metadata` table in batches
+        insert_query = config.get_param('insert_queries', 'aud_metadata')
+        batch_size = 100  # Adjust batch size as needed
+        batch = []
 
-        # Step 6: Loop over `.item` files in the items_directory and parse them
-        filenames = [f for f in os.listdir(items_directory) if f.endswith('.item')]
-        
-        for filename in filenames:
-            file_path = os.path.join(items_directory, filename)
-            parts = filename.split('.', 1)  # Split at the first dot
-            project_name = parts[0]
-            job_name = parts[1].replace('.item', '') if len(parts) > 1 else None
-            
-            print("Processing file:", filename)
-            print("parts:", parts)
-            print("project_name:", project_name)
-            print("job_name:", job_name)
-            print(f"Parsing file: {file_path}")
-
-            xml_parser = XMLParser(file_path)
-            data = xml_parser._parse_file()
-            print("Parsed Data:")
-            print(data)
-
-            # Step 7: Insert parsed parameters data into the `aud_metadata` table
-            insert_query = config.get_param('insert_queries', 'aud_metadata')
-
-            for node_data in data['nodes']:
+        for project_name, job_name, parsed_data in parsed_files_data:
+            for node_data in parsed_data['nodes']:
                 for elem_param in node_data['elementParameters']:
                     for elem_value in elem_param['elementValues']:
                         for meta in node_data['metadata']:
@@ -93,15 +58,15 @@ def main():
                                     meta['label'],
                                     meta['name'],
                                     column['comment'],
-                                    0 if column['key'] == 'false' else 1,
+                                    int(column['key'] != 'false'),
                                     column['length'],
                                     column['name'],
-                                    0 if column['nullable'] == 'false' else 1,
+                                    int(column['nullable'] != 'false'),
                                     column['pattern'],
                                     column['precision'],
                                     column['sourceType'],
                                     column['type'],
-                                    0 if column['usefulColumn'] == 'false' else 1,
+                                    int(column['usefulColumn'] != 'false'),
                                     column['originalLength'],
                                     column['defaultValue'],
                                     elem_value['value'],
@@ -110,30 +75,35 @@ def main():
                                     job_name,
                                     execution_date
                                 )
-                                print(params)
-                                db.insert_data(insert_query, 'aud_metadata', params)
-                                time.sleep(0.001)
-                                print(f"Inserted parameter data into aud_metadata: {params}")
+                                batch.append(params)
+                                if len(batch) >= batch_size:
+                                    db.insert_data_batch(insert_query, 'aud_metadata', batch)
+                                    logging.info(f"Inserted batch of parameter data into aud_metadata: {len(batch)} rows")
+                                    batch.clear()
+                                    gc.collect()  # Manually trigger garbage collection
 
-        # Step 8: Execute MetadataJoinElementNode and delete results from aud_metadata
+        # Insert remaining data in the batch
+        if batch:
+            db.insert_data_batch(insert_query, 'aud_metadata', batch)
+            logging.info(f"Inserted remaining batch of parameter data into aud_metadata: {len(batch)} rows")
+
+        # Step 8: Execute MetadataJoinElementNode query and delete records from aud_metadata
         metadata_join_query = config.get_param('queries', 'MetadataJoinElemntnode')
-        print("Executing MetadataJoinElementNode query:", metadata_join_query)
         metadata_join_results = db.execute_query(metadata_join_query)
-        print("MetadataJoinElementNode Results:", metadata_join_results)
-
         for result in metadata_join_results:
             conditions = {
-            'NameProject': result[0],
-            'NameJob': result[1],
-            'aud_componentValue': result[2]
-        }
+                'NameProject': result[0],
+                'NameJob': result[1],
+                'aud_componentValue': result[2]
+            }
             db.delete_records('aud_metadata', **conditions)
-            print(f"Deleted records from aud_metadata based on MetadataJoinElementNode results: {conditions}")
+            logging.info(f"Deleted records from aud_metadata based on MetadataJoinElementNode results: {conditions}")
+
     except Exception as e:
-        print(f"An error occurred: {str(e)}")
+        logging.error(f"An error occurred: {e}", exc_info=True)
     finally:
         if db:
             db.close()  # Ensure the database connection is closed
+            logging.info("Database connection closed")
 
-if __name__ == "__main__":
-    main()
+
