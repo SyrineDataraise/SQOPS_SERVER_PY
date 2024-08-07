@@ -165,7 +165,19 @@ class Database:
         except Exception as e:
             print(f"Error deleting records from {table} with conditions {conditions}: {e}")
             raise
-
+    
+    def delete_records_batch(self, table_name, conditions_batch):
+        try:
+            # Assuming you are using a cursor for executing queries
+            with self.connection.cursor() as cursor:
+                for conditions in conditions_batch:
+                    where_clause = " AND ".join([f"{key} = %s" for key in conditions.keys()])
+                    sql = f"DELETE FROM {table_name} WHERE {where_clause}"
+                    cursor.execute(sql, tuple(conditions.values()))
+            self.connection.commit()
+        except Exception as e:
+            print(f"Error during batch delete: {e}")
+            self.connection.rollback()
 
 
     def get_execution_date(self, query,params=None):    
