@@ -88,45 +88,70 @@ class XMLParser:
                 comp_data['metadata'].append(meta_data)
 
             # Parse `nodeData` elements
-            for node_data in node.findall('.//nodeData'):
-                ui_propefties = node_data.find('.//uiPropefties')
-                var_tables = node_data.find('.//varTables')
-                output_tables = node_data.find('.//outputTables')
+            # Parse `nodeData` elements
+        for node_data in node.findall('.//nodeData'):
+            ui_propefties = node_data.find('.//uiPropefties')
+            var_tables = node_data.find('.//varTables')
+            output_tables = node_data.find('.//outputTables')
+            input_tables = node_data.find('.//inputTables')
 
-                node_data_info = {
-                    'type': node_data.get('{http://www.w3.org/2001/XMLSchema-instance}type'),
-                    'uiPropefties': {
-                        'shellMaximized': ui_propefties.get('shellMaximized') if ui_propefties is not None else None
-                    },
-                    'varTables': {
-                        'name': var_tables.get('name') if var_tables is not None else None,
-                        'sizeState': var_tables.get('sizeState') if var_tables is not None else None
-                    },
-                    'mapperTableEntries': [],
-                    'outputTables': {
-                        'activateExpressionFilter': output_tables.get('activateExpressionFilter') if output_tables is not None else None,
-                        'expressionFilter': output_tables.get('expressionFilter') if output_tables is not None else None,
-                        'name': output_tables.get('name') if output_tables is not None else None,
-                        'sizeState': output_tables.get('sizeState') if output_tables is not None else None,
-                        'activateCondensedTool': output_tables.get('activateCondensedTool') if output_tables is not None else None,
-                        'reject': output_tables.get('reject') if output_tables is not None else None,
-                        'rejectInnerJoin': output_tables.get('rejectInnerJoin') if output_tables is not None else None,
-                        'mapperTableEntries': []
-                    }
+            node_data_info = {
+                'type': node_data.get('{http://www.w3.org/2001/XMLSchema-instance}type'),
+                'uiPropefties': {
+                    'shellMaximized': ui_propefties.get('shellMaximized') if ui_propefties is not None else None
+                },
+                'varTables': {
+                    'name': var_tables.get('name') if var_tables is not None else None,
+                    'sizeState': var_tables.get('sizeState') if var_tables is not None else None
+                },
+                'mapperTableEntries': [],
+                'outputTables': {
+                    'activateExpressionFilter': output_tables.get('activateExpressionFilter') if output_tables is not None else None,
+                    'expressionFilter': output_tables.get('expressionFilter') if output_tables is not None else None,
+                    'name': output_tables.get('name') if output_tables is not None else None,
+                    'sizeState': output_tables.get('sizeState') if output_tables is not None else None,
+                    'activateCondensedTool': output_tables.get('activateCondensedTool') if output_tables is not None else None,
+                    'reject': output_tables.get('reject') if output_tables is not None else None,
+                    'rejectInnerJoin': output_tables.get('rejectInnerJoin') if output_tables is not None else None,
+                    'mapperTableEntries': []
+                },
+                'inputTables': {
+                    'lookupMode': input_tables.get('lookupMode') if input_tables is not None else None,
+                    'matchingMode': input_tables.get('matchingMode') if input_tables is not None else None,
+                    'name': input_tables.get('name') if input_tables is not None else None,
+                    'sizeState': input_tables.get('sizeState') if input_tables is not None else None,
+                    'activateCondensedTool': input_tables.get('activateCondensedTool') if input_tables is not None else None,
+                    'activateExpressionFilter': input_tables.get('activateExpressionFilter') if input_tables is not None else None,
+                    'innerJoin': input_tables.get('innerJoin') if input_tables is not None else None,
+                    'expressionFilter': input_tables.get('expressionFilter') if input_tables is not None else None,
+                    'persistent': input_tables.get('persistent') if input_tables is not None else None,
+                    'mapperTableEntries': []
                 }
+            }
 
-                for mapper_entry in node_data.findall('.//mapperTableEntries'):
-                    mapper_entry_info = {
-                        'expression': mapper_entry.get('expression'),
-                        'name': mapper_entry.get('name'),
-                        'type': mapper_entry.get('type'),
-                        'nullable': mapper_entry.get('nullable')
-                    }
-                    node_data_info['outputTables']['mapperTableEntries'].append(mapper_entry_info)
+            for mapper_entry in node_data.findall('.//mapperTableEntries'):
+                mapper_entry_info = {
+                    'expression': mapper_entry.get('expression'),
+                    'name': mapper_entry.get('name'),
+                    'type': mapper_entry.get('type'),
+                    'nullable': mapper_entry.get('nullable'),
+                    'operator': mapper_entry.get('operator')
+                }
+                node_data_info['inputTables']['mapperTableEntries'].append(mapper_entry_info)
 
-                comp_data['nodeData'].append(node_data_info)
+            for mapper_entry in node_data.findall('.//outputTables/mapperTableEntries'):
+                mapper_entry_info = {
+                    'expression': mapper_entry.get('expression'),
+                    'name': mapper_entry.get('name'),
+                    'type': mapper_entry.get('type'),
+                    'nullable': mapper_entry.get('nullable')
+                }
+                node_data_info['outputTables']['mapperTableEntries'].append(mapper_entry_info)
 
-            parsed_data.append(comp_data)
+            comp_data['nodeData'].append(node_data_info)
+
+        parsed_data.append(comp_data)
+
 
         return parsed_data
 
