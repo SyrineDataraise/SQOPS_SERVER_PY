@@ -21,72 +21,102 @@ class XMLParser:
             'parameters': parameters_data
         }
 
-    def _parse_nodes(self):
-        """Parse and return data from `node` elements."""
-        parsed_data = []
+def _parse_nodes(self):
+    """Parse and return data from `node` elements, including additional parameters."""
+    parsed_data = []
 
-        for node in self.root.iter('node'):
-            comp_data = {
-                'componentName': node.get('componentName'),
-                'componentVersion': node.get('componentVersion'),
-                'offsetLabelX': node.get('offsetLabelX'),
-                'offsetLabelY': node.get('offsetLabelY'),
-                'posX': node.get('posX'),
-                'posY': node.get('posY'),
-                'elementParameters': [],
-                'metadata': []
+    for node in self.root.iter('node'):
+        comp_data = {
+            'componentName': node.get('componentName'),
+            'componentVersion': node.get('componentVersion'),
+            'offsetLabelX': node.get('offsetLabelX'),
+            'offsetLabelY': node.get('offsetLabelY'),
+            'posX': node.get('posX'),
+            'posY': node.get('posY'),
+            'elementParameters': [],
+            'metadata': [],
+            'nodeData': []
+        }
+
+        # Parse `elementParameters`
+        for elem_param in node.findall('.//elementParameter'):
+            elem_data = {
+                'field': elem_param.get('field'),
+                'name': elem_param.get('name'),
+                'show': elem_param.get('show'),
+                'value': elem_param.get('value'),
+                'elementValues': []
             }
 
-            for elem_param in node.findall('.//elementParameter'):
-                elem_data = {
-                    'field': elem_param.get('field'),
-                    'name': elem_param.get('name'),
-                    'show': elem_param.get('show'),
-                    'value': elem_param.get('value'),
-                    'elementValues': []
+            for elem_value in elem_param.findall('.//elementValue'):
+                value_data = {
+                    'elementRef': elem_value.get('elementRef'),
+                    'value': elem_value.get('value')
                 }
+                elem_data['elementValues'].append(value_data)
 
-                for elem_value in elem_param.findall('.//elementValue'):
-                    value_data = {
-                        'elementRef': elem_value.get('elementRef'),
-                        'value': elem_value.get('value')
-                    }
-                    elem_data['elementValues'].append(value_data)
+            comp_data['elementParameters'].append(elem_data)
 
-                comp_data['elementParameters'].append(elem_data)
+        # Parse `metadata`
+        for metadata in node.findall('.//metadata'):
+            meta_data = {
+                'connector': metadata.get('connector'),
+                'label': metadata.get('label'),
+                'name': metadata.get('name'),
+                'columns': []
+            }
 
-            for metadata in node.findall('.//metadata'):
-                meta_data = {
-                    'connector': metadata.get('connector'),
-                    'label': metadata.get('label'),
-                    'name': metadata.get('name'),
-                    'columns': []
+            for column in metadata.findall('.//column'):
+                column_data = {
+                    'comment': column.get('comment'),
+                    'key': column.get('key'),
+                    'length': column.get('length'),
+                    'name': column.get('name'),
+                    'nullable': column.get('nullable'),
+                    'pattern': column.get('pattern'),
+                    'precision': column.get('precision'),
+                    'sourceType': column.get('sourceType'),
+                    'type': column.get('type'),
+                    'usefulColumn': column.get('usefulColumn'),
+                    'originalLength': column.get('originalLength'),
+                    'defaultValue': column.get('defaultValue'),
+                    'additionalField': column.find('.//additionalField').get('value') if column.find('.//additionalField') else None,
+                    'additionalProperties': column.find('.//additionalProperties').get('value') if column.find('.//additionalProperties') else None
                 }
+                meta_data['columns'].append(column_data)
 
-                for column in metadata.findall('.//column'):
-                    column_data = {
-                        'comment': column.get('comment'),
-                        'key': column.get('key'),
-                        'length': column.get('length'),
-                        'name': column.get('name'),
-                        'nullable': column.get('nullable'),
-                        'pattern': column.get('pattern'),
-                        'precision': column.get('precision'),
-                        'sourceType': column.get('sourceType'),
-                        'type': column.get('type'),
-                        'usefulColumn': column.get('usefulColumn'),
-                        'originalLength': column.get('originalLength'),
-                        'defaultValue': column.get('defaultValue'),
-                        'additionalField': column.find('.//additionalField').get('value') if column.find('.//additionalField') else None,
-                        'additionalProperties': column.find('.//additionalProperties').get('value') if column.find('.//additionalProperties') else None
-                    }
-                    meta_data['columns'].append(column_data)
+            comp_data['metadata'].append(meta_data)
 
-                comp_data['metadata'].append(meta_data)
+        # Parse `nodeData` elements
+        for node_data in node.findall('.//nodeData'):
+            ui_propefties = node_data.find('.//uiPropefties')
+            var_tables = node_data.find('.//varTables')
+            node_data_info = {
+                'type': node_data.get('{http://www.w3.org/2001/XMLSchema-instance}type'),
+                'uiPropefties': {
+                    'shellMaximized': ui_propefties.get('shellMaximized') if ui_propefties is not None else None
+                },
+                'varTables': {
+                    'name': var_tables.get('name') if var_tables is not None else None,
+                    'sizeState': var_tables.get('sizeState') if var_tables is not None else None
+                },
+                'nodes': []
+            }
 
-            parsed_data.append(comp_data)
+            for nested_node in node_data.findall('.//nodes'):
+                nested_node_info = {
+                    'expression': nested_node.get('expression'),
+                    'name': nested_node.get('name'),
+                    'type': nested_node.get('type')
+                }
+                node_data_info['nodes'].append(nested_node_info)
 
-        return parsed_data
+            comp_data['nodeData'].append(node_data_info)
+
+        parsed_data.append(comp_data)
+
+    return parsed_data
+
 
     def _parse_contexts(self):
         """Parse `context` elements and store the data."""
