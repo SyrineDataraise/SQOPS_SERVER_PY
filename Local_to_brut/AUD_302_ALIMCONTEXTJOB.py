@@ -3,7 +3,6 @@ from config import Config  # Assuming Config class is defined in config.py
 from database import Database  # Assuming Database class is defined in database.py
 from XML_parse import XMLParser  # Importing the XMLParser class
 from typing import List, Tuple
-import csv
 
 # Configure logging
 logging.basicConfig(
