@@ -1,114 +1,95 @@
 import os
+import logging
+from typing import List, Tuple
+
 from config import Config  # Assuming Config class is defined in config.py
 from database import Database  # Assuming Database class is defined in database.py
 from XML_parse import XMLParser  # Importing the XMLParser class
-
-def main():
-    config_file = "configs/config.yaml"
-    config = Config(config_file)
-    items_directory = config.get_param('Directories', 'items_directory')
-
-    db = None
-
+# Configure logging
+logging.basicConfig(
+    filename='database_operations.log',
+    level=logging.DEBUG,  # Changed to DEBUG to capture all messages
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    filemode='w'  # Ensure the file is overwritten each time for clean logs
+)
+def AUD_303_ALIMNODE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]], batch_size=10):
     try:
-        # Retrieve JDBC parameters and create a Database instance
-        jdbc_params = config.get_jdbc_parameters()
-        print("JDBC Parameters:", jdbc_params)  # Print JDBC parameters to debug
-
-        db = Database(jdbc_params)
-        db.set_jdbc_parameters(jdbc_params)  # Set JDBC parameters if needed
-        db.connect_JDBC()  # Test the JDBC connection
-
         # Step 1: Get the execution date
         execution_date_query = config.get_param('queries', 'TRANSVERSE_QUERY_LASTEXECUTIONDATE')
         execution_date = db.get_execution_date(execution_date_query)
-        print("Execution Date:", execution_date)
+        logging.info(f"Execution Date: {execution_date}")
 
         # Step 2: Execute LOCAL_TO_DBBRUT_QUERY
         local_to_dbbrut_query = config.get_param('queries', 'LOCAL_TO_DBBRUT_QUERY')
-        print("Executing query:", local_to_dbbrut_query)  # Print the query before execution
+        logging.info(f"Executing query: {local_to_dbbrut_query}")
         local_to_dbbrut_query_results = db.execute_query(local_to_dbbrut_query)
-        print("local_to_dbbrut_query_results:", local_to_dbbrut_query_results)
+        logging.debug(f"local_to_dbbrut_query_results: {local_to_dbbrut_query_results}")
 
         # Step 3: Delete the output from aud_node based on the query results
-        for result in local_to_dbbrut_query_results:
-            project_name, job_name, _, _, _ = result  # Assuming result contains these fields in order
-            
-            # Prepare the conditions dictionary
-            conditions = {
-                'NameProject': project_name,
-                'NameJob': job_name
-            }
-            
-            db.delete_records('aud_node', **conditions)
-            print(f"Deleted records for PROJECT_NAME from aud_node: {project_name}, JOB_NAME: {job_name}")
+        aud_node_conditions_batch = [
+            {'NameProject': result[0], 'NameJob': result[1]}
+            for result in local_to_dbbrut_query_results
+        ]
+        if aud_node_conditions_batch:
+            db.delete_records_batch('aud_node', aud_node_conditions_batch)
 
         # Step 4: Execute aud_node query
         aud_node_query = config.get_param('queries', 'aud_node')
-        print("Executing query:", aud_node_query)  # Print the query before execution
+        logging.info(f"Executing query: {aud_node_query}")
         aud_node_results = db.execute_query(aud_node_query)
-        print("aud_node_results:", aud_node_results)
+        logging.debug(f"aud_node_results: {aud_node_results}")
 
         # Step 5: Delete the output from aud_contextjob based on the query results
-        for result in aud_node_results:
-            project_name, job_name = result
-            conditions = {
-                'NameProject': project_name,
-                'NameJob': job_name
-            }
-            db.delete_records('aud_contextjob', **conditions)
-            print(f"Deleted records for PROJECT_NAME from aud_contextjob: {project_name}, JOB_NAME: {job_name}")
+        aud_contextjob_conditions_batch = [
+            {'NameProject': result[0], 'NameJob': result[1]}
+            for result in aud_node_results
+        ]
+        if aud_contextjob_conditions_batch:
+            db.delete_records_batch('aud_contextjob', aud_contextjob_conditions_batch)
 
-        # Step 6: Loop over `.item` files in the items_directory and parse them
-        xml_parser = XMLParser("")
-        filenames = [f for f in os.listdir(items_directory) if f.endswith('.item')]
-        for filename in filenames:
-            project_name,job_name,parsed_data = xml_parser.loop_parse(filename, items_directory)
-            # Step 7: Insert parsed data into the `aud_element_node` table
+        # Step 6: Prepare data batch for insertion into `aud_node`
+        aud_node_data_batch = []
+        for project_name, job_name, parsed_data in parsed_files_data:
             for data in parsed_data['nodes']:
-                componentName = data['componentName']
-                componentVersion = data['componentVersion']
-                offsetLabelX = data['offsetLabelX']
-                offsetLabelY = data['offsetLabelY']
-                posX = data['posX']
-                posY = data['posY']
-                field = data['field']
-                name = data['name']
-                show = data['show']
-                value = data['value']
-                
-                # Adjust the value of `Componement_UniqueName` as needed, if it's derived from `componentName`
-                Componement_UniqueName = value if field == 'TEXT' and name == 'UNIQUE_NAME' else Componement_UniqueName
-                insert_query = config.get_param('insert_queries', 'aud_node')
-                params = (componentName, componentVersion, offsetLabelX, offsetLabelY, posX, posY, Componement_UniqueName, project_name, job_name, execution_date)
-                db.insert_data(insert_query, 'aud_node', params)
-                print(f"Inserted data for component: {data['componentName']} into aud_node")
-                
-        # Step 8: Execute NodeJoinElementnode
+                for elem_param in data['elementParameters']:
+                    componentName = data['componentName']
+                    componentVersion = data['componentVersion']
+                    offsetLabelX = data['offsetLabelX']
+                    offsetLabelY = data['offsetLabelY']
+                    posX = data['posX']
+                    posY = data['posY']
+                    field = elem_param['field']
+                    name = elem_param['name']
+                    show = elem_param['show']
+                    value = elem_param['value']
+
+                    # Adjust the value of `Componement_UniqueName` as needed
+                    Componement_UniqueName = value if field == 'TEXT' and name == 'UNIQUE_NAME' else None
+                    aud_node_data_batch.append((
+                        componentName, componentVersion, offsetLabelX, offsetLabelY, posX, posY, Componement_UniqueName, project_name, job_name, execution_date
+                    ))
+
+        if aud_node_data_batch:
+            insert_query = config.get_param('insert_queries', 'aud_node')
+            db.insert_data_batch(insert_query, 'aud_node', aud_node_data_batch)
+
+        # Step 7: Execute NodeJoinElementnode
         NodeJoinElementnode_query = config.get_param('queries', 'NodeJoinElementnode')
-        print("Executing query:", NodeJoinElementnode_query)  # Print the query before execution
+        logging.info(f"Executing query: {NodeJoinElementnode_query}")
         NodeJoinElementnode_results = db.execute_query(NodeJoinElementnode_query)
-        print("NodeJoinElementnode_results:", NodeJoinElementnode_results)
-        
-        # Step 9: Delete the output from aud_node based on the query results
-        for result in NodeJoinElementnode_results:
-            project_name, job_name, aud_componentValue = result  # Adjusted to three fields
-            
-            # Prepare the conditions dictionary
-            conditions = {
-                'NameProject': project_name,
-                'NameJob': job_name,
-                'aud_componentValue': aud_componentValue
-            }
-            
-            db.delete_records('aud_node', **conditions)
-            print(f"Deleted records for PROJECT_NAME from aud_node: {project_name}, JOB_NAME: {job_name}, COMPONENT_VALUE: {aud_componentValue}")
+        logging.debug(f"NodeJoinElementnode_results: {NodeJoinElementnode_results}")
+
+        # Step 8: Delete the output from aud_node based on the query results
+        aud_node_delete_conditions_batch = [
+            {'NameProject': result[0], 'NameJob': result[1], 'aud_componentValue': result[2]}
+            for result in NodeJoinElementnode_results
+        ]
+        if aud_node_delete_conditions_batch:
+            db.delete_records_batch('aud_node', aud_node_delete_conditions_batch)
 
     except Exception as e:
-        print(f"An error occurred: {str(e)}")
+        logging.error(f"An error occurred: {str(e)}", exc_info=True)
     finally:
         if db:
             db.close()  # Ensure the database connection is closed
-
-if __name__ == "__main__":
-    main()
+            logging.info("Database connection closed.")
