@@ -12,7 +12,7 @@ logging.basicConfig(
     filemode='w'  # Ensure the file is overwritten each time for clean logs
 )
 
-def AUD_305_ALIMVARTABLE_XML(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]], batch_size=100):
+def AUD_305_ALIMVARTABLE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]], batch_size=100):
     """
     Perform operations including retrieving JDBC parameters, executing queries,
     deleting records, and inserting data in batches.
@@ -88,7 +88,7 @@ def AUD_305_ALIMVARTABLE_XML(config: Config, db: Database, parsed_files_data: Li
                     name = elem_param['name']
                     show = elem_param['show']
                     value = elem_param['value']
-                    Componement_UniqueName = value if field == 'TEXT' and name == 'UNIQUE_NAME' else None
+                    Componement_UniqueName = value if field == 'TEXT' and name == 'UNIQUE_NAME' else Componement_UniqueName
                     logging.debug(f"Element parameter - field: {field}, name: {name}, value: {value}")
 
                 for nodeData in data['nodeData']:
@@ -97,11 +97,11 @@ def AUD_305_ALIMVARTABLE_XML(config: Config, db: Database, parsed_files_data: Li
                     aud_sizeState = nodeData['varTables'].get('sizeState', '')
                     logging.debug(f"Node data - shellMaximized: {shellMaximized}, aud_Var: {aud_Var}, aud_sizeState: {aud_sizeState}")
 
-                    for nodes in nodeData['nodes']:
-                        aud_nameVar = nodes.get('name', '')
-                        aud_expressionVar = nodes.get('expression', '')
-                        aud_type = nodes.get('type', '')
-                        logging.debug(f"Node - nameVar: {aud_nameVar}, expressionVar: {aud_expressionVar}, type: {aud_type}")
+                    for mapperTableEntries in nodeData['mapperTableEntries']:
+                        aud_nameVar = mapperTableEntries.get('name', '')
+                        aud_expressionVar = mapperTableEntries.get('expression', '')
+                        aud_type = mapperTableEntries.get('type', '')
+                        logging.debug(f"mapperTableEntries - nameVar: {aud_nameVar}, expressionVar: {aud_expressionVar}, type: {aud_type}")
 
                         params = (
                             componentName, Componement_UniqueName, aud_Var, aud_sizeState, 
