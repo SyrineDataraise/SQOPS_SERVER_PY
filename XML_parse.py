@@ -1,5 +1,6 @@
 import xml.etree.ElementTree as ET
 import os
+import logging
 
 
 class XMLParser:
@@ -144,24 +145,36 @@ class XMLParser:
         return self._parse_file()
 
     def loop_parse(self, items_directory):
-        parsed_files_data = []
-        filenames = [f for f in os.listdir(items_directory) if f.endswith('.item')]
-        for filename in filenames:
-            file_path = os.path.join(items_directory, filename)
-            parts = filename.split('.', 1)  # Split at the first dot
-            project_name = parts[0]
-            job_name = parts[1].replace('.item', '') if len(parts) > 1 else None
-            print("parts:", parts)
-            print("project_name:", project_name)
-            print("job_name:", job_name)
-            print(f"Parsing file: {file_path}")
+            """
+            Parses XML files from the specified directory and extracts relevant data.
 
-            # Update the file_path for the current file and parse it
-            self.file_path = file_path
-            self.tree = ET.parse(file_path)
-            self.root = self.tree.getroot()
-            parsed_data = self._parse_file()
-            print('parsed data:', parsed_data)
-            parsed_files_data.append((project_name, job_name, parsed_data))
+            Args:
+                items_directory (str): The directory containing XML files to be parsed.
 
-        return parsed_files_data
+            Returns:
+                list of tuples: A list where each tuple contains (project_name, job_name, parsed_data).
+            """
+            parsed_files_data = []
+            for root, dirs, files in os.walk(items_directory):
+                for filename in files:
+                    if filename.endswith('.item'):
+                        file_path = os.path.join(root, filename)  # Use 'root' to construct the full file path
+                        logging.info(f"Processing file: {file_path}")
+                        try:
+                            self.tree = ET.parse(file_path)
+                            self.root = self.tree.getroot()
+                            parsed_data = self._parse_file()
+                            # Extract project_name and job_name
+                            parts = filename.split('.', 1)
+                            project_name = parts[0]
+                            job_name = parts[1].replace('.item', '') if len(parts) > 1 else None
+                            parsed_files_data.append((project_name, job_name, parsed_data))
+                        except FileNotFoundError:
+                            logging.error(f"File not found: {file_path}")
+                        except ET.ParseError:
+                            logging.error(f"Error parsing file: {file_path}")
+                        except Exception as e:
+                            logging.error(f"Unexpected error with file {file_path}: {e}", exc_info=True)
+            return parsed_files_data
+
+
