@@ -51,7 +51,7 @@ insert_queries:
   aud_inputtable : "INSERT INTO aud_inputtable (aud_componentName, aud_lookupMode, aud_matchingMode, aud_nameRowInput, aud_sizeState, aud_nameColumnInput, aud_type, aud_nullable, aud_expressionJoin, aud_operator, aud_activateExpressionFilterInput, aud_expressionFilterInput, aud_componentValue, aud_activateCondensedTool, aud_innerJoin, persistent, NameProject, NameJob, exec_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE aud_componentName = VALUES(aud_componentName), aud_lookupMode = VALUES(aud_lookupMode), aud_matchingMode = VALUES(aud_matchingMode), aud_nameRowInput = VALUES(aud_nameRowInput), aud_sizeState = VALUES(aud_sizeState), aud_nameColumnInput = VALUES(aud_nameColumnInput), aud_type = VALUES(aud_type), aud_nullable = VALUES(aud_nullable), aud_expressionJoin = VALUES(aud_expressionJoin), aud_operator = VALUES(aud_operator), aud_activateExpressionFilterInput = VALUES(aud_activateExpressionFilterInput), aud_expressionFilterInput = VALUES(aud_expressionFilterInput), aud_activateCondensedTool = VALUES(aud_activateCondensedTool), aud_innerJoin = VALUES(aud_innerJoin), persistent = VALUES(persistent), exec_date = VALUES(exec_date)"
   aud_connectioncomponent : "INSERT INTO aud_connectioncomponent (aud_connectorName, aud_labelRow, aud_lineStyle, aud_metaname, aud_offsetLabelX, aud_offsetLabelY, aud_sourceComponent, aud_targetComponent, aud_outputId, aud_field, aud_name, aud_value, aud_show, NameProject, NameJob, exec_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE aud_connectorName = VALUES(aud_connectorName), aud_labelRow = VALUES(aud_labelRow), aud_lineStyle = VALUES(aud_lineStyle), aud_metaname = VALUES(aud_metaname), aud_offsetLabelX = VALUES(aud_offsetLabelX), aud_offsetLabelY = VALUES(aud_offsetLabelY), aud_outputId = VALUES(aud_outputId), aud_field = VALUES(aud_field), aud_name = VALUES(aud_name), aud_value = VALUES(aud_value), aud_show = VALUES(aud_show), exec_date = VALUES(exec_date)"
   aud_elementparameter : "INSERT INTO aud_elementparameter (aud_field, aud_name, aud_show, aud_value, NameProject, NameJob, exec_date) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE aud_field = VALUES(aud_field), aud_show = VALUES(aud_show), aud_value = VALUES(aud_value), exec_date = VALUES(exec_date)"
-  aud_routines : "INSERT INTO audit_routines (PROJECT_NAME, ROUTINE_NAME, ROUTINE_VERSION, Talend_Version, ROUTINE_PATH, label) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE ROUTINE_VERSION = VALUES(ROUTINE_VERSION), Talend_Version = VALUES(Talend_Version), ROUTINE_PATH = VALUES(ROUTINE_PATH), label = VALUES(label)"
+  aud_routines : "INSERT INTO aud_routines (aud_idRoutine, aud_nameRoutine, NameProject, NameJob, exec_date) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE aud_nameRoutine = VALUES(aud_nameRoutine), exec_date = VALUES(exec_date)"
 
 
 
@@ -63,7 +63,7 @@ insert_queries:
 
 
 Directories:
-  items_directory: "C:/Users/sonia/Desktop/TOS_ESB/Studio/workspace/SERVER/process/ANALYSE/LOCAL_TO_BRUT"
+  items_directory: "C:/Users/sonia/Downloads/KEOLISTOURS/KEOLISTOURS/process"
 
 database:
   type: "mysql"  # Example database type

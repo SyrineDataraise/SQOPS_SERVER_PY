@@ -244,7 +244,7 @@ class XMLParser:
             context_data.append(context_entry)
 
         return context_data
-
+    
     def _parse_parameters(self):
         """Parse `parameters` elements and store the data."""
         parameters_data = []
@@ -256,19 +256,39 @@ class XMLParser:
                     'name': elementParameter.get('name'),
                     'show': elementParameter.get('show'),
                     'value': elementParameter.get('value'),
-                    'elementValues': []
+                    'elementValues': [],
+                    'routinesParameters': []  # Added field to store routinesParameter data
                 }
 
+                # Parse elementValues
                 for elementValue in elementParameter.findall('.//elementValue'):
                     value_data = {
                         'elementRef': elementValue.get('elementRef'),
                         'value': elementValue.get('value')
                     }
                     param_data['elementValues'].append(value_data)
+                
+                # Log number of elementValues parsed
+                logging.debug(f"Parsed {len(param_data['elementValues'])} elementValues for parameter: {param_data['name']}")
+
+                # Parse routinesParameter elements
+                for routinesParameter in parameters.findall('.//routinesParameter'):
+                    routines_param_data = {
+                        'id': routinesParameter.get('id'),
+                        'name': routinesParameter.get('name')
+                    }
+                    param_data['routinesParameters'].append(routines_param_data)
+                
+                # Log number of routinesParameters parsed
+                logging.debug(f"Parsed {len(param_data['routinesParameters'])} routinesParameters for parameter: {param_data['name']}")
 
                 parameters_data.append(param_data)
 
+        # Log total parameters parsed
+        logging.debug(f"Total parameters parsed: {len(parameters_data)}")
+
         return parameters_data
+
     
 
 
