@@ -13,15 +13,73 @@ class XMLParser:
         nodes_data = self._parse_nodes()
         contexts_data = self._parse_contexts()
         parameters_data = self._parse_parameters()
+        connection_data = self._parse_connection()
 
         # Return combined data as a list of dictionaries
         return {
             'nodes': nodes_data,
             'contexts': contexts_data,
-            'parameters': parameters_data
+            'parameters': parameters_data,
+            'connections' : connection_data
+        }
+    def _parse_file(self):
+        """Parse the XML file and return a list of data from nodes, contexts, parameters, and connections."""
+        nodes_data = self._parse_nodes()
+        contexts_data = self._parse_contexts()
+        parameters_data = self._parse_parameters()
+        connection_data = self._parse_connection()
+
+        # Return combined data as a dictionary
+        return {
+            'nodes': nodes_data,
+            'contexts': contexts_data,
+            'parameters': parameters_data,
+            'connections': connection_data
         }
 
+    def _parse_connection(self):
+        # Parse `connection` elements
+        data = []
+
+        for connection in self.root.findall('.//connection'):
+            connection_data = {
+                'connectorName': connection.get('connectorName'),
+                'label': connection.get('label'),
+                'lineStyle': connection.get('lineStyle'),
+                'metaname': connection.get('metaname'),
+                'offsetLabelX': connection.get('offsetLabelX'),
+                'offsetLabelY': connection.get('offsetLabelY'),
+                'source': connection.get('source'),
+                'target': connection.get('target'),
+                'r_outputId': connection.get('r_outputId'),
+                'elementParameters': []
+            }
+
+            for elem_param in connection.findall('.//elementParameter'):
+                elem_param_data = {
+                    'field': elem_param.get('field'),
+                    'name': elem_param.get('name'),
+                    'value': elem_param.get('value'),
+                    'show': elem_param.get('show'),
+                    'elementValues': []
+                }
+
+                for elem_value in elem_param.findall('.//elementValue'):
+                    elem_value_data = {
+                        'elementRef': elem_value.get('elementRef'),
+                        'value': elem_value.get('value')
+                    }
+                    elem_param_data['elementValues'].append(elem_value_data)
+
+                connection_data['elementParameters'].append(elem_param_data)
+
+            data.append(connection_data)
+
+        return data
+
+            
     def _parse_nodes(self):
+
         """Parse and return data from `node` elements, including additional parameters."""
         parsed_data = []
 
@@ -35,7 +93,8 @@ class XMLParser:
                 'posY': node.get('posY'),
                 'elementParameters': [],
                 'metadata': [],
-                'nodeData': []
+                'nodeData': [],
+                'connection' : []
             }
 
             # Parse `elementParameters`
@@ -128,7 +187,7 @@ class XMLParser:
                     }
                 }
 
-                for mapper_entry in node_data.findall('.//mapperTableEntries'):
+                for mapper_entry in node_data.findall('.//inputTables/mapperTableEntries'):
                     mapper_entry_info = {
                         'expression': mapper_entry.get('expression'),
                         'name': mapper_entry.get('name'),
@@ -148,6 +207,9 @@ class XMLParser:
                     node_data_info['outputTables']['mapperTableEntries'].append(mapper_entry_info)
 
                 comp_data['nodeData'].append(node_data_info)
+
+           
+
 
             parsed_data.append(comp_data)
 
@@ -207,6 +269,11 @@ class XMLParser:
                 parameters_data.append(param_data)
 
         return parameters_data
+    
+
+
+
+
 
     def get_data(self):
         """Return all parsed data from the XML file."""
