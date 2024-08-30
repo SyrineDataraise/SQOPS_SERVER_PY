@@ -104,7 +104,7 @@ class XMLParser:
                     'name': elem_param.get('name'),
                     'show': elem_param.get('show'),
                     'value': elem_param.get('value'),
-                    'elementValues': []
+                    'elementValue': []
                 }
 
                 for elem_value in elem_param.findall('.//elementValue'):
@@ -112,7 +112,7 @@ class XMLParser:
                         'elementRef': elem_value.get('elementRef'),
                         'value': elem_value.get('value')
                     }
-                    elem_data['elementValues'].append(value_data)
+                    elem_data['elementValue'].append(value_data)
 
                 comp_data['elementParameters'].append(elem_data)
 
@@ -268,8 +268,6 @@ class XMLParser:
                     }
                     param_data['elementValues'].append(value_data)
                 
-                # Log number of elementValues parsed
-                logging.debug(f"Parsed {len(param_data['elementValues'])} elementValues for parameter: {param_data['name']}")
 
                 # Parse routinesParameter elements
                 for routinesParameter in parameters.findall('.//routinesParameter'):
@@ -279,8 +277,7 @@ class XMLParser:
                     }
                     param_data['routinesParameters'].append(routines_param_data)
                 
-                # Log number of routinesParameters parsed
-                logging.debug(f"Parsed {len(param_data['routinesParameters'])} routinesParameters for parameter: {param_data['name']}")
+
 
                 parameters_data.append(param_data)
 

@@ -33,7 +33,7 @@ queries:
   aud_elementparameter : "select distinct namejob, nameproject from aud_elementparameter where NameJob not in (select job_name from audit_jobs)"
   aud_routines : "select distinct namejob, nameproject from aud_routines where NameJob not in (select job_name from audit_jobs)"
   aud_library : "select distinct namejob, nameproject from aud_library where NameJob not in (select job_name from audit_jobs)"
-  elementvaluenode : "select distinct namejob, nameproject from aud_elementvaluenode where NameJob not in (select job_name from audit_jobs)"
+  aud_elementvaluenode : "select distinct namejob, nameproject from aud_elementvaluenode where NameJob not in (select job_name from audit_jobs)"
   elementvaluenodeJoinelementnode : "select distinct N.NameProject, N.NameJob, N.aud_componentValue from aud_elementvaluenode N inner join aud_elementnode E on (N.namejob = E.namejob and N.nameproject = E.nameproject and N.aud_componentValue = E.aud_ComponementValue) where E.aud_nameElementNode = 'ACTIVATE' and E.aud_valueElementNode = 'false' and E.exec_date = (select max(lastexecutiondate) from executiondate)"
 
 
@@ -53,7 +53,7 @@ insert_queries:
   aud_elementparameter : "INSERT INTO aud_elementparameter (aud_field, aud_name, aud_show, aud_value, NameProject, NameJob, exec_date) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE aud_field = VALUES(aud_field), aud_show = VALUES(aud_show), aud_value = VALUES(aud_value), exec_date = VALUES(exec_date)"
   aud_routines : "INSERT INTO aud_routines (aud_idRoutine, aud_nameRoutine, NameProject, NameJob, exec_date) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE aud_nameRoutine = VALUES(aud_nameRoutine), exec_date = VALUES(exec_date)"
   aud_library : "INSERT INTO aud_library (aud_componentName, aud_typeInput, aud_libraryImport, NameProject, NameJob, exec_date) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE aud_typeInput = VALUES(aud_typeInput), aud_libraryImport = VALUES(aud_libraryImport), exec_date = VALUES(exec_date)"
-  elementvaluenode : INSERT INTO aud_elementvaluenode (aud_componentName, aud_posX, aud_posY, aud_typeField, aud_elementRef, aud_valueElementRef, aud_id, aud_columnName, aud_componentValue, NameProject, NameJob, exec_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE aud_posX = VALUES(aud_posX), aud_posY = VALUES(aud_posY), aud_valueElementRef = VALUES(aud_valueElementRef), exec_date = VALUES(exec_date)"
+  aud_elementvaluenode : "INSERT INTO aud_elementvaluenode (aud_componentName, aud_posX, aud_posY, aud_typeField, aud_elementRef, aud_valueElementRef, aud_id, aud_columnName, aud_componentValue, NameProject, NameJob, exec_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE aud_componentName= VALUES(aud_componentName), aud_posX = VALUES(aud_posX), aud_posY = VALUES(aud_posY), aud_valueElementRef = VALUES(aud_valueElementRef), exec_date = VALUES(exec_date)"
 
 
 

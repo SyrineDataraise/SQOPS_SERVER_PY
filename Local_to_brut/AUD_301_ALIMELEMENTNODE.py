@@ -12,7 +12,7 @@ logging.basicConfig(
     filemode='w'  # Ensure the file is overwritten each time for clean logs
 )
 
-def AUD_301_ALIMELEMENTNODE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]]):
+def AUD_301_ALIMELEMENTNODE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],batch_size=100):
     """
     Perform operations including retrieving JDBC parameters, executing queries,
     deleting records, and inserting data in batches.
@@ -75,7 +75,6 @@ def AUD_301_ALIMELEMENTNODE(config: Config, db: Database, parsed_files_data: Lis
         # Step 6: Insert parsed data into the `aud_elementnode` table in batches
         insert_query = config.get_param('insert_queries', 'aud_elementnode')
         batch_insert = []
-        insert_batch_size = 100  # You can adjust this batch size as needed
 
         for project_name, job_name, parsed_data in parsed_files_data:
             for data in parsed_data['nodes']:
