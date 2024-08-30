@@ -1,10 +1,10 @@
-import os
 import logging
 from typing import List, Tuple
 
 from config import Config  # Assuming Config class is defined in config.py
 from database import Database  # Assuming Database class is defined in database.py
 from XML_parse import XMLParser  # Importing the XMLParser class
+
 # Configure logging
 logging.basicConfig(
     filename='database_operations.log',
@@ -12,7 +12,8 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s',
     filemode='w'  # Ensure the file is overwritten each time for clean logs
 )
-def AUD_303_ALIMNODE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]], batch_size=10):
+
+def AUD_303_ALIMNODE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]], batch_size=100):
     try:
         # Step 1: Get the execution date
         execution_date_query = config.get_param('queries', 'TRANSVERSE_QUERY_LASTEXECUTIONDATE')
@@ -47,8 +48,9 @@ def AUD_303_ALIMNODE(config: Config, db: Database, parsed_files_data: List[Tuple
         if aud_contextjob_conditions_batch:
             db.delete_records_batch('aud_contextjob', aud_contextjob_conditions_batch)
 
-        # Step 6: Prepare data batch for insertion into `aud_node`
-        aud_node_data_batch = []
+        # Step 6: Prepare data batch for insertion into `aud_elementnode`
+        insert_query = config.get_param('insert_queries', 'aud_elementnode')
+        batch_insert = []
         for project_name, job_name, parsed_data in parsed_files_data:
             for data in parsed_data['nodes']:
                 for elem_param in data['elementParameters']:
@@ -65,15 +67,25 @@ def AUD_303_ALIMNODE(config: Config, db: Database, parsed_files_data: List[Tuple
 
                     # Adjust the value of `Componement_UniqueName` as needed
                     Componement_UniqueName = value if field == 'TEXT' and name == 'UNIQUE_NAME' else None
-                    aud_node_data_batch.append((
-                        componentName, componentVersion, offsetLabelX, offsetLabelY, posX, posY, Componement_UniqueName, project_name, job_name, execution_date
-                    ))
 
-        if aud_node_data_batch:
-            insert_query = config.get_param('insert_queries', 'aud_node')
-            db.insert_data_batch(insert_query, 'aud_node', aud_node_data_batch)
+                    params = (
+                        componentName, componentVersion, offsetLabelX, offsetLabelY, posX, posY,
+                        Componement_UniqueName, project_name, job_name, execution_date
+                    )
 
-        # Step 7: Execute NodeJoinElementnode
+                    batch_insert.append(params)
+
+                    if len(batch_insert) >= batch_size:
+                        db.insert_data_batch(insert_query, 'aud_elementnode', batch_insert)
+                        logging.info(f"Inserted batch of data into aud_elementnode: {len(batch_insert)} rows")
+                        batch_insert.clear()
+
+        # Insert remaining data in the batch
+        if batch_insert:
+            db.insert_data_batch(insert_query, 'aud_elementnode', batch_insert)
+            logging.info(f"Inserted remaining batch of data into aud_elementnode: {len(batch_insert)} rows")
+
+        # Step 7: Execute NodeJoinElementnode query
         NodeJoinElementnode_query = config.get_param('queries', 'NodeJoinElementnode')
         logging.info(f"Executing query: {NodeJoinElementnode_query}")
         NodeJoinElementnode_results = db.execute_query(NodeJoinElementnode_query)
