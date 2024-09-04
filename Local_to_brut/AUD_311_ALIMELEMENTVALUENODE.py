@@ -15,6 +15,10 @@ logging.basicConfig(
 
 def AUD_311_ALIMELEMENTVALUENODE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]], batch_size=100):
     try:
+        # Initialize variables
+        aud_elementRef = ""
+        aud_valueElementRef = ""
+        aud_columnName = ""
         # Step 1: Get the execution date
         execution_date_query = config.get_param('queries', 'TRANSVERSE_QUERY_LASTEXECUTIONDATE')
         exec_date = db.get_execution_date(execution_date_query)
@@ -67,12 +71,10 @@ def AUD_311_ALIMELEMENTVALUENODE(config: Config, db: Database, parsed_files_data
                     show = elem_param['show']
                     value = elem_param['value']
                    
-                    # Initialize variables
-                    aud_elementRef = ""
-                    aud_valueElementRef = ""
-                    aud_columnName = ""
+
 
                     for elemValue in elem_param['elementValue']:
+
                         aud_columnName = elemValue['value'].replace("\"", "")
                         aud_elementRef = elemValue['elementRef']
                         aud_valueElementRef = elemValue['value']
@@ -99,19 +101,19 @@ def AUD_311_ALIMELEMENTVALUENODE(config: Config, db: Database, parsed_files_data
             db.insert_data_batch(insert_query, 'aud_elementvaluenode', batch_insert)
             logging.info(f"Inserted remaining batch of data into aud_elementvaluenode: {len(batch_insert)} rows")
 
-        # Step 7: Execute NodeJoinElementnode query
-        # NodeJoinElementnode_query = config.get_param('queries', 'NodeJoinElementnode')
-        # logging.info(f"Executing query: {NodeJoinElementnode_query}")
-        # NodeJoinElementnode_results = db.execute_query(NodeJoinElementnode_query)
-        # logging.debug(f"NodeJoinElementnode_results: {NodeJoinElementnode_results}")
+        # Step 7: Execute elementvaluenodeJoinelementnode query
+        elementvaluenodeJoinelementnode_query = config.get_param('queries', 'elementvaluenodeJoinelementnode')
+        logging.info(f"Executing query: {elementvaluenodeJoinelementnode_query}")
+        elementvaluenodeJoinelementnode_results = db.execute_query(elementvaluenodeJoinelementnode_query)
+        logging.debug(f"elementvaluenodeJoinelementnode_results: {elementvaluenodeJoinelementnode_results}")
 
-        # # Step 8: Delete the output from aud_elementvaluenode based on the query results
-        # aud_elementvaluenode_delete_conditions_batch = [
-        #     {'NameProject': result[0], 'NameJob': result[1], 'aud_componentValue': result[2]}
-        #     for result in NodeJoinElementnode_results
-        # ]
-        # if aud_elementvaluenode_delete_conditions_batch:
-        #     db.delete_records_batch('aud_elementvaluenode', aud_elementvaluenode_delete_conditions_batch)
+        # Step 8: Delete the output from aud_elementvaluenode based on the query results
+        aud_elementvaluenode_delete_conditions_batch = [
+            {'NameProject': result[0], 'NameJob': result[1], 'aud_componentValue': result[2]}
+            for result in elementvaluenodeJoinelementnode_results
+        ]
+        if aud_elementvaluenode_delete_conditions_batch:
+            db.delete_records_batch('aud_elementvaluenode', aud_elementvaluenode_delete_conditions_batch)
 
     except Exception as e:
         logging.error(f"An error occurred: {str(e)}", exc_info=True)

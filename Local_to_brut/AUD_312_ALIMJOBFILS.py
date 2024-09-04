@@ -35,6 +35,7 @@ def AUD_301_ALIMELEMENTNODE(config: Config, db: Database, parsed_files_data: Lis
         logging.debug(f"local_to_dbbrut_query_results: {local_to_dbbrut_query_results}")
 
         # Step 3: Delete records from aud_elementvaluenode in batches
+      
         batch_delete_conditions = []
 
         for result in local_to_dbbrut_query_results:
@@ -50,29 +51,29 @@ def AUD_301_ALIMELEMENTNODE(config: Config, db: Database, parsed_files_data: Lis
             db.delete_records_batch('aud_elementvaluenode', batch_delete_conditions)
             logging.info(f"Batch deleted remaining records from aud_elementvaluenode: {len(batch_delete_conditions)} rows")
 
-        # Step 4: Execute aud_elementnode query
-        aud_elementnode_query = config.get_param('queries', 'aud_elementnode')
-        logging.info(f"Executing query: {aud_elementnode_query}")
-        aud_elementnode_results = db.execute_query(aud_elementnode_query)
-        logging.debug(f"aud_elementnode_results: {aud_elementnode_results}")
+        # Step 4: Execute aud_job_fils query
+        aud_job_fils_query = config.get_param('queries', 'aud_job_fils')
+        logging.info(f"Executing query: {aud_job_fils_query}")
+        aud_job_fils_results = db.execute_query(aud_job_fils_query)
+        logging.debug(f"aud_job_fils_results: {aud_job_fils_results}")
 
-        # Step 5: Delete records from aud_elementnode in batches
+        # Step 5: Delete records from aud_job_fils in batches
         batch_delete_conditions = []
-        for result in aud_elementnode_results:
+        for result in aud_job_fils_results:
             project_name, job_name = result
             batch_delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(batch_delete_conditions) >= batch_size:
-                db.delete_records_batch('aud_elementnode', batch_delete_conditions)
-                logging.info(f"Batch deleted records from aud_elementnode: {len(batch_delete_conditions)} rows")
+                db.delete_records_batch('aud_job_fils', batch_delete_conditions)
+                logging.info(f"Batch deleted records from aud_job_fils: {len(batch_delete_conditions)} rows")
                 batch_delete_conditions.clear()
 
         # Delete remaining records
         if batch_delete_conditions:
-            db.delete_records_batch('aud_elementnode', batch_delete_conditions)
-            logging.info(f"Batch deleted remaining records from aud_elementnode: {len(batch_delete_conditions)} rows")
+            db.delete_records_batch('aud_job_fils', batch_delete_conditions)
+            logging.info(f"Batch deleted remaining records from aud_job_fils: {len(batch_delete_conditions)} rows")
 
-        # Step 6: Insert parsed data into the `aud_elementnode` table in batches
-        insert_query = config.get_param('insert_queries', 'aud_elementnode')
+        # Step 6: Insert parsed data into the `aud_job_fils` table in batches
+        insert_query = config.get_param('insert_queries', 'aud_job_fils')
         batch_insert = []
 
         for project_name, job_name, parsed_data in parsed_files_data:
@@ -90,14 +91,14 @@ def AUD_301_ALIMELEMENTNODE(config: Config, db: Database, parsed_files_data: Lis
                     batch_insert.append(params)
 
                     if len(batch_insert) >= insert_batch_size:
-                        db.insert_data_batch(insert_query, 'aud_elementnode', batch_insert)
-                        logging.info(f"Inserted batch of data into aud_elementnode: {len(batch_insert)} rows")
+                        db.insert_data_batch(insert_query, 'aud_job_fils', batch_insert)
+                        logging.info(f"Inserted batch of data into aud_job_fils: {len(batch_insert)} rows")
                         batch_insert.clear()
 
         # Insert remaining data in the batch
         if batch_insert:
-            db.insert_data_batch(insert_query, 'aud_elementnode', batch_insert)
-            logging.info(f"Inserted remaining batch of data into aud_elementnode: {len(batch_insert)} rows")
+            db.insert_data_batch(insert_query, 'aud_job_fils', batch_insert)
+            logging.info(f"Inserted remaining batch of data into aud_job_fils: {len(batch_insert)} rows")
 
     except Exception as e:
         logging.error(f"An error occurred: {e}", exc_info=True)
