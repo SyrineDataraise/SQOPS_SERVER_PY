@@ -87,7 +87,7 @@ def AUD_301_ALIMELEMENTNODE(config: Config, db: Database, parsed_files_data: Lis
 
                     # Adjust the value of `Componement_UniqueName` as needed
                     Componement_UniqueName = value if field == 'TEXT' and name == 'UNIQUE_NAME' else None
-                    params = (componentName, field, name, show, value, Componement_UniqueName, project_name, job_name, execution_date)
+                    params = ( project_name, job_name, componentName,Componement_UniqueName, field, name, show, value,  execution_date)
                     batch_insert.append(params)
 
                     if len(batch_insert) >= insert_batch_size:
