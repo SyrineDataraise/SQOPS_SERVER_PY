@@ -12,7 +12,7 @@ logging.basicConfig(
     filemode='w'  # Ensure the file is overwritten each time for clean logs
 )
 
-def AUD_301_ALIMELEMENTNODE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],batch_size=100):
+def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],batch_size=100):
     """
     Perform operations including retrieving JDBC parameters, executing queries,
     deleting records, and inserting data in batches.
@@ -79,26 +79,27 @@ def AUD_301_ALIMELEMENTNODE(config: Config, db: Database, parsed_files_data: Lis
         for project_name, job_name, parsed_data in parsed_files_data:
             for data in parsed_data['nodes']:
                 for elem_param in data['elementParameters']:
-                    componentName = data['componentName']
-                    field = elem_param['field']
-                    name = elem_param['name']
-                    show = elem_param['show']
-                    value = elem_param['value']
+                    if data['componentName'] == "RunJob":
+                        componentName = data['componentName']
+                        field = elem_param['field']
+                        name = elem_param['name']
+                        show = elem_param['show']
+                        value = elem_param['value']
 
-                    # Adjust the value of `Componement_UniqueName` as needed
-                    Componement_UniqueName = value if field == 'TEXT' and name == 'UNIQUE_NAME' else None
-                    params = ( project_name, job_name, componentName,Componement_UniqueName, field, name, show, value,  execution_date)
-                    batch_insert.append(params)
+                        # Adjust the value of `Componement_UniqueName` as needed
+                        Componement_UniqueName = value if field == 'TEXT' and name == 'UNIQUE_NAME' else None
+                        params = ( project_name, job_name, componentName,Componement_UniqueName, field, name, show, value,  execution_date)
+                        batch_insert.append(params)
 
-                    if len(batch_insert) >= insert_batch_size:
-                        db.insert_data_batch(insert_query, 'aud_job_fils', batch_insert)
-                        logging.info(f"Inserted batch of data into aud_job_fils: {len(batch_insert)} rows")
-                        batch_insert.clear()
+                        if len(batch_insert) >= batch_size:
+                            db.insert_data_batch(insert_query, 'aud_job_fils', batch_insert)
+                            logging.info(f"Inserted batch of data into aud_job_fils: {len(batch_insert)} rows")
+                            batch_insert.clear()
 
-        # Insert remaining data in the batch
-        if batch_insert:
-            db.insert_data_batch(insert_query, 'aud_job_fils', batch_insert)
-            logging.info(f"Inserted remaining batch of data into aud_job_fils: {len(batch_insert)} rows")
+            # Insert remaining data in the batch
+            if batch_insert:
+                db.insert_data_batch(insert_query, 'aud_job_fils', batch_insert)
+                logging.info(f"Inserted remaining batch of data into aud_job_fils: {len(batch_insert)} rows")
 
     except Exception as e:
         logging.error(f"An error occurred: {e}", exc_info=True)

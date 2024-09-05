@@ -35,6 +35,10 @@ queries:
   aud_library : "select distinct namejob, nameproject from aud_library where NameJob not in (select job_name from audit_jobs)"
   aud_elementvaluenode : "select distinct namejob, nameproject from aud_elementvaluenode where NameJob not in (select job_name from audit_jobs)"
   elementvaluenodeJoinelementnode : "select distinct N.NameProject, N.NameJob, N.aud_componentValue from aud_elementvaluenode N inner join aud_elementnode E on (N.namejob = E.namejob and N.nameproject = E.nameproject and N.aud_componentValue = E.aud_ComponementValue) where E.aud_nameElementNode = 'ACTIVATE' and E.aud_valueElementNode = 'false' and E.exec_date = (select max(lastexecutiondate) from executiondate)"
+  audit_jobs_delta : "select distinct PROJECT_NAME,JOB_NAME,JOB_PATH,JOB_VERSION,Talend_Version from  audit_jobs_delta where talend_version is not null"
+  aud_job_fils : "select distinct aud_namejob, aud_nameproject from aud_job_fils where aud_NameJob not in (select job_name from audit_jobs)"
+
+
 
 
 insert_queries:
