@@ -28,13 +28,15 @@ class XMLParser:
         contexts_data = self._parse_contexts()
         parameters_data = self._parse_parameters()
         connection_data = self._parse_connection()
+        subjobs_data = self._parse_subjob()
 
         # Return combined data as a dictionary
         return {
             'nodes': nodes_data,
             'contexts': contexts_data,
             'parameters': parameters_data,
-            'connections': connection_data
+            'connections': connection_data,
+            'subjobs' : subjobs_data
         }
 
     def _parse_connection(self):
@@ -76,6 +78,29 @@ class XMLParser:
             data.append(connection_data)
 
         return data
+    def _parse_subjob(self):
+            # Parse `connection` elements
+            data = []
+
+            for subjob in self.root.findall('.//subjob'):
+                subjob_data = {
+                    'elementParameters': []
+
+                }
+
+                for elem_param in subjob.findall('.//elementParameter'):
+                    elem_param_data = {
+                        'field': elem_param.get('field'),
+                        'name': elem_param.get('name'),
+                        'value': elem_param.get('value'),
+                        'show': elem_param.get('show'),
+                    }
+            
+                    subjob_data['elementParameters'].append(elem_param_data)
+
+                data.append(subjob_data)
+
+            return data
 
             
     def _parse_nodes(self):
