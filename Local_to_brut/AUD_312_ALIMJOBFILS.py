@@ -28,17 +28,17 @@ def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tu
         execution_date = db.get_execution_date(execution_date_query)
         logging.info(f"Execution Date: {execution_date}")
 
-        # Step 2: Execute LOCAL_TO_DBBRUT_QUERY
-        local_to_dbbrut_query = config.get_param('queries', 'LOCAL_TO_DBBRUT_QUERY')
-        logging.info(f"Executing query: {local_to_dbbrut_query}")
-        local_to_dbbrut_query_results = db.execute_query(local_to_dbbrut_query)
-        logging.debug(f"local_to_dbbrut_query_results: {local_to_dbbrut_query_results}")
+        # Step 2: Execute audit_jobs_delta
+        audit_jobs_delta = config.get_param('queries', 'audit_jobs_delta')
+        logging.info(f"Executing query: {audit_jobs_delta}")
+        audit_jobs_delta_results = db.execute_query(audit_jobs_delta)
+        logging.debug(f"audit_jobs_delta_results: {audit_jobs_delta_results}")
 
         # Step 3: Delete records from aud_elementvaluenode in batches
       
         batch_delete_conditions = []
 
-        for result in local_to_dbbrut_query_results:
+        for result in audit_jobs_delta_results:
             project_name, job_name, *_ = result
             batch_delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(batch_delete_conditions) >= batch_size:
@@ -76,6 +76,7 @@ def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tu
         insert_query = config.get_param('insert_queries', 'aud_job_fils')
         batch_insert = []
 
+
         for project_name, job_name, parsed_data in parsed_files_data:
             for data in parsed_data['nodes']:
                 for elem_param in data['elementParameters']:
@@ -100,7 +101,18 @@ def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tu
             if batch_insert:
                 db.insert_data_batch(insert_query, 'aud_job_fils', batch_insert)
                 logging.info(f"Inserted remaining batch of data into aud_job_fils: {len(batch_insert)} rows")
+        # Step 7: Execute Update_job_fils query
+        Update_job_fils_query = config.get_param('queries', 'Update_job_fils')
+        logging.info(f"Executing query: {Update_job_fils_query}")
+        Update_job_fils_results = db.execute_query(Update_job_fils_query)
+        logging.debug(f"Update_job_fils_results: {Update_job_fils_results}")
 
+
+# Updating tables left !!!!!!!!
+
+
+
+    
     except Exception as e:
         logging.error(f"An error occurred: {e}", exc_info=True)
     finally:
