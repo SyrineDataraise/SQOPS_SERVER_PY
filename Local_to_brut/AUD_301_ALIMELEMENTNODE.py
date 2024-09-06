@@ -89,7 +89,7 @@ def AUD_301_ALIMELEMENTNODE(config: Config, db: Database, parsed_files_data: Lis
                     params = (componentName, field, name, show, value, Componement_UniqueName, project_name, job_name, execution_date)
                     batch_insert.append(params)
 
-                    if len(batch_insert) >= insert_batch_size:
+                    if len(batch_insert) >= batch_size:
                         db.insert_data_batch(insert_query, 'aud_elementnode', batch_insert)
                         logging.info(f"Inserted batch of data into aud_elementnode: {len(batch_insert)} rows")
                         batch_insert.clear()
