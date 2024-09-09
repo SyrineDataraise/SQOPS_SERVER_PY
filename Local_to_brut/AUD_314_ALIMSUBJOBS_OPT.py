@@ -1,7 +1,6 @@
 import logging
 from config import Config  # Assuming Config class is defined in config.py
 from database import Database  # Assuming Database class is defined in database.py
-from XML_parse import XMLParser  # Importing the XMLParser class
 from typing import List, Tuple
 
 # Configure logging
@@ -12,7 +11,12 @@ logging.basicConfig(
     filemode='w'  # Ensure the file is overwritten each time for clean logs
 )
 
-def AUD_314_ALIMSUBJOBS_OPT(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],batch_size=100):
+def AUD_314_ALIMSUBJOBS_OPT(
+    config: Config, 
+    db: Database, 
+    parsed_files_data: List[Tuple[str, str, dict]], 
+    batch_size: int = 100
+):
     """
     Perform operations including retrieving JDBC parameters, executing queries,
     deleting records, and inserting data in batches.
@@ -20,7 +24,9 @@ def AUD_314_ALIMSUBJOBS_OPT(config: Config, db: Database, parsed_files_data: Lis
     Args:
         config (Config): An instance of the Config class for retrieving configuration parameters.
         db (Database): An instance of the Database class for executing database operations.
-        parsed_files_data (List[Tuple[str, str, dict]]): List of parsed file data containing project names, job names, and parsed data dictionaries.
+        parsed_files_data (List[Tuple[str, str, dict]]): List of parsed file data containing 
+            project names, job names, and parsed data dictionaries.
+        batch_size (int): The number of rows to process in each batch operation. Default is 100.
     """
     try:
         # Step 1: Get the execution date
@@ -36,10 +42,10 @@ def AUD_314_ALIMSUBJOBS_OPT(config: Config, db: Database, parsed_files_data: Lis
 
         # Step 3: Delete records from aud_elementvaluenode in batches
         batch_delete_conditions = []
-
         for result in local_to_dbbrut_query_results:
             project_name, job_name, *_ = result
             batch_delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
+
             if len(batch_delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_elementvaluenode', batch_delete_conditions)
                 logging.info(f"Batch deleted records from aud_elementvaluenode: {len(batch_delete_conditions)} rows")
@@ -61,6 +67,7 @@ def AUD_314_ALIMSUBJOBS_OPT(config: Config, db: Database, parsed_files_data: Lis
         for result in aud_subjobs_results:
             project_name, job_name = result
             batch_delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
+
             if len(batch_delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_subjobs', batch_delete_conditions)
                 logging.info(f"Batch deleted records from aud_subjobs: {len(batch_delete_conditions)} rows")
@@ -78,21 +85,19 @@ def AUD_314_ALIMSUBJOBS_OPT(config: Config, db: Database, parsed_files_data: Lis
         for project_name, job_name, parsed_data in parsed_files_data:
             for data in parsed_data['subjobs']:
                 for elem_param in data['elementParameters']:
-                    componentName = data['componentName']
-                    field = elem_param['field']
-                    name = elem_param['name']
-                    show = elem_param['show']
-                    value = elem_param['value']
+                    if elem_param['name'] == "UNIQUE_NAME" or elem_param['name'] == "SUBJOB_TITLE":
+                        field = elem_param['field']
+                        name = elem_param['name']
+                        value = elem_param['value']
 
-                    # Adjust the value of `Componement_UniqueName` as needed
-                    Componement_UniqueName = value if field == 'TEXT' and name == 'UNIQUE_NAME' else None
-                    params = (componentName, field, name, show, value, Componement_UniqueName, project_name, job_name, execution_date)
-                    batch_insert.append(params)
+                        params = (project_name, job_name, execution_date, name, value)
+                        logging.info(f"Parameters: {params}")
+                        batch_insert.append(params)
 
-                    if len(batch_insert) >= batch_size:
-                        db.insert_data_batch(insert_query, 'aud_subjobs', batch_insert)
-                        logging.info(f"Inserted batch of data into aud_subjobs: {len(batch_insert)} rows")
-                        batch_insert.clear()
+                        if len(batch_insert) >= batch_size:
+                            db.insert_data_batch(insert_query, 'aud_subjobs', batch_insert)
+                            logging.info(f"Inserted batch of data into aud_subjobs: {len(batch_insert)} rows")
+                            batch_insert.clear()
 
         # Insert remaining data in the batch
         if batch_insert:

@@ -9,20 +9,6 @@ class XMLParser:
         self.file_path = ""
 
     def _parse_file(self):
-        """Parse the XML file and return a list of data from nodes, contexts, and parameters."""
-        nodes_data = self._parse_nodes()
-        contexts_data = self._parse_contexts()
-        parameters_data = self._parse_parameters()
-        connection_data = self._parse_connection()
-
-        # Return combined data as a list of dictionaries
-        return {
-            'nodes': nodes_data,
-            'contexts': contexts_data,
-            'parameters': parameters_data,
-            'connections' : connection_data
-        }
-    def _parse_file(self):
         """Parse the XML file and return a list of data from nodes, contexts, parameters, and connections."""
         nodes_data = self._parse_nodes()
         contexts_data = self._parse_contexts()
