@@ -91,7 +91,6 @@ def AUD_314_ALIMSUBJOBS_OPT(
                         value = elem_param['value']
 
                         params = (project_name, job_name, execution_date, name, value)
-                        logging.info(f"Parameters: {params}")
                         batch_insert.append(params)
 
                         if len(batch_insert) >= batch_size:
