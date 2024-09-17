@@ -15,6 +15,7 @@ class XMLParser:
         parameters_data = self._parse_parameters()
         connection_data = self._parse_connection()
         subjobs_data = self._parse_subjob()
+        parsed_contextGroup_data = self._parse_contextGroup()
 
         # Return combined data as a dictionary
         return {
@@ -22,7 +23,8 @@ class XMLParser:
             'contexts': contexts_data,
             'parameters': parameters_data,
             'connections': connection_data,
-            'subjobs' : subjobs_data
+            'subjobs' : subjobs_data ,
+            'contextGroups' : parsed_contextGroup_data
         }
 
     def _parse_connection(self):
@@ -226,6 +228,36 @@ class XMLParser:
 
 
         return parsed_data
+
+    def _parse_contextGroup(self):
+        """Parse and return data from `xmi:XMl` elements and their nested `TalendPropefties:Property` elements."""
+        parsed_contextGroup_data = []
+
+        # Iterate over `xmi:XMl` elements
+        for context_group in self.root.iter('xmi:XMl'):
+            context_data = {
+                'properties': []
+            }
+
+            # Parse `TalendPropefties:Property` elements within the `xmi:XMl`
+            for prop in context_group.findall('.//TalendPropefties:Property'):
+                property_data = {
+                    'label': prop.get('label'),
+                    'purpose': prop.get('purpose'),
+                    'description': prop.get('description'),
+                    'version': prop.get('version'),
+                    'statusCode': prop.get('statusCode'),
+                    'item': prop.get('item'),
+                    'displayName': prop.get('displayName')
+                }
+
+                # Add the property data to the context group data
+                context_data['properties'].append(property_data)
+
+            # Append the context data to the final parsed context data list
+            parsed_contextGroup_data.append(context_data)
+
+        return parsed_contextGroup_data
 
 
 
