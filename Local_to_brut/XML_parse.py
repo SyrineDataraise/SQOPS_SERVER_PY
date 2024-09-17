@@ -8,14 +8,13 @@ class XMLParser:
         """Initialize the XMLParser without a specific file path."""
         self.file_path = ""
 
-    def _parse_file(self):
+    def _parse_file_items(self):
         """Parse the XML file and return a list of data from nodes, contexts, parameters, and connections."""
         nodes_data = self._parse_nodes()
         contexts_data = self._parse_contexts()
         parameters_data = self._parse_parameters()
         connection_data = self._parse_connection()
         subjobs_data = self._parse_subjob()
-        parsed_contextGroup_data = self._parse_contextGroup()
 
         # Return combined data as a dictionary
         return {
@@ -24,8 +23,13 @@ class XMLParser:
             'parameters': parameters_data,
             'connections': connection_data,
             'subjobs' : subjobs_data ,
-            'contextGroups' : parsed_contextGroup_data
         }
+    
+    def _parse_file_properties(self):
+        parsed_contextGroup_data = self._parse_contextGroup()
+        return {'contextGroups' : parsed_contextGroup_data}
+
+
 
     def _parse_connection(self):
         # Parse `connection` elements
@@ -229,35 +233,57 @@ class XMLParser:
 
         return parsed_data
 
-    def _parse_contextGroup(self):
-        """Parse and return data from `xmi:XMl` elements and their nested `TalendPropefties:Property` elements."""
-        parsed_contextGroup_data = []
 
-        # Iterate over `xmi:XMl` elements
-        for context_group in self.root.iter('xmi:XMl'):
+    def _parse_contextGroup(self):
+        """Parse and return data from `xmi:XMI` elements and their nested `TalendProperties:Property` and `additionalProperties` elements."""
+        logging.info("Starting to parse context group data from `xmi:XMI` elements.")
+        parsed_context_data = []
+
+        # Iterate over `xmi:XMI` elements
+        for context_group in self.root.iter('{http://www.omg.org/XMI}XMI'):
+            logging.debug(f"Found `xmi:XMI` element: {ET.tostring(context_group, encoding='unicode')[:200]}")  # Print snippet
+
             context_data = {
                 'properties': []
             }
 
-            # Parse `TalendPropefties:Property` elements within the `xmi:XMl`
-            for prop in context_group.findall('.//TalendPropefties:Property'):
+            # Parse `TalendProperties:Property` elements
+            for prop in context_group.findall('.//{http://www.talend.org/properties}Property'):
+                logging.debug(f"Found `TalendProperties:Property` element: {ET.tostring(prop, encoding='unicode')[:200]}")  # Print snippet
+
                 property_data = {
+                    'id': prop.get('{http://www.omg.org/XMI}id'),
                     'label': prop.get('label'),
                     'purpose': prop.get('purpose'),
-                    'description': prop.get('description'),
+                    'description' : prop.get('description'),
                     'version': prop.get('version'),
                     'statusCode': prop.get('statusCode'),
                     'item': prop.get('item'),
-                    'displayName': prop.get('displayName')
+                    'displayName': prop.get('displayName'),
+                    'additionalProperties': []
                 }
+
+                # Parse `additionalProperties` inside the `TalendProperties:Property`
+                for add_prop in prop.findall('.//{http://www.talend.org/properties}additionalProperties'):
+                    logging.debug(f"Found `additionalProperties` with Key: {add_prop.get('key')} and Value: {add_prop.get('value')}")
+                    additional_property_data = {
+                        'key': add_prop.get('key'),
+                        'value': add_prop.get('value')
+                    }
+                    property_data['additionalProperties'].append(additional_property_data)
 
                 # Add the property data to the context group data
                 context_data['properties'].append(property_data)
 
-            # Append the context data to the final parsed context data list
-            parsed_contextGroup_data.append(context_data)
+            # Log completed parsing for `TalendProperties:Property`
+            logging.info(f"Completed parsing of `TalendProperties:Property` with {len(context_data['properties'])} properties.")
 
-        return parsed_contextGroup_data
+            # Append the context data to the final parsed context data list
+            parsed_context_data.append(context_data)
+
+        logging.info(f"Completed parsing context group data. Total parsed `xmi:XMI` elements: {len(parsed_context_data)}.")
+        return parsed_context_data
+
 
 
 
@@ -329,17 +355,9 @@ class XMLParser:
 
         return parameters_data
 
-    
 
 
-
-
-
-    def get_data(self):
-        """Return all parsed data from the XML file."""
-        return self._parse_file()
-
-    def loop_parse(self, items_directory):
+    def loop_parse_items(self, items_directory):
             """
             Parses XML files from the specified directory and extracts relevant data.
 
@@ -358,11 +376,44 @@ class XMLParser:
                         try:
                             self.tree = ET.parse(file_path)
                             self.root = self.tree.getroot()
-                            parsed_data = self._parse_file()
+                            parsed_data = self._parse_file_items()
                             # Extract project_name and job_name
                             parts = filename.split('.', 1)
                             project_name = parts[0]
                             job_name = parts[1].replace('.item', '') if len(parts) > 1 else None
+                            parsed_files_data.append((project_name, job_name, parsed_data))
+                        except FileNotFoundError:
+                            logging.error(f"File not found: {file_path}")
+                        except ET.ParseError:
+                            logging.error(f"Error parsing file: {file_path}")
+                        except Exception as e:
+                            logging.error(f"Unexpected error with file {file_path}: {e}", exc_info=True)
+            return parsed_files_data
+
+    def loop_parse_properties(self, items_directory):
+            """
+            Parses XML files from the specified directory and extracts relevant data.
+
+            Args:
+                items_directory (str): The directory containing XML files to be parsed.
+
+            Returns:
+                list of tuples: A list where each tuple contains (project_name, job_name, parsed_data).
+            """
+            parsed_files_data = []
+            for root, dirs, files in os.walk(items_directory):
+                for filename in files:
+                    if filename.endswith('.properties'):
+                        file_path = os.path.join(root, filename)  # Use 'root' to construct the full file path
+                        logging.info(f"Processing file: {file_path}")
+                        try:
+                            self.tree = ET.parse(file_path)
+                            self.root = self.tree.getroot()
+                            parsed_data = self._parse_file_properties()
+                            # Extract project_name and job_name
+                            parts = filename.split('.', 1)
+                            project_name = parts[0]
+                            job_name = parts[1].replace('.properties', '') if len(parts) > 1 else None
                             parsed_files_data.append((project_name, job_name, parsed_data))
                         except FileNotFoundError:
                             logging.error(f"File not found: {file_path}")
