@@ -11,7 +11,7 @@ logging.basicConfig(
     filemode='w'
 )
 
-def AUD_310_ALIMLIBRARY(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]], batch_size=100):
+def AUD_310_ALIMLIBRARY(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str, batch_size=100):
     try:
         # Step 1: Get the execution date
         execution_date_query = config.get_param('queries', 'TRANSVERSE_QUERY_LASTEXECUTIONDATE')

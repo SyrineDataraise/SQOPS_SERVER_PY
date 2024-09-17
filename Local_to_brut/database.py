@@ -226,7 +226,60 @@ class Database:
             except Exception as e:
                 self.connection.rollback()  # Rollback in case of a major error
                 logging.error(f"Error during batch insert into {table_name}: {e}", exc_info=True)
+
+    def insert_from_csv_batch(self, csv_file_path, table_name, batch_size):
+        """
+        Reads data from a CSV file and inserts it into the specified database table in batches.
+
+        Args:
+        - csv_file_path (str): Path to the CSV file.
+        - table_name (str): Name of the database table to insert data into.
+        - batch_size (int): Number of rows per batch for insertion. Defaults to 1000.
+        """
+        try:
+            with open(csv_file_path, 'r') as csv_file:
+                csv_reader = csv.reader(csv_file)
+                headers = next(csv_reader)  # Read the header row from the CSV
+                data_batch = []
                 
+                insert_query = f"""
+                INSERT INTO {table_name} ({', '.join(headers)}) 
+                VALUES ({', '.join(['?' for _ in headers])}) ;                
+                """
+
+                for row in csv_reader:
+                    data_batch.append(tuple(row))
+                    if len(data_batch) == batch_size:
+                        self.insert_data_batch(insert_query, table_name, data_batch)
+                        data_batch.clear()  # Clear the batch after inserting
+
+                # Insert any remaining data if the last batch is smaller than batch_size
+                if data_batch:
+                    self.insert_data_batch(insert_query, table_name, data_batch)
+                    logging.info(f"Inserted remaining {len(data_batch)} rows from CSV into {table_name}.")
+
+        except FileNotFoundError as e:
+            logging.error(f"CSV file not found: {e}")
+        except Exception as e:
+            logging.error(f"Error inserting data from CSV to {table_name}: {e}", exc_info=True)
+
+    def truncate_table(self, table_name):
+        """
+        Truncates the specified table, removing all rows and resetting any auto-increment counters.
+
+        Args:
+        - table_name (str): Name of the table to truncate.
+        """
+        try:
+            truncate_query = f"TRUNCATE TABLE {table_name}"
+            with self.connection.cursor() as cursor:
+                cursor.execute(truncate_query)
+            self.connection.commit()  # Commit the transaction
+            logging.info(f"Table {table_name} has been truncated.")
+        except Exception as e:
+            logging.error(f"Error truncating table {table_name}: {e}", exc_info=True)
+            self.connection.rollback()  # Rollback in case of an error
+                     
     def close(self):
         """
         Closes the cursor and database connection.
@@ -243,45 +296,7 @@ class Database:
 
     
 
-    # def insert_data(self, query, table, params=None):
-    #     """
-    #     Executes an insert query on the connected database.
-
-    #     Args:
-    #     - query (str): SQL insert query.
-    #     - table (str): Name of the table into which data is being inserted.
-
-    #     Prints:
-    #     - Success message upon successful insertion.
-    #     - Error message upon insertion failure.
-    #     """
-    #     try:
-    #         self.cursor.execute(query,params or ())
-    #         self.connection.commit()
-    #     except Exception as e:
-    #         print(f"Error inserting data into {table}: {str(e)}")
-    #         try:
-    #             self.connection.rollback()
-    #         except Exception as rollback_e:
-    #             print(f"Error rolling back transaction: {rollback_e}")
-
-        # def delete_records(self, table, **conditions):
-        #     """
-        #     Delete records from the specified table based on the given conditions.
-            
-        #     :param table: The name of the table.
-        #     :param conditions: A dictionary where keys are column names and values are the values to match.
-        #     """
-        #     condition_clauses = " AND ".join([f"{column} = '{value}'" for column, value in conditions.items()])
-        #     delete_query = f"DELETE FROM {table} WHERE {condition_clauses}"
-
-        #     try:
-        #         self.cursor.execute(delete_query)
-        #         self.connection.commit()
-        #     except Exception as e:
-        #         print(f"Error deleting records from {table} with conditions {conditions}: {e}")
-        #         raise
-
+    
         # def connect(self):
         #     """
         #     Establishes a connection to the database based on the configured database type.

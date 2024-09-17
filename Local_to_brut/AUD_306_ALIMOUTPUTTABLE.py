@@ -12,12 +12,12 @@ logging.basicConfig(
     filemode='w'
 )
 
-def AUD_306_ALIMOUTPUTTABLE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]], batch_size=100):
+def AUD_306_ALIMOUTPUTTABLE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str, batch_size=100):
     try:
         # Step 1: Get the execution date
-        execution_date_query = config.get_param('queries', 'TRANSVERSE_QUERY_LASTEXECUTIONDATE')
-        execution_date = db.get_execution_date(execution_date_query)
-        logging.info(f"Execution Date: {execution_date}")
+        # execution_date_query = config.get_param('queries', 'TRANSVERSE_QUERY_LASTEXECUTIONDATE')
+        # execution_date = db.get_execution_date(execution_date_query)
+        # logging.info(f"Execution Date: {execution_date}")
 
         # Step 2: Execute LOCAL_TO_DBBRUT_QUERY
         local_to_dbbrut_query = config.get_param('queries', 'LOCAL_TO_DBBRUT_QUERY')

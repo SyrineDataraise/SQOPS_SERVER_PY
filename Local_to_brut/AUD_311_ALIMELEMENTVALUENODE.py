@@ -13,7 +13,7 @@ logging.basicConfig(
     filemode='w'  # Ensure the file is overwritten each time for clean logs
 )
 
-def AUD_311_ALIMELEMENTVALUENODE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]], batch_size=100):
+def AUD_311_ALIMELEMENTVALUENODE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str, batch_size=100):
     try:
         # Initialize variables
         aud_elementRef = ""
