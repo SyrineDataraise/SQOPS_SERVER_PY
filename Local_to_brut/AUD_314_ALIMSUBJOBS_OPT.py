@@ -25,7 +25,7 @@ def AUD_314_ALIMSUBJOBS_OPT(
         config (Config): An instance of the Config class for retrieving configuration parameters.
         db (Database): An instance of the Database class for executing database operations.
         parsed_files_data (List[Tuple[str, str, dict]]): List of parsed file data containing 
-            project names, job names, and parsed data dictionaries.
+        project names, job names, and parsed data dictionaries.
         batch_size (int): The number of rows to process in each batch operation. Default is 100.
     """
     try:
