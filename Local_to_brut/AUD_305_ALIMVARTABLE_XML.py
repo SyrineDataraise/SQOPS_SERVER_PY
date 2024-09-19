@@ -92,7 +92,6 @@ def AUD_305_ALIMVARTABLE(config: Config, db: Database, parsed_files_data: List[T
                     logging.debug(f"Element parameter - field: {field}, name: {name}, value: {value}")
 
                 for nodeData in data['nodeData']:
-                    shellMaximized = nodeData['uiPropefties'].get('shellMaximized', 0)
                     aud_Var = nodeData['varTables'].get('name', '')
                     aud_sizeState = nodeData['varTables'].get('sizeState', '')
                     logging.debug(f"Node data - shellMaximized: {shellMaximized}, aud_Var: {aud_Var}, aud_sizeState: {aud_sizeState}")
@@ -105,9 +104,10 @@ def AUD_305_ALIMVARTABLE(config: Config, db: Database, parsed_files_data: List[T
 
                         params = (
                             componentName, Componement_UniqueName, aud_Var, aud_sizeState, 
-                            aud_nameVar, aud_expressionVar, aud_type, shellMaximized, 
+                            aud_nameVar, aud_expressionVar, aud_type, 
                             project_name, job_name, execution_date
                         )
+
                         batch_insert.append(params)
 
                         if len(batch_insert) >= insert_batch_size:

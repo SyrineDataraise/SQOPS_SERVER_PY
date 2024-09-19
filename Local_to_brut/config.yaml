@@ -22,11 +22,10 @@ queries:
   aud_bigdata : "select distinct namejob, nameproject from aud_bigdata where NameJob not in (select job_name from audit_jobs)"
   aud_metadata : "select distinct namejob, nameproject from aud_metadata where NameJob not in (select job_name from audit_jobs)"
   MetadataJoinElemntnode : "select  distinct N.NameProject, N.NameJob, N.aud_componentValue from aud_metadata N inner join aud_elementnode E on (N.namejob = E.namejob and N.nameproject = E.nameproject and N.aud_componentValue = E.aud_ComponementValue) where E.aud_nameElementNode = 'ACTIVATE' and E.aud_valueElementNode = 'false' and E.exec_date = (select max(lastexecutiondate) from executiondate)"
-  aud_vartable : "select distinct namejob, nameproject from aud_vartable where NameJob"
-  aud_vartable_xml : "select distinct namejob, nameproject from aud_vartable_xml where NameJob"
+  aud_vartable : "select distinct namejob, nameproject from aud_vartable where NameJob not in (select job_name from audit_jobs)"
+  aud_vartable_xml : "select distinct namejob, nameproject from aud_vartable_xml where NameJob not in (select job_name from audit_jobs)"
   vartableJoinElemntnode : "select distinct N.NameProject, N.NameJob, N.aud_componentValue from aud_vartable N inner join aud_elementnode E on (N.namejob = E.namejob and N.nameproject = E.nameproject and N.aud_componentValue = E.aud_ComponementValue) where E.aud_nameElementNode = 'ACTIVATE' and E.aud_valueElementNode = 'false' and E.exec_date = (select max(lastexecutiondate) from executiondate)"
   vartable_xmlJoinElemntnode : "select distinct N.NameProject, N.NameJob, N.aud_componentValue from aud_vartable_xml N inner join aud_elementnode E on (N.namejob = E.namejob and N.nameproject = E.nameproject and N.aud_componentValue = E.aud_ComponementValue) where E.aud_nameElementNode = 'ACTIVATE' and E.aud_valueElementNode = 'false' and E.exec_date = (select max(lastexecutiondate) from executiondate)"
-  
   aud_outputTable : "select distinct namejob, nameproject from aud_outputtable where NameJob not in (select job_name from audit_jobs)"
   outputtableJoinElemntnode : "select distinct N.NameProject, N.NameJob, N.aud_componentValue from aud_outputtable N inner join aud_elementnode E on (N.namejob = E.namejob and N.nameproject = E.nameproject and N.aud_componentValue = E.aud_ComponementValue) where E.aud_nameElementNode = 'ACTIVATE' and E.aud_valueElementNode = 'false' and E.exec_date = (select max(lastexecutiondate) from executiondate)"
   aud_inputtable : "select distinct namejob, nameproject from aud_inputtable where NameJob not in (select job_name from audit_jobs)"
