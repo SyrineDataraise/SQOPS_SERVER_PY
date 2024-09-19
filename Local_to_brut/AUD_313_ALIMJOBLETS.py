@@ -76,7 +76,7 @@ def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tu
         for project_name, job_name, parsed_data in parsed_files_data:
             for data in parsed_data['nodes']:
                 for elem_param in data['elementParameters']:
-                    if data['componentName'] == "RunJob":
+                    if elem_param['value'] == "Joblets":
                         componentName = data['componentName']
                         field = elem_param['field']
                         name = elem_param['name']
@@ -84,8 +84,8 @@ def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tu
                         value = elem_param['value']
 
                         # Adjust the value of `Componement_UniqueName` as needed
-                        Componement_UniqueName = value if field == 'TEXT' and name == 'UNIQUE_NAME' else None
-                        params = ( project_name, job_name, componentName,Componement_UniqueName, field, name, show, value,  execution_date)
+                        Componement_UniqueName = value if field == 'TEXT' and name == 'UNIQUE_NAME' else Componement_UniqueName
+                        params = ( project_name, job_name, componentName, field, name, show, value,Componement_UniqueName,  execution_date)
                         batch_insert.append(params)
 
                         if len(batch_insert) >= batch_size:
@@ -97,14 +97,24 @@ def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tu
             if batch_insert:
                 db.insert_data_batch(insert_query, 'aud_joblets', batch_insert)
                 logging.info(f"Inserted remaining batch of data into aud_joblets: {len(batch_insert)} rows")
-        # Step 7: Execute Update_job_fils query
-        Update_job_fils_query = config.get_param('queries', 'Update_job_fils')
-        logging.info(f"Executing query: {Update_job_fils_query}")
-        Update_job_fils_results = db.execute_query(Update_job_fils_query)
-        logging.debug(f"Update_job_fils_results: {Update_job_fils_results}")
+                
+         # Step 7: Execute jobletsJoinelementnode query and delete records
+        jobletsJoinelementnode_query = config.get_param('queries', 'jobletsJoinelementnode')
+        jobletsJoinelementnode_results = db.execute_query(jobletsJoinelementnode_query)
+        logging.debug(f"jobletsJoinelementnode_results: {jobletsJoinelementnode_results}")
 
+        delete_conditions = []
+        for result in jobletsJoinelementnode_results:
+            project_name, job_name = result
+            delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
+            if len(delete_conditions) >= batch_size:
+                db.delete_records_batch('jobletsJoinelementnode_results', delete_conditions)
+                logging.info(f"Batch deleted records from aud_inputtable: {len(delete_conditions)} rows")
+                delete_conditions.clear()
 
-# Updating tables left !!!!!!!!
+        if delete_conditions:
+            db.delete_records_batch('jobletsJoinelementnode_results', delete_conditions)
+            logging.info(f"Deleted remaining records from aud_inputtable: {len(delete_conditions)} rows")
 
 
 
