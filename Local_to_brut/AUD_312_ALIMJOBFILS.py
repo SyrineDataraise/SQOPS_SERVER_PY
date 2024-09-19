@@ -23,10 +23,6 @@ def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tu
         parsed_files_data (List[Tuple[str, str, dict]]): List of parsed file data containing project names, job names, and parsed data dictionaries.
     """
     try:
-        # Step 1: Get the execution date
-        execution_date_query = config.get_param('queries', 'TRANSVERSE_QUERY_LASTEXECUTIONDATE')
-        execution_date = db.get_execution_date(execution_date_query)
-        logging.info(f"Execution Date: {execution_date}")
 
         # Step 2: Execute audit_jobs_delta
         audit_jobs_delta = config.get_param('queries', 'audit_jobs_delta')
@@ -80,7 +76,7 @@ def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tu
         for project_name, job_name, parsed_data in parsed_files_data:
             for data in parsed_data['nodes']:
                 for elem_param in data['elementParameters']:
-                    if data['componentName'] == "RunJob":
+                    if data['componentName'] == "tRunJob":
                         componentName = data['componentName']
                         field = elem_param['field']
                         name = elem_param['name']
