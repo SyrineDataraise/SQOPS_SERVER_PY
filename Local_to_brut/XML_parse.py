@@ -1,8 +1,17 @@
 import xml.etree.ElementTree as ET
 import os
 import logging
+import base64
+from io import BytesIO
+from PIL import Image  # Pillow library for image handling
 
-
+# Configure logging
+logging.basicConfig(
+    filename='database_operations.log',
+    level=logging.DEBUG,  # Capture all messages
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    filemode='w'  # Overwrite the file each time for clean logs
+)
 class XMLParser:
     def __init__(self):
         """Initialize the XMLParser without a specific file path."""
@@ -26,9 +35,12 @@ class XMLParser:
         }
     
     def _parse_file_properties(self):
-        parsed_contextGroup_data = self._parse_contextGroup()
-        return {'contextGroups' : parsed_contextGroup_data}
+        TalendProperties_data = self._parse_Properties()
+        return {'TalendProperties' : TalendProperties_data}
 
+    def _parse_file_screenshots(self):
+        Screenshots_data = self._parse_screenshot()
+        return{'screenshots' :Screenshots_data }
 
 
     def _parse_connection(self):
@@ -234,21 +246,21 @@ class XMLParser:
         return parsed_data
 
 
-    def _parse_contextGroup(self):
+    def _parse_Properties(self):
         """Parse and return data from `xmi:XMI` elements and their nested `TalendProperties:Property` and `additionalProperties` elements."""
         logging.info("Starting to parse context group data from `xmi:XMI` elements.")
         parsed_context_data = []
 
         # Iterate over `xmi:XMI` elements
-        for context_group in self.root.iter('{http://www.omg.org/XMI}XMI'):
-            logging.debug(f"Found `xmi:XMI` element: {ET.tostring(context_group, encoding='unicode')[:200]}")  # Print snippet
+        for properties in self.root.iter('{http://www.omg.org/XMI}XMI'):
+            logging.debug(f"Found `xmi:XMI` element: {ET.tostring(properties, encoding='unicode')[:200]}")  # Print snippet
 
             context_data = {
                 'properties': []
             }
 
             # Parse `TalendProperties:Property` elements
-            for prop in context_group.findall('.//{http://www.talend.org/properties}Property'):
+            for prop in properties.findall('.//{http://www.talend.org/properties}Property'):
                 logging.debug(f"Found `TalendProperties:Property` element: {ET.tostring(prop, encoding='unicode')[:200]}")  # Print snippet
 
                 property_data = {
@@ -423,4 +435,89 @@ class XMLParser:
                             logging.error(f"Unexpected error with file {file_path}: {e}", exc_info=True)
             return parsed_files_data
 
+
+    def loop_parse_screenshots(self, screenshots_directory):
+        """
+        Parses XML files related to screenshots from the specified directory and extracts relevant data.
+
+        Args:
+            screenshots_directory (str): The directory containing screenshot XML files to be parsed.
+
+        Returns:
+            list of tuples: A list where each tuple contains (screenshot_name, parsed_data).
+        """
+        parsed_screenshots_data = []
+        for root, dirs, files in os.walk(screenshots_directory):
+            for filename in files:
+                if filename.endswith('.screenshot'):  # Assuming screenshot files end with `.screenshot`
+                    file_path = os.path.join(root, filename)
+                    logging.info(f"Processing screenshot file: {file_path}")
+                    
+                    try:
+                        self.tree = ET.parse(file_path)
+                        self.root = self.tree.getroot()
+                        parsed_data = self._parse_file_screenshots()
+
+                        # Extract project_name and job_name
+                        parts = filename.split('.', 1)
+                        project_name = parts[0]
+                        job_name = parts[1].replace('.properties', '') if len(parts) > 1 else None
+
+                        parsed_screenshots_data.append((project_name, job_name, parsed_data))
+
+                    except ET.ParseError as e:
+                        logging.error(f"Failed to parse screenshot XML file: {file_path}. Error: {e}")
+                    except Exception as e:
+                        logging.error(f"An error occurred while processing the screenshot file: {file_path}. Error: {e}")
+
+        return parsed_screenshots_data
+
+    def _parse_screenshot(self):
+        """
+        Parse and return data from the `talendfile:ScreenshotsMap` XML element, decode base64 image data,
+        and capture image resolution.
+        """
+        screenshot_data = []
+        # Define the namespace for the ScreenshotsMap element
+        ns = {'talendfile': 'platform:/resource/org.talend.model/model/TalendFile.xsd'}
+
+        # Iterate over `talendfile:ScreenshotsMap` elements
+        for screenshot in self.root.findall('talendfile:ScreenshotsMap', ns):
+            logging.debug(f"Found `talendfile:ScreenshotsMap` element: {screenshot.attrib}")
+
+
+            # Extract the base64 string from the `value` attribute
+            base64_string = screenshot.get('value')
+
+            if base64_string is not None:
+                try:
+                    # Decode the base64 string into bytes
+                    image_bytes = base64.b64decode(base64_string)
+
+                    # Use with statement for BytesIO
+                    with BytesIO(image_bytes) as image_stream:
+                        # Open the image using PIL (Pillow)
+                        image = Image.open(image_stream)
+
+                        # Get the image resolution (width and height)
+                        width, height = image.size
+                        logging.info(f"Image resolution: {width} x {height}")
+
+                
+
+                    # Add the screenshot data, including the resolution
+                    data = {
+                        'key': screenshot.get('key'),
+                        'value': base64_string,  # Truncate base64 string for logging
+                        'resolution': f"{width}x{height}",
+                    }
+                    screenshot_data.append(data)
+
+                except Exception as e:
+                    logging.error(f"Error decoding base64 or processing image for screenshot: {e}")
+
+            else:
+                logging.warning("No base64 string found in the screenshot element.")
+
+        return screenshot_data
 

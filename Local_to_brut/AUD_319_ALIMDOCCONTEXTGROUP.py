@@ -35,7 +35,7 @@ def AUD_319_ALIMDOCCONTEXTGROUP(config: Config, db: Database, parsed_files_data:
         logging.info(f"Starting to process {len(parsed_files_data)} files.")
         for nameproject, job_name, parsed_data in parsed_files_data:
             logging.debug(f"Processing project: {nameproject}, job: {job_name}")
-            for data in parsed_data['contextGroups']:
+            for data in parsed_data['TalendProperties']:
                 for prop in data['properties']:
                     # Extract values from properties
                     namecontextgroup = prop['label']
