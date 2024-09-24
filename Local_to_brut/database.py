@@ -160,9 +160,7 @@ class Database:
                     condition_clauses = " AND ".join([f"{column} = '{value}'" for column, value in conditions.items()])
                     sql = f"DELETE FROM {table_name} WHERE {condition_clauses}"
                     
-                    # Logging the SQL query
-                    logging.debug(f"Executing SQL: {sql}")
-                    
+ 
                     cursor.execute(sql)
                     
             self.connection.commit()

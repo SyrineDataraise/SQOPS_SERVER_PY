@@ -94,7 +94,7 @@ def AUD_301_ALIMELEMENTNODE(config: Config, db: Database, parsed_files_data: Lis
     finally:
         if db:
             #db.close()  # Ensure the database connection is closed
-            logging.info("Database connection closed.")
+            logging.info("done!")
 
 
 def AUD_302_ALIMCONTEXTJOB(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
@@ -165,7 +165,7 @@ def AUD_302_ALIMCONTEXTJOB(config: Config, db: Database, parsed_files_data: List
     finally:
         if db:
             #db.close()  # Ensure the database connection is closed
-            logging.info("Database connection closed.")
+            logging.info("done!")
 
 
 def AUD_303_ALIMNODE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
@@ -252,7 +252,7 @@ def AUD_303_ALIMNODE(config: Config, db: Database, parsed_files_data: List[Tuple
     finally:
         if db:
             #db.close()  # Ensure the database connection is closed
-            logging.info("Database connection closed.")
+            logging.info("done!")
 def AUD_303_BIGDATA_PARAMETERS(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
     """
     Perform various database operations including retrieving execution dates,
@@ -319,7 +319,7 @@ def AUD_303_BIGDATA_PARAMETERS(config: Config, db: Database, parsed_files_data: 
     finally:
         if db:
             #db.close()  # Ensure the database connection is closed
-            logging.info("Database connection closed.")
+            logging.info("done!")
 
 def AUD_304_ALIMMETADATA(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
     """
@@ -554,7 +554,7 @@ def AUD_305_ALIMVARTABLE_XML(config: Config, db: Database, parsed_files_data: Li
     finally:
         if db:
             #db.close()  # Ensure the database connection is closed
-            logging.info("Database connection closed.")
+            logging.info("done!")
             
 
 
@@ -682,7 +682,7 @@ def AUD_305_ALIMVARTABLE(config: Config, db: Database, parsed_files_data: List[T
     finally:
         if db:
             #db.close()  # Ensure the database connection is closed
-            logging.info("Database connection closed.")
+            logging.info("done!")
 
 
 def AUD_306_ALIMOUTPUTTABLE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
@@ -796,7 +796,7 @@ def AUD_306_ALIMOUTPUTTABLE(config: Config, db: Database, parsed_files_data: Lis
     finally:
         if db:
             #db.close()
-            logging.info("Database connection closed.")
+            logging.info("done!")
 
 
 def AUD_307_ALIMINPUTTABLE_XML(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
@@ -883,7 +883,7 @@ def AUD_307_ALIMINPUTTABLE_XML(config: Config, db: Database, parsed_files_data: 
                             aud_componentName, aud_lookupMode, aud_matchingMode, aud_nameRowInput, aud_sizeState,
                             aud_nameColumnInput, aud_type, aud_nullable, aud_expressionJoin, aud_operator,
                             aud_activateExpressionFilterInput, aud_expressionFilterInput, aud_componentValue,
-                            aud_activateCondensedTool, aud_innerJoin, persistent, NameProject, NameJob, exec_date
+                            aud_activateCondensedTool, aud_innerJoin, persistent, NameProject, NameJob, execution_date
                         )
 
                         batch_insert.append(params)
@@ -925,7 +925,7 @@ def AUD_307_ALIMINPUTTABLE_XML(config: Config, db: Database, parsed_files_data: 
     finally:
         if db:
             #db.close()
-            logging.info("Database connection closed.")
+            logging.info("done!")
 
 
 def AUD_307_ALIMINPUTTABLE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
@@ -1012,7 +1012,7 @@ def AUD_307_ALIMINPUTTABLE(config: Config, db: Database, parsed_files_data: List
                             aud_componentName, aud_lookupMode, aud_matchingMode, aud_nameRowInput, aud_sizeState,
                             aud_nameColumnInput, aud_type, aud_nullable, aud_expressionJoin, aud_operator,
                             aud_activateExpressionFilterInput, aud_expressionFilterInput, aud_componentValue,
-                            aud_activateCondensedTool, aud_innerJoin, persistent, NameProject, NameJob, exec_date
+                            aud_activateCondensedTool, aud_innerJoin, persistent, NameProject, NameJob, execution_date
                         )
 
                         batch_insert.append(params)
@@ -1054,7 +1054,7 @@ def AUD_307_ALIMINPUTTABLE(config: Config, db: Database, parsed_files_data: List
     finally:
         if db:
             #db.close()
-            logging.info("Database connection closed.")
+            logging.info("done!")
 
 
 def AUD_308_ALIMCONNECTIONCOMPONENT(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
@@ -1149,7 +1149,7 @@ def AUD_308_ALIMCONNECTIONCOMPONENT(config: Config, db: Database, parsed_files_d
     finally:
         if db:
             #db.close()
-            logging.info("Database connection closed.")
+            logging.info("done!")
 
 
 def AUD_309_ALIMELEMENTPARAMETER(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
@@ -1199,12 +1199,12 @@ def AUD_309_ALIMELEMENTPARAMETER(config: Config, db: Database, parsed_files_data
             logging.info(f"Processing project: {project_name}, job: {job_name}")
             for parameter in parsed_data['parameters']:
 
-                for elementParameter in parameter['elementParameter']:
+                for elementParameter in parameter['elementParameters']:
                     aud_field = elementParameter['field']
                     aud_name = elementParameter['name']
                     aud_show = elementParameter['show']
                     aud_value = elementParameter['value']
-                    params =   (aud_field,aud_name,aud_show,aud_value,NameProject,NameJob,exec_date)
+                    params =   (aud_field,aud_name,aud_show,aud_value,NameProject,NameJob,execution_date)
                     batch_insert.append(params)
 
 
@@ -1230,7 +1230,7 @@ def AUD_309_ALIMELEMENTPARAMETER(config: Config, db: Database, parsed_files_data
     finally:
         if db:
             #db.close()
-            logging.info("Database connection closed.")
+            logging.info("done!")
 
 
 def AUD_309_ALIMROUTINES(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
@@ -1308,7 +1308,7 @@ def AUD_309_ALIMROUTINES(config: Config, db: Database, parsed_files_data: List[T
     finally:
         if db:
             #db.close()
-            logging.info("Database connection closed.")
+            logging.info("done!")
 
 
 def AUD_310_ALIMLIBRARY(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
@@ -1398,7 +1398,7 @@ def AUD_310_ALIMLIBRARY(config: Config, db: Database, parsed_files_data: List[Tu
     finally:
         if db:
             #db.close()
-            logging.info("Database connection closed.")
+            logging.info("done!")
 
 
 def AUD_311_ALIMELEMENTVALUENODE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
@@ -1499,7 +1499,7 @@ def AUD_311_ALIMELEMENTVALUENODE(config: Config, db: Database, parsed_files_data
     finally:
         if db:
             #db.close()  # Ensure the database connection is closed
-            logging.info("Database connection closed.")
+            logging.info("done!")
 
 
 def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,batch_size=100):
@@ -1604,7 +1604,7 @@ def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tu
     finally:
         if db:
             #db.close()  # Ensure the database connection is closed
-            logging.info("Database connection closed.")
+            logging.info("done!")
 
 
 def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,batch_size=100):
@@ -1805,7 +1805,7 @@ def AUD_314_ALIMSUBJOBS_OPT(config: Config, db: Database, parsed_files_data: Lis
     finally:
         if db:
             #db.close()  # Ensure the database connection is closed
-            logging.info("Database connection closed.")
+            logging.info("done!")
 
 
 def AUD_315_DELETEINACTIFNODES(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],  batch_size: int = 100):
@@ -1880,7 +1880,7 @@ def AUD_315_DELETEINACTIFNODES(config: Config, db: Database, parsed_files_data: 
         # Ensure the database connection is always closed
         if db:
             #db.close()
-            logging.info("Database connection closed.")
+            logging.info("done!")
 
 
 
@@ -1909,7 +1909,7 @@ def AUD_317_ALIMJOBSERVERPROPRETY(config: Config, db: Database, parsed_files_dat
         # Ensure the database connection is always closed
         if db:
             #db.close()
-            logging.info("Database connection closed.")
+            logging.info("done!")
 
 
 def AUD_318_ALIMCONFQUARTZ(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]], file_path: str, batch_size: int = 100):
@@ -1937,7 +1937,7 @@ def AUD_318_ALIMCONFQUARTZ(config: Config, db: Database, parsed_files_data: List
         # Ensure the database connection is always closed
         if db:
             #db.close()
-            logging.info("Database connection closed.")
+            logging.info("done!")
 
 
 def AUD_319_ALIMDOCCONTEXTGROUP(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]], batch_size: int = 100):
@@ -2002,7 +2002,7 @@ def AUD_319_ALIMDOCCONTEXTGROUP(config: Config, db: Database, parsed_files_data:
         # Ensure the database connection is properly closed
         if db:
             #db.close()
-            logging.info("Database connection closed.")
+            logging.info("done!")
 
 
 
@@ -2101,7 +2101,7 @@ def AUD_320_ALIMDOCJOBS(config: Config, db: Database, parsed_files_data: List[Tu
     finally:
         if db:
             #db.close()  # Ensure the database connection is closed
-            logging.info("Database connection closed.")
+            logging.info("done!")
 
 def AUD_323_ALIMELEMENTNODEFILTER(
     config: Config, 
@@ -2131,7 +2131,7 @@ def AUD_323_ALIMELEMENTNODEFILTER(
         batch_insert = []
         insert_query = config.get_param('insert_queries', 'aud_elementnode_filter')
         for result in aud_elementnode_filter_query_results:
-            aud_componentName, aud_field, aud_nameElementNode, aud_show, aud_valueElementNode, aud_ComponementValue, NameProject, NameJob, exec_date = result
+            aud_componentName, aud_field, aud_nameElementNode, aud_show, aud_valueElementNode, aud_ComponementValue, NameProject, NameJob, execution_date = result
             # Add result to batch insert list
             batch_insert.append(result)
 
@@ -2150,7 +2150,7 @@ def AUD_323_ALIMELEMENTNODEFILTER(
     finally:
         if db:
             #db.close()  # Ensure the database connection is closed
-            logging.info("Database connection closed.")
+            logging.info("done!")
 
 
 def AUD_324_ALIMMETADATAFILTER(
@@ -2180,18 +2180,18 @@ def AUD_324_ALIMMETADATAFILTER(
         # Step 2: Insert data into aud_metadata_filter in batches
         batch_insert = []
         for result in aud_metadata_filter_query_results:
-            aud_connector, aud_labelConnector, aud_nameComponentView, aud_comment, aud_key, aud_length, aud_columnName, aud_nullable, aud_pattern, aud_precision, aud_sourceType, aud_type, aud_usefulColumn, aud_originalLength, aud_defaultValue, aud_componentValue, aud_componentName, NameProject, NameJob, exec_date = result
+            aud_connector, aud_labelConnector, aud_nameComponentView, aud_comment, aud_key, aud_length, aud_columnName, aud_nullable, aud_pattern, aud_precision, aud_sourceType, aud_type, aud_usefulColumn, aud_originalLength, aud_defaultValue, aud_componentValue, aud_componentName, NameProject, NameJob, execution_date = result
             # Add result to batch insert list
             batch_insert.append(result)
 
             if len(batch_insert) >= batch_size:
-                db.insert_data_batch('aud_metadata_filter', batch_insert)
+                db.insert_data_batch('aud_metadata_filter', batch_insert, batch_insert)
                 logging.info(f"Inserted batch of data into aud_metadata_filter: {len(batch_insert)} rows")
                 batch_insert.clear()
 
         # Insert remaining data in the batch
         if batch_insert:
-            db.insert_data_batch('aud_metadata_filter', batch_insert)
+            db.insert_data_batch('aud_metadata_filter', batch_insert, batch_insert)
             logging.info(f"Inserted remaining batch of data into aud_metadata_filter: {len(batch_insert)} rows")
 
     except Exception as e:
@@ -2199,4 +2199,4 @@ def AUD_324_ALIMMETADATAFILTER(
     finally:
         if db:
             #db.close()  # Ensure the database connection is closed
-            logging.info("Database connection closed.")
+            logging.info("done!")
