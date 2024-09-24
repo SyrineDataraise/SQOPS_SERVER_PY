@@ -261,7 +261,7 @@ class XMLParser:
 
             # Parse `TalendProperties:Property` elements
             for prop in properties.findall('.//{http://www.talend.org/properties}Property'):
-                logging.debug(f"Found `TalendProperties:Property` element: {ET.tostring(prop, encoding='unicode')[:200]}")  # Print snippet
+                # logging.debug(f"Found `TalendProperties:Property` element: {ET.tostring(prop, encoding='unicode')[:200]}")  # Print snippet
 
                 property_data = {
                     'id': prop.get('{http://www.omg.org/XMI}id'),
@@ -362,8 +362,8 @@ class XMLParser:
 
                 parameters_data.append(param_data)
 
-        # Log total parameters parsed
-        logging.debug(f"Total parameters parsed: {len(parameters_data)}")
+        # # Log total parameters parsed
+        # logging.debug(f"Total parameters parsed: {len(parameters_data)}")
 
         return parameters_data
 
@@ -384,7 +384,7 @@ class XMLParser:
                 for filename in files:
                     if filename.endswith('.item'):
                         file_path = os.path.join(root, filename)  # Use 'root' to construct the full file path
-                        logging.info(f"Processing file: {file_path}")
+                        # logging.info(f"Processing file: {file_path}")
                         try:
                             self.tree = ET.parse(file_path)
                             self.root = self.tree.getroot()
@@ -417,7 +417,7 @@ class XMLParser:
                 for filename in files:
                     if filename.endswith('.properties'):
                         file_path = os.path.join(root, filename)  # Use 'root' to construct the full file path
-                        logging.info(f"Processing file: {file_path}")
+                        # logging.info(f"Processing file: {file_path}")
                         try:
                             self.tree = ET.parse(file_path)
                             self.root = self.tree.getroot()

@@ -13,7 +13,7 @@ class Config:
     def __init__(self, config_file):
         self.config_file = config_file
         self.config = self.load_config()
-        logging.info("Loaded configuration: %s", self.config)
+        # logging.info("Loaded configuration: %s", self.config)
 
     def load_config(self):
         with open(self.config_file, 'r') as f:
