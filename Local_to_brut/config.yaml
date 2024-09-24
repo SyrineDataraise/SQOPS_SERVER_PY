@@ -90,7 +90,7 @@ insert_queries:
 
 
 Directories:
-  items_directory: "C:/Users/sonia/Desktop/TOS_ESB/Studio/workspace/SERVER/process"
+  items_directory: "C:/Users/sonia/Downloads/KEOLISTOURS/KEOLISTOURS/process"
 
 database:
   type: "mysql"  # Example database type
