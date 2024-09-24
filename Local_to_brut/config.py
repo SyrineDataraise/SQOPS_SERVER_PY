@@ -69,7 +69,7 @@ class Config:
     def get_param(self, key, value):
         try:
             parameter = self.config[key][value]
-            logging.debug("Parameter: %s -> %s", value, parameter)
+            # logging.debug("Parameter: %s -> %s", value, parameter)
             return parameter
         except KeyError:
             logging.error(f"No parameter found with name '{value}'")
