@@ -248,12 +248,12 @@ class XMLParser:
 
     def _parse_Properties(self):
         """Parse and return data from `xmi:XMI` elements and their nested `TalendProperties:Property` and `additionalProperties` elements."""
-        logging.info("Starting to parse context group data from `xmi:XMI` elements.")
+        # logging.info("Starting to parse context group data from `xmi:XMI` elements.")
         parsed_context_data = []
 
         # Iterate over `xmi:XMI` elements
         for properties in self.root.iter('{http://www.omg.org/XMI}XMI'):
-            logging.debug(f"Found `xmi:XMI` element: {ET.tostring(properties, encoding='unicode')[:200]}")  # Print snippet
+            # logging.debug(f"Found `xmi:XMI` element: {ET.tostring(properties, encoding='unicode')[:200]}")  # Print snippet
 
             context_data = {
                 'properties': []
@@ -277,7 +277,7 @@ class XMLParser:
 
                 # Parse `additionalProperties` inside the `TalendProperties:Property`
                 for add_prop in prop.findall('.//{http://www.talend.org/properties}additionalProperties'):
-                    logging.debug(f"Found `additionalProperties` with Key: {add_prop.get('key')} and Value: {add_prop.get('value')}")
+                    # logging.debug(f"Found `additionalProperties` with Key: {add_prop.get('key')} and Value: {add_prop.get('value')}")
                     additional_property_data = {
                         'key': add_prop.get('key'),
                         'value': add_prop.get('value')
@@ -288,12 +288,12 @@ class XMLParser:
                 context_data['properties'].append(property_data)
 
             # Log completed parsing for `TalendProperties:Property`
-            logging.info(f"Completed parsing of `TalendProperties:Property` with {len(context_data['properties'])} properties.")
+            # logging.info(f"Completed parsing of `TalendProperties:Property` with {len(context_data['properties'])} properties.")
 
             # Append the context data to the final parsed context data list
             parsed_context_data.append(context_data)
 
-        logging.info(f"Completed parsing context group data. Total parsed `xmi:XMI` elements: {len(parsed_context_data)}.")
+        # logging.info(f"Completed parsing context group data. Total parsed `xmi:XMI` elements: {len(parsed_context_data)}.")
         return parsed_context_data
 
 
@@ -380,9 +380,11 @@ class XMLParser:
                 list of tuples: A list where each tuple contains (project_name, job_name, parsed_data).
             """
             parsed_files_data = []
+            i=0
             for root, dirs, files in os.walk(items_directory):
                 for filename in files:
                     if filename.endswith('.item'):
+                        i+=1
                         file_path = os.path.join(root, filename)  # Use 'root' to construct the full file path
                         # logging.info(f"Processing file: {file_path}")
                         try:
@@ -400,6 +402,8 @@ class XMLParser:
                             logging.error(f"Error parsing file: {file_path}")
                         except Exception as e:
                             logging.error(f"Unexpected error with file {file_path}: {e}", exc_info=True)
+            logging.info(f"Processed {i} files ")
+               
             return parsed_files_data
 
     def loop_parse_properties(self, items_directory):
@@ -413,9 +417,11 @@ class XMLParser:
                 list of tuples: A list where each tuple contains (project_name, job_name, parsed_data).
             """
             parsed_files_data = []
+            i=0
             for root, dirs, files in os.walk(items_directory):
                 for filename in files:
                     if filename.endswith('.properties'):
+                        i+=1
                         file_path = os.path.join(root, filename)  # Use 'root' to construct the full file path
                         # logging.info(f"Processing file: {file_path}")
                         try:
@@ -433,44 +439,52 @@ class XMLParser:
                             logging.error(f"Error parsing file: {file_path}")
                         except Exception as e:
                             logging.error(f"Unexpected error with file {file_path}: {e}", exc_info=True)
+            logging.info(f"Processed {i} files ")
+                
             return parsed_files_data
 
 
     def loop_parse_screenshots(self, screenshots_directory):
         """
-        Parses XML files related to screenshots from the specified directory and extracts relevant data.
-
+        Parses XML files related to screenshots from the specified directory and all its subdirectories.
+        
         Args:
             screenshots_directory (str): The directory containing screenshot XML files to be parsed.
-
+        
         Returns:
-            list of tuples: A list where each tuple contains (screenshot_name, parsed_data).
+            list of tuples: A list where each tuple contains (project_name, job_name, parsed_data).
         """
         parsed_screenshots_data = []
-        for root, dirs, files in os.walk(screenshots_directory):
+        i=0
+        
+        for root, dirs, files in os.walk(screenshots_directory):  # Traverse directories and subdirectories
             for filename in files:
-                if filename.endswith('.screenshot'):  # Assuming screenshot files end with `.screenshot`
+                if filename.endswith('.screenshot'):  # Process only files with `.screenshot` extension
+                    i+=1
                     file_path = os.path.join(root, filename)
                     logging.info(f"Processing screenshot file: {file_path}")
-                    
+
                     try:
+                        # Parse XML file
                         self.tree = ET.parse(file_path)
                         self.root = self.tree.getroot()
                         parsed_data = self._parse_file_screenshots()
 
-                        # Extract project_name and job_name
+                        # Extract project_name and job_name from the filename
                         parts = filename.split('.', 1)
                         project_name = parts[0]
-                        job_name = parts[1].replace('.properties', '') if len(parts) > 1 else None
+                        job_name = parts[1].replace('.screenshot', '') if len(parts) > 1 else None
 
+                        # Append the result to the list
                         parsed_screenshots_data.append((project_name, job_name, parsed_data))
 
                     except ET.ParseError as e:
                         logging.error(f"Failed to parse screenshot XML file: {file_path}. Error: {e}")
                     except Exception as e:
                         logging.error(f"An error occurred while processing the screenshot file: {file_path}. Error: {e}")
-
+        logging.info(f"Processed {i} files ")
         return parsed_screenshots_data
+    
 
     def _parse_screenshot(self):
         """
@@ -483,7 +497,7 @@ class XMLParser:
 
         # Iterate over `talendfile:ScreenshotsMap` elements
         for screenshot in self.root.findall('talendfile:ScreenshotsMap', ns):
-            logging.debug(f"Found `talendfile:ScreenshotsMap` element: {screenshot.attrib}")
+            # logging.debug(f"Found `talendfile:ScreenshotsMap` element: {screenshot.attrib}")
 
 
             # Extract the base64 string from the `value` attribute

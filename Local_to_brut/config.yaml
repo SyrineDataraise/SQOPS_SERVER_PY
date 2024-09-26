@@ -53,6 +53,10 @@ queries:
   ActiveNodes_elementnode :  "select aud_ComponementValue, NameProject, NameJob from aud_elementnode  where aud_nameElementNode = 'ACTIVATE' and aud_valueElementNode = 'false'"
   aud_docjobs : "select distinct namejob, nameproject from aud_docjobs where NameJob not in (select job_name from audit_jobs)"
   aud_inputtable_xml : "select distinct namejob, nameproject from aud_inputtable_xml where NameJob not in (select job_name from audit_jobs)"
+  aud_screenshot : "select distinct namejob, nameproject from aud_screenshot where NameJob not in (select job_name from audit_jobs)"
+
+
+
 
 insert_queries:
   aud_agg_aggregate: "INSERT IGNORE INTO aud_agg_aggregate (NameProject, namejob, aud_componentValue, aud_valueElementRef_input, aud_valueElementRef_output, aud_valueElementRef_function) SELECT a.NameProject, a.namejob, a.aud_componentValue, a.aud_valueElementRef as aud_valueElementRef_input, b.aud_valueElementRef as aud_valueElementRef_output, 'GROUPBY' as aud_valueElementRef_function FROM aud_elementvaluenode a INNER JOIN aud_elementvaluenode b ON a.aud_id : b.aud_id WHERE a.aud_typeField IN ('GROUPBYS') AND b.aud_typeField IN ('GROUPBYS') AND a.aud_elementRef : 'INPUT_COLUMN' AND b.aud_elementRef : 'OUTPUT_COLUMN' AND a.aud_componentName LIKE 'tAggregate%' AND b.aud_componentName LIKE 'tAggregate%' UNION ALL SELECT a.NameProject, a.namejob, a.aud_componentValue, a.aud_valueElementRef as aud_valueElementRef_input, b.aud_valueElementRef as aud_valueElementRef_output , c.aud_valueElementRef as aud_valueElementRef_function FROM aud_elementvaluenode a INNER JOIN aud_elementvaluenode b ON a.aud_id : b.aud_id INNER JOIN aud_elementvaluenode c ON a.aud_id : c.aud_id WHERE a.aud_componentName LIKE 'tAggregate%' AND a.aud_typeField : 'OPERATIONS' AND b.aud_componentName LIKE 'tAggregate%' AND b.aud_typeField : 'OPERATIONS' AND c.aud_componentName LIKE 'tAggregate%' AND c.aud_typeField : 'OPERATIONS' AND a.aud_elementRef : 'INPUT_COLUMN' AND b.aud_elementRef : 'OUTPUT_COLUMN' AND c.aud_elementRef : 'FUNCTION'"
@@ -77,7 +81,7 @@ insert_queries:
   aud_subjobs : "INSERT INTO aud_subjobs (nameproject, namejob, exec_date, name, value) VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE nameproject=VALUES(nameproject), namejob=VALUES(namejob), exec_date=VALUES(exec_date), name=VALUES(name), value=VALUES(value)"
   aud_joblets : "INSERT INTO aud_joblets (nameproject, namejob, aud_componentName, aud_field, aud_name, aud_show, aud_value, aud_ComponentValue, exec_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE aud_field = VALUES(aud_field), aud_name = VALUES(aud_name), aud_show = VALUES(aud_show), aud_value = VALUES(aud_value), aud_ComponentValue = VALUES(aud_ComponentValue), exec_date = VALUES(exec_date)"
   aud_docjobs : "INSERT INTO aud_docjobs (namejob, nameproject, purpose, description, version, statusCode, item, displayName) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE purpose = VALUES(purpose), description = VALUES(description), version = VALUES(version), statusCode = VALUES(statusCode), item = VALUES(item), displayName = VALUES(displayName)"
-
+  aud_screenshot : "INSERT INTO aud_screenshot (namejob, nameproject, screenshot_value, cle, exec_date, width, height) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE screenshot_value = VALUES(screenshot_value), exec_date = VALUES(exec_date), width = VALUES(width), height = VALUES(height)"
   aud_metadata_filter : "INSERT INTO aud_metadata_filter (aud_connector, aud_labelConnector, aud_nameComponentView, aud_comment, aud_key, aud_length, aud_columnName, aud_nullable, aud_pattern, aud_precision, aud_sourceType, aud_type, aud_usefulColumn, aud_originalLength, aud_defaultValue, aud_componentValue, aud_componentName, NameProject, NameJob, exec_date) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE aud_connector = VALUES(aud_connector), aud_labelConnector = VALUES(aud_labelConnector), aud_nameComponentView = VALUES(aud_nameComponentView), aud_comment = VALUES(aud_comment), aud_key = VALUES(aud_key), aud_length = VALUES(aud_length), aud_columnName = VALUES(aud_columnName), aud_nullable = VALUES(aud_nullable), aud_pattern = VALUES(aud_pattern), aud_precision = VALUES(aud_precision), aud_sourceType = VALUES(aud_sourceType), aud_type = VALUES(aud_type), aud_usefulColumn = VALUES(aud_usefulColumn), aud_originalLength = VALUES(aud_originalLength), aud_defaultValue = VALUES(aud_defaultValue), aud_componentValue = VALUES(aud_componentValue), aud_componentName = VALUES(aud_componentName), exec_date = VALUES(exec_date)"
   aud_elementnode_filter : "INSERT INTO aud_elementnode_filter (aud_componentName, aud_field, aud_nameElementNode, aud_show, aud_valueElementNode, aud_ComponementValue, NameProject, NameJob, exec_date) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)"
   aud_doccontextgroup : "INSERT INTO aud_doccontextgroup (namecontextgroup, nameproject, purpose, description, version, statusCode, item, displayName, id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE purpose = VALUES(purpose), description = VALUES(description), version = VALUES(version), statusCode = VALUES(statusCode), item = VALUES(item), displayName = VALUES(displayName), id = VALUES(id)"
@@ -93,6 +97,7 @@ insert_queries:
 
 Directories:
   items_directory: "C:/Users/sonia/Downloads/KEOLISTOURS/KEOLISTOURS/process"
+  screenshots_directory : "C:/Users/sonia/Desktop/TOS_ESB/Studio/workspace/SERVER/process"
 
 database:
   type: "mysql"  # Example database type
