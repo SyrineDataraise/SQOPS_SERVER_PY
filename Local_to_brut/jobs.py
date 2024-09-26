@@ -32,7 +32,7 @@ def AUD_301_ALIMELEMENTNODE(config: Config, db: Database, parsed_files_data: Lis
             batch_delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(batch_delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_elementvaluenode', batch_delete_conditions)
-                logging.info(f"Batch deleted records from aud_elementvaluenode: {len(batch_delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_elementvaluenode: {len(batch_delete_conditions)} rows")
                 batch_delete_conditions.clear()
 
         # Delete remaining records
@@ -53,7 +53,7 @@ def AUD_301_ALIMELEMENTNODE(config: Config, db: Database, parsed_files_data: Lis
             batch_delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(batch_delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_elementnode', batch_delete_conditions)
-                logging.info(f"Batch deleted records from aud_elementnode: {len(batch_delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_elementnode: {len(batch_delete_conditions)} rows")
                 batch_delete_conditions.clear()
 
         # Delete remaining records
@@ -487,7 +487,7 @@ def AUD_305_ALIMVARTABLE_XML(config: Config, db: Database, parsed_files_data: Li
             batch_delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(batch_delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_vartable_xml', batch_delete_conditions)
-                logging.info(f"Batch deleted records from aud_vartable_xml: {len(batch_delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_vartable_xml: {len(batch_delete_conditions)} rows")
                 batch_delete_conditions.clear()
 
         # Delete remaining records
@@ -508,7 +508,7 @@ def AUD_305_ALIMVARTABLE_XML(config: Config, db: Database, parsed_files_data: Li
             batch_delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(batch_delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_vartable_xml', batch_delete_conditions)
-                logging.info(f"Batch deleted records from aud_vartable_xml: {len(batch_delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_vartable_xml: {len(batch_delete_conditions)} rows")
                 batch_delete_conditions.clear()
 
         # Delete remaining records
@@ -577,7 +577,7 @@ def AUD_305_ALIMVARTABLE_XML(config: Config, db: Database, parsed_files_data: Li
             batch_delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(batch_delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_vartable_xml', batch_delete_conditions)
-                logging.info(f"Batch deleted records from aud_vartable_xml: {len(batch_delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_vartable_xml: {len(batch_delete_conditions)} rows")
                 batch_delete_conditions.clear()
 
         # Delete remaining records
@@ -615,7 +615,7 @@ def AUD_305_ALIMVARTABLE(config: Config, db: Database, parsed_files_data: List[T
             batch_delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(batch_delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_vartable', batch_delete_conditions)
-                logging.info(f"Batch deleted records from aud_vartable: {len(batch_delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_vartable: {len(batch_delete_conditions)} rows")
                 batch_delete_conditions.clear()
 
         # Delete remaining records
@@ -636,7 +636,7 @@ def AUD_305_ALIMVARTABLE(config: Config, db: Database, parsed_files_data: List[T
             batch_delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(batch_delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_vartable', batch_delete_conditions)
-                logging.info(f"Batch deleted records from aud_vartable: {len(batch_delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_vartable: {len(batch_delete_conditions)} rows")
                 batch_delete_conditions.clear()
 
         # Delete remaining records
@@ -705,7 +705,7 @@ def AUD_305_ALIMVARTABLE(config: Config, db: Database, parsed_files_data: List[T
             batch_delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(batch_delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_vartable', batch_delete_conditions)
-                logging.info(f"Batch deleted records from aud_vartable: {len(batch_delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_vartable: {len(batch_delete_conditions)} rows")
                 batch_delete_conditions.clear()
 
         # Delete remaining records
@@ -731,7 +731,7 @@ def AUD_306_ALIMOUTPUTTABLE(config: Config, db: Database, parsed_files_data: Lis
             delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_outputTable', delete_conditions)
-                logging.info(f"Batch deleted records from aud_outputTable: {len(delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_outputTable: {len(delete_conditions)} rows")
                 delete_conditions.clear()
 
         if delete_conditions:
@@ -750,7 +750,7 @@ def AUD_306_ALIMOUTPUTTABLE(config: Config, db: Database, parsed_files_data: Lis
             delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_outputTable', delete_conditions)
-                logging.info(f"Batch deleted records from aud_outputTable: {len(delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_outputTable: {len(delete_conditions)} rows")
                 delete_conditions.clear()
 
         if delete_conditions:
@@ -820,7 +820,7 @@ def AUD_306_ALIMOUTPUTTABLE(config: Config, db: Database, parsed_files_data: Lis
             delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_outputtable', delete_conditions)
-                logging.info(f"Batch deleted records from aud_outputTable: {len(delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_outputTable: {len(delete_conditions)} rows")
                 delete_conditions.clear()
 
         if delete_conditions:
@@ -846,7 +846,7 @@ def AUD_307_ALIMINPUTTABLE_XML(config: Config, db: Database, parsed_files_data: 
             delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_inputtable_xml', delete_conditions)
-                logging.info(f"Batch deleted records from aud_inputtable_xml: {len(delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_inputtable_xml: {len(delete_conditions)} rows")
                 delete_conditions.clear()
 
         if delete_conditions:
@@ -865,7 +865,7 @@ def AUD_307_ALIMINPUTTABLE_XML(config: Config, db: Database, parsed_files_data: 
             delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_inputtable_xml', delete_conditions)
-                logging.info(f"Batch deleted records from aud_inputtable_xml: {len(delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_inputtable_xml: {len(delete_conditions)} rows")
                 delete_conditions.clear()
 
         if delete_conditions:
@@ -928,8 +928,8 @@ def AUD_307_ALIMINPUTTABLE_XML(config: Config, db: Database, parsed_files_data: 
                             batch_insert.clear()
 
                     # Log a warning if aud_nameColumnInput is still None after default value assignment
-                    if aud_nameColumnInput == 'DEFAULT_COLUMN_VALUE':
-                        logging.warning("aud_nameColumnInput was None and has been set to 'DEFAULT_COLUMN_VALUE'.")
+                    # if aud_nameColumnInput == 'DEFAULT_COLUMN_VALUE':
+                        # logging.warning("aud_nameColumnInput was None and has been set to 'DEFAULT_COLUMN_VALUE'.")
 
 
         # Insert remaining data after the loop
@@ -948,7 +948,7 @@ def AUD_307_ALIMINPUTTABLE_XML(config: Config, db: Database, parsed_files_data: 
             delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(delete_conditions) >= batch_size:
                 db.delete_records_batch('inputtableJoinElemntnode_results', delete_conditions)
-                logging.info(f"Batch deleted records from aud_inputtable_xml: {len(delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_inputtable_xml: {len(delete_conditions)} rows")
                 delete_conditions.clear()
 
         if delete_conditions:
@@ -974,7 +974,7 @@ def AUD_307_ALIMINPUTTABLE(config: Config, db: Database, parsed_files_data: List
             delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_inputtable', delete_conditions)
-                logging.info(f"Batch deleted records from aud_inputtable: {len(delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_inputtable: {len(delete_conditions)} rows")
                 delete_conditions.clear()
 
         if delete_conditions:
@@ -993,7 +993,7 @@ def AUD_307_ALIMINPUTTABLE(config: Config, db: Database, parsed_files_data: List
             delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_inputtable', delete_conditions)
-                logging.info(f"Batch deleted records from aud_inputtable: {len(delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_inputtable: {len(delete_conditions)} rows")
                 delete_conditions.clear()
 
         if delete_conditions:
@@ -1083,7 +1083,7 @@ def AUD_307_ALIMINPUTTABLE(config: Config, db: Database, parsed_files_data: List
             delete_conditions.append({'NameProject': project_name, 'NameJob': job_name , 'aud_componentValue':aud_ComponementValue})
             if len(delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_inputtable_xml', delete_conditions)
-                logging.info(f"Batch deleted records from aud_inputtable: {len(delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_inputtable: {len(delete_conditions)} rows")
                 delete_conditions.clear()
 
         if delete_conditions:
@@ -1109,7 +1109,7 @@ def AUD_308_ALIMCONNECTIONCOMPONENT(config: Config, db: Database, parsed_files_d
             delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_connectioncomponent', delete_conditions)
-                logging.info(f"Batch deleted records from aud_connectioncomponent: {len(delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_connectioncomponent: {len(delete_conditions)} rows")
                 delete_conditions.clear()
 
         if delete_conditions:
@@ -1128,7 +1128,7 @@ def AUD_308_ALIMCONNECTIONCOMPONENT(config: Config, db: Database, parsed_files_d
             delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_connectioncomponent', delete_conditions)
-                logging.info(f"Batch deleted records from aud_connectioncomponent: {len(delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_connectioncomponent: {len(delete_conditions)} rows")
                 delete_conditions.clear()
 
         if delete_conditions:
@@ -1169,7 +1169,7 @@ def AUD_308_ALIMCONNECTIONCOMPONENT(config: Config, db: Database, parsed_files_d
 
                     if len(batch_insert) >= batch_size:
                         try:
-                            logging.info("Inserting batch into database.")
+                            # logging.info("Inserting batch into database.")
                             db.insert_data_batch(insert_query, 'aud_connectioncomponent', batch_insert)
                             # logging.info(f"Inserted batch of data into aud_connectioncomponent: {len(batch_insert)} rows")
                         except Exception as insert_error:
@@ -1205,7 +1205,7 @@ def AUD_309_ALIMELEMENTPARAMETER(config: Config, db: Database, parsed_files_data
             delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_elementparameter', delete_conditions)
-                logging.info(f"Batch deleted records from aud_elementparameter: {len(delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_elementparameter: {len(delete_conditions)} rows")
                 delete_conditions.clear()
 
         if delete_conditions:
@@ -1224,7 +1224,7 @@ def AUD_309_ALIMELEMENTPARAMETER(config: Config, db: Database, parsed_files_data
             delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_elementparameter', delete_conditions)
-                logging.info(f"Batch deleted records from aud_elementparameter: {len(delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_elementparameter: {len(delete_conditions)} rows")
                 delete_conditions.clear()
 
         if delete_conditions:
@@ -1283,7 +1283,7 @@ def AUD_309_ALIMROUTINES(config: Config, db: Database, parsed_files_data: List[T
             delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_routines', delete_conditions)
-                logging.info(f"Batch deleted records from aud_routines: {len(delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_routines: {len(delete_conditions)} rows")
                 delete_conditions.clear()
 
         if delete_conditions:
@@ -1302,7 +1302,7 @@ def AUD_309_ALIMROUTINES(config: Config, db: Database, parsed_files_data: List[T
             delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_routines', delete_conditions)
-                logging.info(f"Batch deleted records from aud_routines: {len(delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_routines: {len(delete_conditions)} rows")
                 delete_conditions.clear()
 
         if delete_conditions:
@@ -1361,7 +1361,7 @@ def AUD_310_ALIMLIBRARY(config: Config, db: Database, parsed_files_data: List[Tu
             delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_library', delete_conditions)
-                logging.info(f"Batch deleted records from aud_library: {len(delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_library: {len(delete_conditions)} rows")
                 delete_conditions.clear()
 
         if delete_conditions:
@@ -1380,7 +1380,7 @@ def AUD_310_ALIMLIBRARY(config: Config, db: Database, parsed_files_data: List[Tu
             delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_library', delete_conditions)
-                logging.info(f"Batch deleted records from aud_library: {len(delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_library: {len(delete_conditions)} rows")
                 delete_conditions.clear()
 
         if delete_conditions:
@@ -1568,7 +1568,7 @@ def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tu
             batch_delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(batch_delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_elementvaluenode', batch_delete_conditions)
-                logging.info(f"Batch deleted records from aud_elementvaluenode: {len(batch_delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_elementvaluenode: {len(batch_delete_conditions)} rows")
                 batch_delete_conditions.clear()
 
         # Delete remaining records
@@ -1589,7 +1589,7 @@ def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tu
             batch_delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(batch_delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_job_fils', batch_delete_conditions)
-                logging.info(f"Batch deleted records from aud_job_fils: {len(batch_delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_job_fils: {len(batch_delete_conditions)} rows")
                 batch_delete_conditions.clear()
 
         # Delete remaining records
@@ -1673,7 +1673,7 @@ def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tu
             batch_delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(batch_delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_elementvaluenode', batch_delete_conditions)
-                logging.info(f"Batch deleted records from aud_elementvaluenode: {len(batch_delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_elementvaluenode: {len(batch_delete_conditions)} rows")
                 batch_delete_conditions.clear()
 
         # Delete remaining records
@@ -1694,7 +1694,7 @@ def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tu
             batch_delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(batch_delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_joblets', batch_delete_conditions)
-                logging.info(f"Batch deleted records from aud_joblets: {len(batch_delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_joblets: {len(batch_delete_conditions)} rows")
                 batch_delete_conditions.clear()
 
         # Delete remaining records
@@ -1742,7 +1742,7 @@ def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tu
             delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(delete_conditions) >= batch_size:
                 db.delete_records_batch('jobletsJoinelementnode_results', delete_conditions)
-                logging.info(f"Batch deleted records from aud_inputtable: {len(delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_inputtable: {len(delete_conditions)} rows")
                 delete_conditions.clear()
 
         if delete_conditions:
@@ -1783,7 +1783,7 @@ def AUD_314_ALIMSUBJOBS_OPT(config: Config, db: Database, parsed_files_data: Lis
 
             if len(batch_delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_elementvaluenode', batch_delete_conditions)
-                logging.info(f"Batch deleted records from aud_elementvaluenode: {len(batch_delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_elementvaluenode: {len(batch_delete_conditions)} rows")
                 batch_delete_conditions.clear()
 
         # Delete remaining records
@@ -1805,7 +1805,7 @@ def AUD_314_ALIMSUBJOBS_OPT(config: Config, db: Database, parsed_files_data: Lis
 
             if len(batch_delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_subjobs', batch_delete_conditions)
-                logging.info(f"Batch deleted records from aud_subjobs: {len(batch_delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_subjobs: {len(batch_delete_conditions)} rows")
                 batch_delete_conditions.clear()
 
         # Delete remaining records
@@ -2067,7 +2067,7 @@ def AUD_320_ALIMDOCJOBS(config: Config, db: Database, parsed_files_data: List[Tu
 
             if len(batch_delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_docjobs', batch_delete_conditions)
-                logging.info(f"Batch deleted records from aud_docjobs: {len(batch_delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_docjobs: {len(batch_delete_conditions)} rows")
                 batch_delete_conditions.clear()
 
         # Delete remaining records
@@ -2089,7 +2089,7 @@ def AUD_320_ALIMDOCJOBS(config: Config, db: Database, parsed_files_data: List[Tu
 
             if len(batch_delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_subjobs', batch_delete_conditions)
-                logging.info(f"Batch deleted records from aud_subjobs: {len(batch_delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_subjobs: {len(batch_delete_conditions)} rows")
                 batch_delete_conditions.clear()
 
         # Delete remaining records

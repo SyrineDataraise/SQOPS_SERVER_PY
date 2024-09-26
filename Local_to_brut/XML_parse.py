@@ -524,6 +524,8 @@ class XMLParser:
                         'key': screenshot.get('key'),
                         'value': base64_string,  # Truncate base64 string for logging
                         'resolution': f"{width}x{height}",
+                        'width' : width,
+                        'height' : height
                     }
                     screenshot_data.append(data)
 

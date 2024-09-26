@@ -119,7 +119,7 @@ class Database:
                         except Exception as e:
                             logging.warning(f"Skipping row due to error: {e}, row data: {row}")
                     self.connection.commit()  # Ensure the changes are committed
-                    logging.info(f"Batch inserted data into {table_name}: {len(data_batch)} rows.")
+                    # logging.info(f"Batch inserted data into {table_name}: {len(data_batch)} rows.")
             except Exception as e:
                 self.connection.rollback()  # Rollback in case of a major error
                 logging.error(f"Error during batch insert into {table_name}: {e}", exc_info=True)
@@ -166,7 +166,7 @@ class Database:
             self.connection.commit()
             
             # Logging successful batch delete
-            logging.info(f"Successfully deleted records from {table_name} for {len(conditions_batch)} conditions.")
+            # logging.info(f"Successfully deleted records from {table_name} for {len(conditions_batch)} conditions.")
         
         except Exception as e:
             # Logging error during batch delete
@@ -219,7 +219,7 @@ class Database:
                         except Exception as e:
                             logging.warning(f"Skipping row due to error: {e}, row data: {row}")
                     self.connection.commit()  # Ensure the changes are committed
-                    logging.info(f"Batch inserted data into {table_name}: {len(data_batch)} rows.")
+                    # logging.info(f"Batch inserted data into {table_name}: {len(data_batch)} rows.")
             except Exception as e:
                 self.connection.rollback()  # Rollback in case of a major error
                 logging.error(f"Error during batch insert into {table_name}: {e}", exc_info=True)
@@ -253,7 +253,7 @@ class Database:
                 # Insert any remaining data if the last batch is smaller than batch_size
                 if data_batch:
                     self.insert_data_batch(insert_query, table_name, data_batch)
-                    logging.info(f"Inserted remaining {len(data_batch)} rows from CSV into {table_name}.")
+                    # logging.info(f"Inserted remaining {len(data_batch)} rows from CSV into {table_name}.")
 
         except FileNotFoundError as e:
             logging.error(f"CSV file not found: {e}")
