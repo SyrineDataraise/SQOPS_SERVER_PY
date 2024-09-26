@@ -38,7 +38,7 @@ def AUD_301_ALIMELEMENTNODE(config: Config, db: Database, parsed_files_data: Lis
         # Delete remaining records
         if batch_delete_conditions:
             db.delete_records_batch('aud_elementvaluenode', batch_delete_conditions)
-            logging.info(f"Batch deleted remaining records from aud_elementvaluenode: {len(batch_delete_conditions)} rows")
+           # logging.info(f"Batch deleted remaining records from aud_elementvaluenode: {len(batch_delete_conditions)} rows")
 
         # Step 4: Execute aud_elementnode query
         aud_elementnode_query = config.get_param('queries', 'aud_elementnode')
@@ -59,7 +59,7 @@ def AUD_301_ALIMELEMENTNODE(config: Config, db: Database, parsed_files_data: Lis
         # Delete remaining records
         if batch_delete_conditions:
             db.delete_records_batch('aud_elementnode', batch_delete_conditions)
-            logging.info(f"Batch deleted remaining records from aud_elementnode: {len(batch_delete_conditions)} rows")
+           # logging.info(f"Batch deleted remaining records from aud_elementnode: {len(batch_delete_conditions)} rows")
 
         # Step 6: Insert parsed data into the aud_elementnode table in batches
         insert_query = config.get_param('insert_queries', 'aud_elementnode')
@@ -81,13 +81,13 @@ def AUD_301_ALIMELEMENTNODE(config: Config, db: Database, parsed_files_data: Lis
 
                     if len(batch_insert) >= batch_size:
                         db.insert_data_batch(insert_query, 'aud_elementnode', batch_insert)
-                        # logging.info(f"Inserted batch of data into aud_elementnode: {len(batch_insert)} rows")
+                        # #logging.info(f"Inserted batch of data into aud_elementnode: {len(batch_insert)} rows")
                         batch_insert.clear()
 
         # Insert remaining data in the batch
         if batch_insert:
             db.insert_data_batch(insert_query, 'aud_elementnode', batch_insert)
-            logging.info(f"Inserted remaining batch of data into aud_elementnode: {len(batch_insert)} rows")
+            #logging.info(f"Inserted remaining batch of data into aud_elementnode: {len(batch_insert)} rows")
 
     except Exception as e:
         logging.error(f"An error occurred: {e}", exc_info=True)
@@ -225,13 +225,13 @@ def AUD_303_ALIMNODE(config: Config, db: Database, parsed_files_data: List[Tuple
 
                     if len(batch_insert) >= batch_size:
                         db.insert_data_batch(insert_query, 'aud_node', batch_insert)
-                        # logging.info(f"Inserted batch of data into aud_node: {len(batch_insert)} rows")
+                        # #logging.info(f"Inserted batch of data into aud_node: {len(batch_insert)} rows")
                         batch_insert.clear()
 
         # Insert remaining data in the batch
         if batch_insert:
             db.insert_data_batch(insert_query, 'aud_node', batch_insert)
-            logging.info(f"Inserted remaining batch of data into aud_node: {len(batch_insert)} rows")
+            #logging.info(f"Inserted remaining batch of data into aud_node: {len(batch_insert)} rows")
 
         # Step 7: Execute NodeJoinElementnode query
         NodeJoinElementnode_query = config.get_param('queries', 'NodeJoinElementnode')
@@ -334,7 +334,7 @@ def AUD_303_BIGDATA_PARAMETERS(
         if aud_bigdata_batch:
             insert_query = config.get_param('insert_queries', 'aud_bigdata')
             db.insert_data_batch(insert_query, 'aud_bigdata', aud_bigdata_batch)
-            logging.info(f"Inserted remaining batch of data into aud_bigdata: {len(aud_bigdata_batch)} rows")
+            #logging.info(f"Inserted remaining batch of data into aud_bigdata: {len(aud_bigdata_batch)} rows")
 
         # Insert data for aud_bigdata_elementvalue
         if len(aud_bigdata_elementvalue_batch) >= batch_size:
@@ -346,7 +346,7 @@ def AUD_303_BIGDATA_PARAMETERS(
         if aud_bigdata_elementvalue_batch:
             insert_query = config.get_param('insert_queries', 'aud_bigdata_elementvalue')
             db.insert_data_batch(insert_query, 'aud_bigdata_elementvalue', aud_bigdata_elementvalue_batch)
-            logging.info(f"Inserted remaining batch of data into aud_bigdata_elementvalue: {len(aud_bigdata_elementvalue_batch)} rows")
+            #logging.info(f"Inserted remaining batch of data into aud_bigdata_elementvalue: {len(aud_bigdata_elementvalue_batch)} rows")
 
     except Exception as e:
         logging.error(f"An error occurred: {str(e)}", exc_info=True)
@@ -379,7 +379,7 @@ def AUD_304_ALIMMETADATA(config: Config, db: Database, parsed_files_data: List[T
                 'NameJob': job_name
             })
         db.delete_records_batch('aud_metadata', delete_conditions)
-        logging.info(f"Deleted records for projects/jobs: {[(d['NameProject'], d['NameJob']) for d in delete_conditions]}")
+        # logging.info(f"Deleted records for projects/jobs: {[(d['NameProject'], d['NameJob']) for d in delete_conditions]}")
 
         # Step 4: Execute aud_metadata query
         aud_metadata_query = config.get_param('queries', 'aud_metadata')
@@ -397,7 +397,7 @@ def AUD_304_ALIMMETADATA(config: Config, db: Database, parsed_files_data: List[T
                 'NameJob': job_name
             })
         db.delete_records_batch('aud_metadata', delete_conditions)
-        logging.info(f"Deleted records for projects/jobs: {[(d['NameProject'], d['NameJob']) for d in delete_conditions]}")
+        # logging.info(f"Deleted records for projects/jobs: {[(d['NameProject'], d['NameJob']) for d in delete_conditions]}")
 
         # Step 6: Collect parsed parameters data into batches
         data_batch = []
@@ -456,7 +456,7 @@ def AUD_304_ALIMMETADATA(config: Config, db: Database, parsed_files_data: List[T
                 'NameJob': job_name
             })
         db.delete_records_batch('aud_metadata', delete_conditions)
-        logging.info(f"Deleted records for projects/jobs: {[(d['NameProject'], d['NameJob']) for d in delete_conditions]}")
+        # logging.info(f"Deleted records for projects/jobs: {[(d['NameProject'], d['NameJob']) for d in delete_conditions]}")
 
     except Exception as e:
         logging.error(f"An error occurred: {e}", exc_info=True)
@@ -493,7 +493,7 @@ def AUD_305_ALIMVARTABLE_XML(config: Config, db: Database, parsed_files_data: Li
         # Delete remaining records
         if batch_delete_conditions:
             db.delete_records_batch('aud_vartable_xml', batch_delete_conditions)
-            logging.info(f"Batch deleted remaining records from aud_vartable_xml: {len(batch_delete_conditions)} rows")
+           # logging.info(f"Batch deleted remaining records from aud_vartable_xml: {len(batch_delete_conditions)} rows")
 
         # Step 4: Execute aud_vartable_xml query
         vartableJoinElemntnode_query = config.get_param('queries', 'aud_vartable_xml')
@@ -514,7 +514,7 @@ def AUD_305_ALIMVARTABLE_XML(config: Config, db: Database, parsed_files_data: Li
         # Delete remaining records
         if batch_delete_conditions:
             db.delete_records_batch('aud_vartable_xml', batch_delete_conditions)
-            logging.info(f"Batch deleted remaining records from aud_vartable_xml: {len(batch_delete_conditions)} rows")
+           # logging.info(f"Batch deleted remaining records from aud_vartable_xml: {len(batch_delete_conditions)} rows")
 
         # Step 6: Insert parsed data into the aud_vartable_xml table in batches
         insert_query = config.get_param('insert_queries', 'aud_vartable_xml')
@@ -556,13 +556,13 @@ def AUD_305_ALIMVARTABLE_XML(config: Config, db: Database, parsed_files_data: Li
 
                         if len(batch_insert) >= insert_batch_size:
                             db.insert_data_batch(insert_query, 'aud_vartable_xml', batch_insert)
-                            # logging.info(f"Inserted batch of data into aud_vartable_xml: {len(batch_insert)} rows")
+                            # #logging.info(f"Inserted batch of data into aud_vartable_xml: {len(batch_insert)} rows")
                             batch_insert.clear()
 
         # Insert remaining data in the batch
         if batch_insert:
             db.insert_data_batch(insert_query, 'aud_vartable_xml', batch_insert)
-            logging.info(f"Inserted remaining batch of data into aud_vartable_xml: {len(batch_insert)} rows")
+            #logging.info(f"Inserted remaining batch of data into aud_vartable_xml: {len(batch_insert)} rows")
 
         # Step 7: Execute vartableJoinElemntnode query
         vartableJoinElemntnode_query = config.get_param('queries', 'vartableJoinElemntnode')
@@ -583,7 +583,7 @@ def AUD_305_ALIMVARTABLE_XML(config: Config, db: Database, parsed_files_data: Li
         # Delete remaining records
         if batch_delete_conditions:
             db.delete_records_batch('vartableJoinElemntnode_results', batch_delete_conditions)
-            logging.info(f"Batch deleted remaining records from aud_vartable_xml: {len(batch_delete_conditions)} rows")
+           # logging.info(f"Batch deleted remaining records from aud_vartable_xml: {len(batch_delete_conditions)} rows")
 
     except Exception as e:
         logging.error(f"An error occurred: {e}", exc_info=True)
@@ -621,7 +621,7 @@ def AUD_305_ALIMVARTABLE(config: Config, db: Database, parsed_files_data: List[T
         # Delete remaining records
         if batch_delete_conditions:
             db.delete_records_batch('aud_vartable', batch_delete_conditions)
-            logging.info(f"Batch deleted remaining records from aud_vartable: {len(batch_delete_conditions)} rows")
+           # logging.info(f"Batch deleted remaining records from aud_vartable: {len(batch_delete_conditions)} rows")
 
         # Step 4: Execute aud_vartable query
         vartableJoinElemntnode_query = config.get_param('queries', 'aud_vartable')
@@ -642,7 +642,7 @@ def AUD_305_ALIMVARTABLE(config: Config, db: Database, parsed_files_data: List[T
         # Delete remaining records
         if batch_delete_conditions:
             db.delete_records_batch('aud_vartable', batch_delete_conditions)
-            logging.info(f"Batch deleted remaining records from aud_vartable: {len(batch_delete_conditions)} rows")
+           # logging.info(f"Batch deleted remaining records from aud_vartable: {len(batch_delete_conditions)} rows")
 
         # Step 6: Insert parsed data into the aud_vartable table in batches
         insert_query = config.get_param('insert_queries', 'aud_vartable')
@@ -684,13 +684,13 @@ def AUD_305_ALIMVARTABLE(config: Config, db: Database, parsed_files_data: List[T
 
                         if len(batch_insert) >= insert_batch_size:
                             db.insert_data_batch(insert_query, 'aud_vartable', batch_insert)
-                            # logging.info(f"Inserted batch of data into aud_vartable: {len(batch_insert)} rows")
+                            # #logging.info(f"Inserted batch of data into aud_vartable: {len(batch_insert)} rows")
                             batch_insert.clear()
 
         # Insert remaining data in the batch
         if batch_insert:
             db.insert_data_batch(insert_query, 'aud_vartable', batch_insert)
-            logging.info(f"Inserted remaining batch of data into aud_vartable: {len(batch_insert)} rows")
+            #logging.info(f"Inserted remaining batch of data into aud_vartable: {len(batch_insert)} rows")
 
         # Step 7: Execute vartableJoinElemntnode query
         vartableJoinElemntnode_query = config.get_param('queries', 'vartableJoinElemntnode')
@@ -711,7 +711,7 @@ def AUD_305_ALIMVARTABLE(config: Config, db: Database, parsed_files_data: List[T
         # Delete remaining records
         if batch_delete_conditions:
             db.delete_records_batch('vartableJoinElemntnode_results', batch_delete_conditions)
-            logging.info(f"Batch deleted remaining records from aud_vartable: {len(batch_delete_conditions)} rows")
+           # logging.info(f"Batch deleted remaining records from aud_vartable: {len(batch_delete_conditions)} rows")
 
     except Exception as e:
         logging.error(f"An error occurred: {e}", exc_info=True)
@@ -736,7 +736,7 @@ def AUD_306_ALIMOUTPUTTABLE(config: Config, db: Database, parsed_files_data: Lis
 
         if delete_conditions:
             db.delete_records_batch('aud_outputTable', delete_conditions)
-            logging.info(f"Deleted remaining records from aud_outputTable: {len(delete_conditions)} rows")
+            # #logging.info(f"Deleted remaining records from aud_outputTable: {len(delete_conditions)} rows")
 
         # Step 4: Execute aud_outputTable query
         aud_outputTable_query = config.get_param('queries', 'aud_outputTable')
@@ -755,7 +755,7 @@ def AUD_306_ALIMOUTPUTTABLE(config: Config, db: Database, parsed_files_data: Lis
 
         if delete_conditions:
             db.delete_records_batch('aud_outputTable', delete_conditions)
-            logging.info(f"Deleted remaining records from aud_outputTable: {len(delete_conditions)} rows")
+            # #logging.info(f"Deleted remaining records from aud_outputTable: {len(delete_conditions)} rows")
 
         # Step 6: Insert parsed data into aud_outputTable in batches
         insert_query = config.get_param('insert_queries', 'aud_outputTable')
@@ -800,14 +800,14 @@ def AUD_306_ALIMOUTPUTTABLE(config: Config, db: Database, parsed_files_data: Lis
 
                             if len(batch_insert) >= batch_size:
                                 db.insert_data_batch(insert_query, 'aud_outputTable', batch_insert)
-                                # logging.info(f"Inserted batch of data into aud_outputTable: {len(batch_insert)} rows")
+                                # #logging.info(f"Inserted batch of data into aud_outputTable: {len(batch_insert)} rows")
                                 batch_insert.clear()
                         else:
                             logging.warning("aud_OutputName is None, skipping this entry.")
 
         if batch_insert:
             db.insert_data_batch(insert_query, 'aud_outputTable', batch_insert)
-            logging.info(f"Inserted remaining batch of data into aud_outputTable: {len(batch_insert)} rows")
+            #logging.info(f"Inserted remaining batch of data into aud_outputTable: {len(batch_insert)} rows")
 
         # Step 7: Execute outputtableJoinElemntnode query and delete records
         outputtableJoinElemntnode_query = config.get_param('queries', 'outputtableJoinElemntnode')
@@ -825,7 +825,7 @@ def AUD_306_ALIMOUTPUTTABLE(config: Config, db: Database, parsed_files_data: Lis
 
         if delete_conditions:
             db.delete_records_batch('aud_outputtable', delete_conditions)
-            logging.info(f"Deleted remaining records from aud_outputTable: {len(delete_conditions)} rows")
+            # #logging.info(f"Deleted remaining records from aud_outputTable: {len(delete_conditions)} rows")
 
     except Exception as e:
         logging.error(f"An error occurred: {e}", exc_info=True)
@@ -851,7 +851,7 @@ def AUD_307_ALIMINPUTTABLE_XML(config: Config, db: Database, parsed_files_data: 
 
         if delete_conditions:
             db.delete_records_batch('aud_inputtable_xml', delete_conditions)
-            logging.info(f"Deleted remaining records from aud_inputtable_xml: {len(delete_conditions)} rows")
+            # #logging.info(f"Deleted remaining records from aud_inputtable_xml: {len(delete_conditions)} rows")
 
         # Step 4: Execute aud_inputtable_xml query
         aud_inputtable_xml_query = config.get_param('queries', 'aud_inputtable_xml')
@@ -870,7 +870,7 @@ def AUD_307_ALIMINPUTTABLE_XML(config: Config, db: Database, parsed_files_data: 
 
         if delete_conditions:
             db.delete_records_batch('aud_inputtable_xml', delete_conditions)
-            logging.info(f"Deleted remaining records from aud_inputtable_xml: {len(delete_conditions)} rows")
+            # #logging.info(f"Deleted remaining records from aud_inputtable_xml: {len(delete_conditions)} rows")
 
         # Step 6: Insert parsed data into aud_inputtable_xml in batches
         insert_query = config.get_param('insert_queries', 'aud_inputtable_xml')
@@ -924,7 +924,7 @@ def AUD_307_ALIMINPUTTABLE_XML(config: Config, db: Database, parsed_files_data: 
                         # Insert the batch when the size limit is reached
                         if len(batch_insert) >= batch_size:
                             db.insert_data_batch(insert_query, 'aud_inputtable_xml', batch_insert)
-                            # logging.info(f"Inserted batch of data into aud_inputtable_xml: {len(batch_insert)} rows")
+                            # #logging.info(f"Inserted batch of data into aud_inputtable_xml: {len(batch_insert)} rows")
                             batch_insert.clear()
 
                     # Log a warning if aud_nameColumnInput is still None after default value assignment
@@ -935,7 +935,7 @@ def AUD_307_ALIMINPUTTABLE_XML(config: Config, db: Database, parsed_files_data: 
         # Insert remaining data after the loop
         if batch_insert:
             db.insert_data_batch(insert_query, 'aud_inputtable_xml', batch_insert)
-            logging.info(f"Inserted remaining batch of data into aud_inputtable_xml: {len(batch_insert)} rows")
+            #logging.info(f"Inserted remaining batch of data into aud_inputtable_xml: {len(batch_insert)} rows")
 
         # Step 7: Execute inputtableJoinElemntnode query and delete records
         inputtableJoinElemntnode_query = config.get_param('queries', 'inputtableJoinElemntnode')
@@ -953,7 +953,7 @@ def AUD_307_ALIMINPUTTABLE_XML(config: Config, db: Database, parsed_files_data: 
 
         if delete_conditions:
             db.delete_records_batch('inputtableJoinElemntnode_results', delete_conditions)
-            logging.info(f"Deleted remaining records from aud_inputtable_xml: {len(delete_conditions)} rows")
+            # #logging.info(f"Deleted remaining records from aud_inputtable_xml: {len(delete_conditions)} rows")
 
     except Exception as e:
         logging.error(f"An error occurred: {e}", exc_info=True)
@@ -979,7 +979,7 @@ def AUD_307_ALIMINPUTTABLE(config: Config, db: Database, parsed_files_data: List
 
         if delete_conditions:
             db.delete_records_batch('aud_inputtable', delete_conditions)
-            logging.info(f"Deleted remaining records from aud_inputtable: {len(delete_conditions)} rows")
+            # #logging.info(f"Deleted remaining records from aud_inputtable: {len(delete_conditions)} rows")
 
         # Step 4: Execute aud_inputtable query
         aud_inputtable_query = config.get_param('queries', 'aud_inputtable')
@@ -998,7 +998,7 @@ def AUD_307_ALIMINPUTTABLE(config: Config, db: Database, parsed_files_data: List
 
         if delete_conditions:
             db.delete_records_batch('aud_inputtable', delete_conditions)
-            logging.info(f"Deleted remaining records from aud_inputtable: {len(delete_conditions)} rows")
+            # #logging.info(f"Deleted remaining records from aud_inputtable: {len(delete_conditions)} rows")
 
         # Step 6: Insert parsed data into aud_inputtable in batches
         insert_query = config.get_param('insert_queries', 'aud_inputtable')
@@ -1057,20 +1057,20 @@ def AUD_307_ALIMINPUTTABLE(config: Config, db: Database, parsed_files_data: List
                         # Insert the batch when the size limit is reached
                         if len(batch_insert) >= batch_size:
                             db.insert_data_batch(insert_query, 'aud_inputtable', batch_insert)
-                            # logging.info(f"Inserted batch of data into aud_inputtable: {len(batch_insert)} rows")
+                            # #logging.info(f"Inserted batch of data into aud_inputtable: {len(batch_insert)} rows")
                             batch_insert.clear()
 
-                    # Log a warning if aud_nameColumnInput & aud_nameRowInput is still None after default value assignment
-                    if aud_nameColumnInput == 'DEFAULT_COLUMN_VALUE':
-                        logging.warning("aud_nameColumnInput was None and has been set to 'DEFAULT_COLUMN_VALUE'.")
-                    if aud_nameRowInput == 'DEFAULT_COLUMN_VALUE':
-                        logging.warning("aud_nameRowInput was None and has been set to 'DEFAULT_COLUMN_VALUE'.")
+                    # # Log a warning if aud_nameColumnInput & aud_nameRowInput is still None after default value assignment
+                    # if aud_nameColumnInput == 'DEFAULT_COLUMN_VALUE':
+                    #     logging.warning("aud_nameColumnInput was None and has been set to 'DEFAULT_COLUMN_VALUE'.")
+                    # if aud_nameRowInput == 'DEFAULT_COLUMN_VALUE':
+                    #     logging.warning("aud_nameRowInput was None and has been set to 'DEFAULT_COLUMN_VALUE'.")
                     
 
         # Insert remaining data after the loop
         if batch_insert:
             db.insert_data_batch(insert_query, 'aud_inputtable', batch_insert)
-            logging.info(f"Inserted remaining batch of data into aud_inputtable: {len(batch_insert)} rows")
+            #logging.info(f"Inserted remaining batch of data into aud_inputtable: {len(batch_insert)} rows")
 
         # Step 7: Execute inputtableJoinElemntnode query and delete records
         inputtableJoinElemntnode_query = config.get_param('queries', 'inputtableJoinElemntnode')
@@ -1088,7 +1088,7 @@ def AUD_307_ALIMINPUTTABLE(config: Config, db: Database, parsed_files_data: List
 
         if delete_conditions:
             db.delete_records_batch('aud_inputtable_xml', delete_conditions)
-            logging.info(f"Deleted remaining records from aud_inputtable: {len(delete_conditions)} rows")
+            # #logging.info(f"Deleted remaining records from aud_inputtable: {len(delete_conditions)} rows")
 
     except Exception as e:
         logging.error(f"An error occurred: {e}", exc_info=True)
@@ -1114,7 +1114,7 @@ def AUD_308_ALIMCONNECTIONCOMPONENT(config: Config, db: Database, parsed_files_d
 
         if delete_conditions:
             db.delete_records_batch('aud_connectioncomponent', delete_conditions)
-            logging.info(f"Deleted remaining records from aud_connectioncomponent: {len(delete_conditions)} rows")
+            #logging.info(f"Deleted remaining records from aud_connectioncomponent: {len(delete_conditions)} rows")
 
         # Step 4: Execute aud_connectioncomponent query
         aud_connectioncomponent_query = config.get_param('queries', 'aud_connectioncomponent')
@@ -1133,7 +1133,7 @@ def AUD_308_ALIMCONNECTIONCOMPONENT(config: Config, db: Database, parsed_files_d
 
         if delete_conditions:
             db.delete_records_batch('aud_connectioncomponent', delete_conditions)
-            logging.info(f"Deleted remaining records from aud_connectioncomponent: {len(delete_conditions)} rows")
+            #logging.info(f"Deleted remaining records from aud_connectioncomponent: {len(delete_conditions)} rows")
 
         # Step 6: Insert parsed data into aud_connectioncomponent in batches
         insert_query = config.get_param('insert_queries', 'aud_connectioncomponent')
@@ -1171,7 +1171,7 @@ def AUD_308_ALIMCONNECTIONCOMPONENT(config: Config, db: Database, parsed_files_d
                         try:
                             # logging.info("Inserting batch into database.")
                             db.insert_data_batch(insert_query, 'aud_connectioncomponent', batch_insert)
-                            # logging.info(f"Inserted batch of data into aud_connectioncomponent: {len(batch_insert)} rows")
+                            # #logging.info(f"Inserted batch of data into aud_connectioncomponent: {len(batch_insert)} rows")
                         except Exception as insert_error:
                             logging.error(f"Error during batch insert: {insert_error}", exc_info=True)
                         finally:
@@ -1181,7 +1181,7 @@ def AUD_308_ALIMCONNECTIONCOMPONENT(config: Config, db: Database, parsed_files_d
             try:
                 logging.info("Inserting remaining batch into database.")
                 db.insert_data_batch(insert_query, 'aud_connectioncomponent', batch_insert)
-                logging.info(f"Inserted remaining batch of data into aud_connectioncomponent: {len(batch_insert)} rows")
+                #logging.info(f"Inserted remaining batch of data into aud_connectioncomponent: {len(batch_insert)} rows")
             except Exception as insert_error:
                 logging.error(f"Error during final batch insert: {insert_error}", exc_info=True)
 
@@ -1210,7 +1210,7 @@ def AUD_309_ALIMELEMENTPARAMETER(config: Config, db: Database, parsed_files_data
 
         if delete_conditions:
             db.delete_records_batch('aud_elementparameter', delete_conditions)
-            logging.info(f"Deleted remaining records from aud_elementparameter: {len(delete_conditions)} rows")
+            #logging.info(f"Deleted remaining records from aud_elementparameter: {len(delete_conditions)} rows")
 
         # Step 4: Execute aud_elementparameter query
         aud_elementparameter_query = config.get_param('queries', 'aud_elementparameter')
@@ -1229,7 +1229,7 @@ def AUD_309_ALIMELEMENTPARAMETER(config: Config, db: Database, parsed_files_data
 
         if delete_conditions:
             db.delete_records_batch('aud_elementparameter', delete_conditions)
-            logging.info(f"Deleted remaining records from aud_elementparameter: {len(delete_conditions)} rows")
+            #logging.info(f"Deleted remaining records from aud_elementparameter: {len(delete_conditions)} rows")
 
         # Step 6: Insert parsed data into aud_elementparameter in batches
         insert_query = config.get_param('insert_queries', 'aud_elementparameter')
@@ -1250,7 +1250,7 @@ def AUD_309_ALIMELEMENTPARAMETER(config: Config, db: Database, parsed_files_data
                 if len(batch_insert) >= batch_size:
                     try:
                         db.insert_data_batch(insert_query, 'aud_elementparameter', batch_insert)
-                        # logging.info(f"Inserted batch of data into aud_elementparameter: {len(batch_insert)} rows")
+                        # #logging.info(f"Inserted batch of data into aud_elementparameter: {len(batch_insert)} rows")
                     except Exception as insert_error:
                         logging.error(f"Error during batch insert: {insert_error}", exc_info=True)
                     finally:
@@ -1260,7 +1260,7 @@ def AUD_309_ALIMELEMENTPARAMETER(config: Config, db: Database, parsed_files_data
             try:
                 logging.info("Inserting remaining batch into database.")
                 db.insert_data_batch(insert_query, 'aud_elementparameter', batch_insert)
-                logging.info(f"Inserted remaining batch of data into aud_elementparameter: {len(batch_insert)} rows")
+                #logging.info(f"Inserted remaining batch of data into aud_elementparameter: {len(batch_insert)} rows")
             except Exception as insert_error:
                 logging.error(f"Error during final batch insert: {insert_error}", exc_info=True)
 
@@ -1288,7 +1288,7 @@ def AUD_309_ALIMROUTINES(config: Config, db: Database, parsed_files_data: List[T
 
         if delete_conditions:
             db.delete_records_batch('aud_routines', delete_conditions)
-            logging.info(f"Deleted remaining records from aud_routines: {len(delete_conditions)} rows")
+            #logging.info(f"Deleted remaining records from aud_routines: {len(delete_conditions)} rows")
 
         # Step 4: Execute aud_routines query
         aud_routines_query = config.get_param('queries', 'aud_routines')
@@ -1307,7 +1307,7 @@ def AUD_309_ALIMROUTINES(config: Config, db: Database, parsed_files_data: List[T
 
         if delete_conditions:
             db.delete_records_batch('aud_routines', delete_conditions)
-            logging.info(f"Deleted remaining records from aud_routines: {len(delete_conditions)} rows")
+            #logging.info(f"Deleted remaining records from aud_routines: {len(delete_conditions)} rows")
 
         # Step 6: Insert parsed data into aud_routines in batches
         insert_query = config.get_param('insert_queries', 'aud_routines')
@@ -1328,7 +1328,7 @@ def AUD_309_ALIMROUTINES(config: Config, db: Database, parsed_files_data: List[T
                     if len(batch_insert) >= batch_size:
                         try:
                             db.insert_data_batch(insert_query, 'aud_routines', batch_insert)
-                            # logging.info(f"Inserted batch of data into aud_routines: {len(batch_insert)} rows")
+                            # #logging.info(f"Inserted batch of data into aud_routines: {len(batch_insert)} rows")
                         except Exception as insert_error:
                             logging.error(f"Error during batch insert: {insert_error}", exc_info=True)
                         finally:
@@ -1338,7 +1338,7 @@ def AUD_309_ALIMROUTINES(config: Config, db: Database, parsed_files_data: List[T
             try:
                 logging.info("Inserting remaining batch into database.")
                 db.insert_data_batch(insert_query, 'aud_routines', batch_insert)
-                logging.info(f"Inserted remaining batch of data into aud_routines: {len(batch_insert)} rows")
+                #logging.info(f"Inserted remaining batch of data into aud_routines: {len(batch_insert)} rows")
             except Exception as insert_error:
                 logging.error(f"Error during final batch insert: {insert_error}", exc_info=True)
 
@@ -1366,7 +1366,7 @@ def AUD_310_ALIMLIBRARY(config: Config, db: Database, parsed_files_data: List[Tu
 
         if delete_conditions:
             db.delete_records_batch('aud_library', delete_conditions)
-            logging.info(f"Deleted remaining records from aud_library: {len(delete_conditions)} rows")
+            #logging.info(f"Deleted remaining records from aud_library: {len(delete_conditions)} rows")
 
         # Step 4: Execute aud_library query
         aud_library_query = config.get_param('queries', 'aud_library')
@@ -1385,7 +1385,7 @@ def AUD_310_ALIMLIBRARY(config: Config, db: Database, parsed_files_data: List[Tu
 
         if delete_conditions:
             db.delete_records_batch('aud_library', delete_conditions)
-            logging.info(f"Deleted remaining records from aud_library: {len(delete_conditions)} rows")
+            #logging.info(f"Deleted remaining records from aud_library: {len(delete_conditions)} rows")
 
         # Step 6: Insert parsed data into aud_library in batches
         insert_query = config.get_param('insert_queries', 'aud_library')
@@ -1422,13 +1422,13 @@ def AUD_310_ALIMLIBRARY(config: Config, db: Database, parsed_files_data: List[Tu
                             # Insert in batches
                             if len(batch_insert) >= batch_size:
                                 db.insert_data_batch(insert_query, 'aud_library', batch_insert)
-                                # logging.info(f"Inserted batch of data into aud_library: {len(batch_insert)} rows")
+                                # #logging.info(f"Inserted batch of data into aud_library: {len(batch_insert)} rows")
                                 batch_insert.clear()
 
         # Insert any remaining data
         if batch_insert:
             db.insert_data_batch(insert_query, 'aud_library', batch_insert)
-            logging.info(f"Inserted remaining batch of data into aud_library: {len(batch_insert)} rows")
+            #logging.info(f"Inserted remaining batch of data into aud_library: {len(batch_insert)} rows")
 
 
 
@@ -1509,7 +1509,7 @@ def AUD_311_ALIMELEMENTVALUENODE(config: Config, db: Database, parsed_files_data
 
                     if len(batch_insert) >= batch_size:
                         db.insert_data_batch(insert_query, 'aud_elementvaluenode', batch_insert)
-                        # logging.info(f"Inserted batch of data into aud_elementvaluenode: {len(batch_insert)} rows")
+                        # #logging.info(f"Inserted batch of data into aud_elementvaluenode: {len(batch_insert)} rows")
                         batch_insert.clear()
                 
                     aud_id += 1
@@ -1517,7 +1517,7 @@ def AUD_311_ALIMELEMENTVALUENODE(config: Config, db: Database, parsed_files_data
         # Insert remaining data in the batch
         if batch_insert:
             db.insert_data_batch(insert_query, 'aud_elementvaluenode', batch_insert)
-            logging.info(f"Inserted remaining batch of data into aud_elementvaluenode: {len(batch_insert)} rows")
+            #logging.info(f"Inserted remaining batch of data into aud_elementvaluenode: {len(batch_insert)} rows")
 
         # Step 7: Execute elementvaluenodeJoinelementnode query
         elementvaluenodeJoinelementnode_query = config.get_param('queries', 'elementvaluenodeJoinelementnode')
@@ -1574,7 +1574,7 @@ def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tu
         # Delete remaining records
         if batch_delete_conditions:
             db.delete_records_batch('aud_elementvaluenode', batch_delete_conditions)
-            logging.info(f"Batch deleted remaining records from aud_elementvaluenode: {len(batch_delete_conditions)} rows")
+           # logging.info(f"Batch deleted remaining records from aud_elementvaluenode: {len(batch_delete_conditions)} rows")
 
         # Step 4: Execute aud_job_fils query
         aud_job_fils_query = config.get_param('queries', 'aud_job_fils')
@@ -1595,7 +1595,7 @@ def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tu
         # Delete remaining records
         if batch_delete_conditions:
             db.delete_records_batch('aud_job_fils', batch_delete_conditions)
-            logging.info(f"Batch deleted remaining records from aud_job_fils: {len(batch_delete_conditions)} rows")
+           # logging.info(f"Batch deleted remaining records from aud_job_fils: {len(batch_delete_conditions)} rows")
 
         # Step 6: Insert parsed data into the aud_job_fils table in batches
         insert_query = config.get_param('insert_queries', 'aud_job_fils')
@@ -1619,13 +1619,13 @@ def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tu
 
                         if len(batch_insert) >= batch_size:
                             db.insert_data_batch(insert_query, 'aud_job_fils', batch_insert)
-                            # logging.info(f"Inserted batch of data into aud_job_fils: {len(batch_insert)} rows")
+                            # #logging.info(f"Inserted batch of data into aud_job_fils: {len(batch_insert)} rows")
                             batch_insert.clear()
 
             # Insert remaining data in the batch
             if batch_insert:
                 db.insert_data_batch(insert_query, 'aud_job_fils', batch_insert)
-                logging.info(f"Inserted remaining batch of data into aud_job_fils: {len(batch_insert)} rows")
+                #logging.info(f"Inserted remaining batch of data into aud_job_fils: {len(batch_insert)} rows")
         # Step 7: Execute Update_job_fils query
         Update_job_fils_query = config.get_param('queries', 'Update_job_fils')
         logging.info(f"Executing query: {Update_job_fils_query}")
@@ -1679,7 +1679,7 @@ def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tu
         # Delete remaining records
         if batch_delete_conditions:
             db.delete_records_batch('aud_elementvaluenode', batch_delete_conditions)
-            logging.info(f"Batch deleted remaining records from aud_elementvaluenode: {len(batch_delete_conditions)} rows")
+           # logging.info(f"Batch deleted remaining records from aud_elementvaluenode: {len(batch_delete_conditions)} rows")
 
         # Step 4: Execute aud_joblets query
         aud_joblets_query = config.get_param('queries', 'aud_joblets')
@@ -1700,7 +1700,7 @@ def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tu
         # Delete remaining records
         if batch_delete_conditions:
             db.delete_records_batch('aud_joblets', batch_delete_conditions)
-            logging.info(f"Batch deleted remaining records from aud_joblets: {len(batch_delete_conditions)} rows")
+           # logging.info(f"Batch deleted remaining records from aud_joblets: {len(batch_delete_conditions)} rows")
 
         # Step 6: Insert parsed data into the aud_joblets table in batches
         insert_query = config.get_param('insert_queries', 'aud_joblets')
@@ -1729,7 +1729,7 @@ def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tu
             # Insert remaining data in the batch
             if batch_insert:
                 db.insert_data_batch(insert_query, 'aud_joblets', batch_insert)
-                logging.info(f"Inserted remaining batch of data into aud_joblets: {len(batch_insert)} rows")
+                #logging.info(f"Inserted remaining batch of data into aud_joblets: {len(batch_insert)} rows")
                 
          # Step 7: Execute jobletsJoinelementnode query and delete records
         jobletsJoinelementnode_query = config.get_param('queries', 'jobletsJoinelementnode')
@@ -1747,7 +1747,7 @@ def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tu
 
         if delete_conditions:
             db.delete_records_batch('jobletsJoinelementnode_results', delete_conditions)
-            logging.info(f"Deleted remaining records from aud_inputtable: {len(delete_conditions)} rows")
+            #logging.info(f"Deleted remaining records from aud_inputtable: {len(delete_conditions)} rows")
 
 
 
@@ -1789,7 +1789,7 @@ def AUD_314_ALIMSUBJOBS_OPT(config: Config, db: Database, parsed_files_data: Lis
         # Delete remaining records
         if batch_delete_conditions:
             db.delete_records_batch('aud_elementvaluenode', batch_delete_conditions)
-            logging.info(f"Batch deleted remaining records from aud_elementvaluenode: {len(batch_delete_conditions)} rows")
+           # logging.info(f"Batch deleted remaining records from aud_elementvaluenode: {len(batch_delete_conditions)} rows")
 
         # Step 4: Execute aud_subjobs query
         aud_subjobs_query = config.get_param('queries', 'aud_subjobs')
@@ -1811,7 +1811,7 @@ def AUD_314_ALIMSUBJOBS_OPT(config: Config, db: Database, parsed_files_data: Lis
         # Delete remaining records
         if batch_delete_conditions:
             db.delete_records_batch('aud_subjobs', batch_delete_conditions)
-            logging.info(f"Batch deleted remaining records from aud_subjobs: {len(batch_delete_conditions)} rows")
+           # logging.info(f"Batch deleted remaining records from aud_subjobs: {len(batch_delete_conditions)} rows")
 
         # Step 6: Insert parsed data into the aud_subjobs table in batches
         insert_query = config.get_param('insert_queries', 'aud_subjobs')
@@ -1830,13 +1830,13 @@ def AUD_314_ALIMSUBJOBS_OPT(config: Config, db: Database, parsed_files_data: Lis
 
                         if len(batch_insert) >= batch_size:
                             db.insert_data_batch(insert_query, 'aud_subjobs', batch_insert)
-                            # logging.info(f"Inserted batch of data into aud_subjobs: {len(batch_insert)} rows")
+                            # #logging.info(f"Inserted batch of data into aud_subjobs: {len(batch_insert)} rows")
                             batch_insert.clear()
 
         # Insert remaining data in the batch
         if batch_insert:
             db.insert_data_batch(insert_query, 'aud_subjobs', batch_insert)
-            logging.info(f"Inserted remaining batch of data into aud_subjobs: {len(batch_insert)} rows")
+            #logging.info(f"Inserted remaining batch of data into aud_subjobs: {len(batch_insert)} rows")
 
     except Exception as e:
         logging.error(f"An error occurred: {e}", exc_info=True)
@@ -2073,7 +2073,7 @@ def AUD_320_ALIMDOCJOBS(config: Config, db: Database, parsed_files_data: List[Tu
         # Delete remaining records
         if batch_delete_conditions:
             db.delete_records_batch('aud_docjobs', batch_delete_conditions)
-            logging.info(f"Batch deleted remaining records from aud_docjobs: {len(batch_delete_conditions)} rows")
+           # logging.info(f"Batch deleted remaining records from aud_docjobs: {len(batch_delete_conditions)} rows")
 
         # Step 4: Execute aud_subjobs query
         aud_subjobs_query = config.get_param('queries', 'aud_subjobs')
@@ -2095,7 +2095,7 @@ def AUD_320_ALIMDOCJOBS(config: Config, db: Database, parsed_files_data: List[Tu
         # Delete remaining records
         if batch_delete_conditions:
             db.delete_records_batch('aud_subjobs', batch_delete_conditions)
-            logging.info(f"Batch deleted remaining records from aud_subjobs: {len(batch_delete_conditions)} rows")
+           # logging.info(f"Batch deleted remaining records from aud_subjobs: {len(batch_delete_conditions)} rows")
 
         # Step 6: Insert parsed data into the aud_subjobs table in batches
         insert_query = config.get_param('insert_queries', 'aud_docjobs')
@@ -2123,16 +2123,16 @@ def AUD_320_ALIMDOCJOBS(config: Config, db: Database, parsed_files_data: List[Tu
 
                     # Insert data in batches if the batch size is reached
                     if len(batch_insert) >= batch_size:
-                        logging.info(f"Inserting batch of {len(batch_insert)} rows into 'aud_docjobs'.")
+                        # logging.info(f"Inserting batch of {len(batch_insert)} rows into 'aud_docjobs'.")
                         db.insert_data_batch(insert_query, 'aud_docjobs', batch_insert)
-                        logging.info(f"Inserted batch of {len(batch_insert)} rows into 'aud_docjobs'.")
+                        # logging.info(f"Inserted batch of {len(batch_insert)} rows into 'aud_docjobs'.")
                         batch_insert.clear()
 
         # Step 4: Insert any remaining data that didn't fill a full batch
         if batch_insert:
-            logging.info(f"Inserting remaining {len(batch_insert)} rows into 'aud_docjobs'.")
+            # logging.info(f"Inserting remaining {len(batch_insert)} rows into 'aud_docjobs'.")
             db.insert_data_batch(insert_query, 'aud_docjobs', batch_insert)
-            logging.info(f"Inserted remaining {len(batch_insert)} rows into 'aud_docjobs'.")
+            # logging.info(f"Inserted remaining {len(batch_insert)} rows into 'aud_docjobs'.")
 
     except Exception as e:
         logging.error(f"An error occurred: {e}", exc_info=True)
@@ -2159,6 +2159,11 @@ def AUD_323_ALIMELEMENTNODEFILTER(
         batch_size (int): The number of rows to process in each batch operation. Default is 100.
     """
     try:
+        #Truncate the 'aud_elementnode_filter' table before inserting new data
+        logging.info("Truncating table 'aud_elementnode_filter'.")
+        db.truncate_table('aud_elementnode_filter')
+        logging.info("Table 'aud_elementnode_filter' truncated successfully.")
+
         # Step 1: Execute aud_elementnode_filter
         aud_elementnode_filter_query = config.get_param('queries', 'aud_elementnode_filter')
         logging.info(f"Executing query: {aud_elementnode_filter_query}")
@@ -2171,25 +2176,28 @@ def AUD_323_ALIMELEMENTNODEFILTER(
         
         for result in aud_elementnode_filter_query_results:
             # Unpack result tuple
-            cleaned_result = ( aud_componentName, aud_field, aud_nameElementNode, aud_show,   aud_valueElementNode_cleaned, aud_ComponementValue, NameProject, NameJob, execution_date) = result
+            ( aud_componentName, aud_field, aud_nameElementNode, aud_show,aud_valueElementNode, aud_ComponementValue, NameProject, NameJob, execution_date) = result
 
-            # Apply REPLACE function to aud_valueElementNode
-            aud_valueElementNode = aud_valueElementNode.replace("''", '').replace('+', ' ').replace('', '')
+            # Check if aud_valueElementNode is None, then handle it appropriately
+            if aud_valueElementNode is not None:
+                # Chain multiple replace calls
+                aud_valueElementNode = aud_valueElementNode.replace('\"', '').replace('+', ' ').replace('`', '') 
 
-            # Create a new tuple with the cleaned value
-            cleaned_result = (aud_componentName, aud_field, aud_nameElementNode, aud_show,  aud_valueElementNode, aud_ComponementValue, NameProject,     NameJob, execution_date)       
+            aud_show = 0 if aud_show == 'false' else 1 if aud_show == 'true' else None
+
+            cleaned_result = ( aud_componentName, aud_field, aud_nameElementNode, aud_show,   aud_valueElementNode, aud_ComponementValue, NameProject, NameJob, execution_date)       
             # Add result to batch insert list
             batch_insert.append(cleaned_result)
 
             if len(batch_insert) >= batch_size:
-                db.insert_data_batch('aud_elementnode_filter', insert_query, batch_insert)
-                # logging.info(f"Inserted batch of data into aud_elementnode_filter: {len(batch_insert)} rows")
+                db.insert_data_batch(insert_query,'aud_elementnode_filter',  batch_insert)
+                # #logging.info(f"Inserted batch of data into aud_elementnode_filter: {len(batch_insert)} rows")
                 batch_insert.clear()
 
         # Insert remaining data in the batch
         if batch_insert:
-            db.insert_data_batch('aud_elementnode_filter', insert_query, batch_insert)
-            logging.info(f"Inserted remaining batch of data into aud_elementnode_filter: {len(batch_insert)} rows")
+            db.insert_data_batch(insert_query,'aud_elementnode_filter',  batch_insert)
+            #logging.info(f"Inserted remaining batch of data into aud_elementnode_filter: {len(batch_insert)} rows")
 
     except Exception as e:
         logging.error(f"An error occurred: {e}", exc_info=True)
@@ -2242,13 +2250,13 @@ def AUD_324_ALIMMETADATAFILTER(
 
             if len(batch_insert) >= batch_size:
                 db.insert_data_batch(insert_query,'aud_metadata_filter', batch_insert)
-                logging.info(f"Inserted batch of data into aud_metadata_filter: {len(batch_insert)} rows")
+                #logging.info(f"Inserted batch of data into aud_metadata_filter: {len(batch_insert)} rows")
                 batch_insert.clear()
 
         # Insert remaining data in the batch
         if batch_insert:
             db.insert_data_batch(insert_query,'aud_metadata_filter', batch_insert)
-            logging.info(f"Inserted remaining batch of data into aud_metadata_filter: {len(batch_insert)} rows")
+            #logging.info(f"Inserted remaining batch of data into aud_metadata_filter: {len(batch_insert)} rows")
 
     except Exception as e:
         logging.error(f"An error occurred: {e}", exc_info=True)
@@ -2286,7 +2294,7 @@ def AUD_701_CONVERTSCREENSHOT(
             for result in local_to_dbbrut_query_results
         ]
         if aud_screenshot_conditions_batch:
-            logging.info(f"Deleting records from aud_screenshot: {len(aud_screenshot_conditions_batch)} items.")
+            # logging.info(f"Deleting records from aud_screenshot: {len(aud_screenshot_conditions_batch)} items.")
             db.delete_records_batch('aud_screenshot', aud_screenshot_conditions_batch)
 
         # Step 2: Execute 'aud_screenshot' query and retrieve results
