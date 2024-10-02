@@ -67,10 +67,6 @@ def main():
     AUD_303_BIGDATA_PARAMETERS(config, db, parsed_files_data, execution_date, local_to_dbbrut_query_results)
     log_execution_time("AUD_303_BIGDATA_PARAMETERS", start_time)
 
-    # start_time = time.time()
-    # logging.info("Starting AUD_304_ALIMMETADATA...")
-    # AUD_304_ALIMMETADATA(config, db, parsed_files_data, execution_date, local_to_dbbrut_query_results)
-    # log_execution_time("AUD_304_ALIMMETADATA", start_time)
 
     start_time = time.time()
     logging.info("Starting AUD_305_ALIMVARTABLE_XML...")
@@ -87,17 +83,18 @@ def main():
     AUD_306_ALIMOUTPUTTABLE(config, db, parsed_files_data, execution_date, local_to_dbbrut_query_results)
     log_execution_time("AUD_306_ALIMOUTPUTTABLE", start_time)
 
-
     #i need to update it
+
     # start_time = time.time()
     # logging.info("Starting AUD_307_ALIMINPUTTABLE_XML...")
     # AUD_307_ALIMINPUTTABLE_XML(config, db, parsed_files_data, execution_date, local_to_dbbrut_query_results)
     # log_execution_time("AUD_307_ALIMINPUTTABLE_XML", start_time)
 
-    # start_time = time.time()
-    # logging.info("Starting AUD_307_ALIMINPUTTABLE...")
-    # AUD_307_ALIMINPUTTABLE(config, db, parsed_files_data, execution_date, local_to_dbbrut_query_results)
-    # log_execution_time("AUD_307_ALIMINPUTTABLE", start_time)
+
+    start_time = time.time()
+    logging.info("Starting AUD_307_ALIMINPUTTABLE...")
+    AUD_307_ALIMINPUTTABLE(config, db, parsed_files_data, execution_date, local_to_dbbrut_query_results)
+    log_execution_time("AUD_307_ALIMINPUTTABLE", start_time)
 
     start_time = time.time()
     logging.info("Starting AUD_308_ALIMCONNECTIONCOMPONENT...")
@@ -150,7 +147,7 @@ def main():
     # log_execution_time("AUD_318_ALIMCONFQUARTZ", start_time)
 
     parsed_files_properties = xml_parser.loop_parse_properties(items_directory)
-    logging.debug(f"Parsed Files Data: {parsed_files_properties}")
+    # logging.debug(f"Parsed Files Data: {parsed_files_properties}")
     start_time = time.time()
     logging.info("Starting AUD_319_ALIMDOCCONTEXTGROUP...")
     AUD_319_ALIMDOCCONTEXTGROUP(config, db, parsed_files_properties)
@@ -158,7 +155,7 @@ def main():
 
     start_time = time.time()
     logging.info("Starting AUD_320_ALIMDOCJOBS...")
-    AUD_320_ALIMDOCJOBS(config, db, parsed_files_data, local_to_dbbrut_query_results)
+    AUD_320_ALIMDOCJOBS(config, db, parsed_files_properties, local_to_dbbrut_query_results)
     log_execution_time("AUD_320_ALIMDOCJOBS", start_time)
 
     start_time = time.time()
@@ -170,6 +167,21 @@ def main():
     logging.info("Starting AUD_324_ALIMMETADATAFILTER...")
     AUD_324_ALIMMETADATAFILTER(config, db, parsed_files_data)
     log_execution_time("AUD_324_ALIMMETADATAFILTER", start_time)
+
+    # Step 3: Parse screenshot files from the directory
+    screenshots_directory = config.get_param('Directories', 'screenshots_directory')
+    # Assuming the `loop_parse_screenshots` method parses all screenshot XMLs in the directory
+    parsed_files_items = xml_parser.loop_parse_screenshots(screenshots_directory)
+    start_time = time.time()
+    logging.info("Starting AUD_701_CONVERTSCREENSHOT...")
+    AUD_701_CONVERTSCREENSHOT(config, db, parsed_files_items,execution_date,local_to_dbbrut_query_results)
+    log_execution_time("AUD_701_CONVERTSCREENSHOT", start_time)
+
+    start_time = time.time()
+    logging.info("Starting AUD_304_ALIMMETADATA...")
+    AUD_304_ALIMMETADATA(config, db, parsed_files_data, execution_date, local_to_dbbrut_query_results)
+    log_execution_time("AUD_304_ALIMMETADATA", start_time)
+
 
     # Optionally, you can add a final log or print statement indicating that all jobs have finished.
     logging.info("All jobs have been executed.")

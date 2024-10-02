@@ -58,8 +58,24 @@ queries:
 
 
 
+
+
+# brut to agg
+  aud_agg: "select a.NameProject, a.namejob, a.aud_componentValue, a.aud_valueElementRef as aud_valueElementRef_input, b.aud_valueElementRef as aud_valueElementRef_output, 'GROUPBY' as aud_valueElementRef_function from aud_elementvaluenode a inner join aud_elementvaluenode b on a.aud_id = b.aud_id where a.aud_typeField in ('GROUPBYS') and b.aud_typeField in ('GROUPBYS') and a.aud_elementRef = 'INPUT_COLUMN' and b.aud_elementRef = 'OUTPUT_COLUMN' and a.aud_componentName like 'tAggregate%' and b.aud_componentName like 'tAggregate%' union all select a.NameProject, a.namejob, a.aud_componentValue, a.aud_valueElementRef as aud_valueElementRef_input, b.aud_valueElementRef as aud_valueElementRef_output, c.aud_valueElementRef as aud_valueElementRef_function from aud_elementvaluenode a inner join aud_elementvaluenode b on a.aud_id = b.aud_id inner join aud_elementvaluenode c on a.aud_id = c.aud_id where a.aud_componentName like 'tAggregate%' and a.aud_typeField = 'OPERATIONS' and b.aud_componentName like 'tAggregate%' and b.aud_typeField = 'OPERATIONS' and c.aud_componentName like 'tAggregate%' and c.aud_typeField = 'OPERATIONS' and a.aud_elementRef = 'INPUT_COLUMN' and b.aud_elementRef = 'OUTPUT_COLUMN' and c.aud_elementRef = 'FUNCTION'"
+  inputtable_xml : "SELECT aud_nameColumnInput,aud_type,aud_xpathColumnInput,aud_nameRowInput, aud_componentName, aud_componentValue, filterOutGoingConnections, lookupOutgoingConnections, outgoingConnections, namejob, nameproject, exec_date,lookupIncomingConnections, expression, lookupMode, matchingMode, activateCondensedTool, activateExpressionFilter, activateGlobalMap, expressionFilter, filterIncomingConnections, lookup FROM aud_inputtable_xml"
+  outputtable_xml : "SELECT aud_nameColumnInput, aud_type,aud_xpathColumnInput, aud_nameRowOutput, aud_componentName, aud_componentValue,filterOutGoingConnections, outgoingConnections, namejob, nameproject, exec_date, expression, activateCondensedTool,activateExpressionFilter, expressionFilter, filterIncomingConnections FROM aud_outputtable_xml"
+
+
+
+
+
+
+
+
+
+
 insert_queries:
-  aud_agg_aggregate: "INSERT IGNORE INTO aud_agg_aggregate (NameProject, namejob, aud_componentValue, aud_valueElementRef_input, aud_valueElementRef_output, aud_valueElementRef_function) SELECT a.NameProject, a.namejob, a.aud_componentValue, a.aud_valueElementRef as aud_valueElementRef_input, b.aud_valueElementRef as aud_valueElementRef_output, 'GROUPBY' as aud_valueElementRef_function FROM aud_elementvaluenode a INNER JOIN aud_elementvaluenode b ON a.aud_id : b.aud_id WHERE a.aud_typeField IN ('GROUPBYS') AND b.aud_typeField IN ('GROUPBYS') AND a.aud_elementRef : 'INPUT_COLUMN' AND b.aud_elementRef : 'OUTPUT_COLUMN' AND a.aud_componentName LIKE 'tAggregate%' AND b.aud_componentName LIKE 'tAggregate%' UNION ALL SELECT a.NameProject, a.namejob, a.aud_componentValue, a.aud_valueElementRef as aud_valueElementRef_input, b.aud_valueElementRef as aud_valueElementRef_output , c.aud_valueElementRef as aud_valueElementRef_function FROM aud_elementvaluenode a INNER JOIN aud_elementvaluenode b ON a.aud_id : b.aud_id INNER JOIN aud_elementvaluenode c ON a.aud_id : c.aud_id WHERE a.aud_componentName LIKE 'tAggregate%' AND a.aud_typeField : 'OPERATIONS' AND b.aud_componentName LIKE 'tAggregate%' AND b.aud_typeField : 'OPERATIONS' AND c.aud_componentName LIKE 'tAggregate%' AND c.aud_typeField : 'OPERATIONS' AND a.aud_elementRef : 'INPUT_COLUMN' AND b.aud_elementRef : 'OUTPUT_COLUMN' AND c.aud_elementRef : 'FUNCTION'"
+  aud_agg_aggregate: "INSERT INTO aud_agg_aggregate (NameProject, namejob, aud_componentValue, aud_valueElementRef_input, aud_valueElementRef_output, aud_valueElementRef_function) VALUES (?, ?, ?, ?, ?, ?)"
   aud_elementnode : "INSERT INTO aud_elementnode (aud_componentName, aud_field, aud_nameElementNode, aud_show, aud_valueElementNode, aud_ComponementValue, NameProject, NameJob, exec_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE aud_componentName = VALUES(aud_componentName), aud_field = VALUES(aud_field), aud_show = VALUES(aud_show), aud_valueElementNode = VALUES(aud_valueElementNode), exec_date = VALUES(exec_date)"
   aud_contextjob : "INSERT INTO aud_contextjob (aud_environementContext, aud_nameContext, aud_prompt, aud_promptNeeded, aud_typeContext, aud_valueContext, aud_repositoryContextId, NameProject, NameJob, exec_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE aud_prompt = VALUES(aud_prompt), aud_promptNeeded = VALUES(aud_promptNeeded), aud_typeContext = VALUES(aud_typeContext), aud_valueContext = VALUES(aud_valueContext), aud_repositoryContextId = VALUES(aud_repositoryContextId), exec_date = VALUES(exec_date)"
   aud_contextgroupdetail : "INSERT INTO aud_contextgroupdetail (aud_nameContext, aud_commentContext, NameProject, NameContextGroup, exec_date) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE aud_commentContext = VALUES(aud_commentContext), exec_date = VALUES(exec_date)"
@@ -87,6 +103,12 @@ insert_queries:
   aud_doccontextgroup : "INSERT INTO aud_doccontextgroup (namecontextgroup, nameproject, purpose, description, version, statusCode, item, displayName, id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE purpose = VALUES(purpose), description = VALUES(description), version = VALUES(version), statusCode = VALUES(statusCode), item = VALUES(item), displayName = VALUES(displayName), id = VALUES(id)"
 
 
+# brut to agg
+  aud_agg_txmlmapinputinoutput : "INSERT INTO aud_agg_txmlmapinputinoutput (aud_nameColumnInput, aud_nameRowInput, aud_componentName, expressionOutput, output_aud_nameColumnInput, aud_nameRowOutput, output_namejob, output_nameproject) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+
+
+
+
 
 
 
@@ -98,7 +120,7 @@ insert_queries:
 Directories:
   items_directory: "C:/Users/sonia/Downloads/KEOLISTOURS/KEOLISTOURS/process"
   screenshots_directory : "C:/Users/sonia/Desktop/TOS_ESB/Studio/workspace/SERVER/process"
-
+  delete_files : "C:/Users/sonia/Desktop/FilesList"
 database:
   type: "mysql"  # Example database type
   postgresql:

@@ -462,7 +462,7 @@ class XMLParser:
                 if filename.endswith('.screenshot'):  # Process only files with `.screenshot` extension
                     i+=1
                     file_path = os.path.join(root, filename)
-                    logging.info(f"Processing screenshot file: {file_path}")
+                    # logging.info(f"Processing screenshot file: {file_path}")
 
                     try:
                         # Parse XML file

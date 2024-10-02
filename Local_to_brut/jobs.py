@@ -6,7 +6,7 @@ from typing import List, Tuple
 
 # Configure logging
 logging.basicConfig(
-    filename='database_operations.log',
+    filename='Local_to_brut.log',
     level=logging.DEBUG,  # Changed to DEBUG to capture all messages
     format='%(asctime)s - %(levelname)s - %(message)s',
     filemode='w'  # Ensure the file is overwritten each time for clean logs
@@ -1898,7 +1898,7 @@ def AUD_315_DELETEINACTIFNODES(config: Config, db: Database, parsed_files_data: 
             batch_delete_conditions.append({
                 'NameProject': aud_name_project, 
                 'namejob': aud_name_job, 
-                'aud_ComponentValue': aud_component_value
+                'aud_ComponementValue': aud_component_value
             })
 
             # If batch size is reached, delete records in batch
