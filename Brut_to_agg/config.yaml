@@ -60,14 +60,14 @@ queries:
 
 
 
-# brut to agg
+agg_queries:
   aud_agg: "select a.NameProject, a.namejob, a.aud_componentValue, a.aud_valueElementRef as aud_valueElementRef_input, b.aud_valueElementRef as aud_valueElementRef_output, 'GROUPBY' as aud_valueElementRef_function from aud_elementvaluenode a inner join aud_elementvaluenode b on a.aud_id = b.aud_id where a.aud_typeField in ('GROUPBYS') and b.aud_typeField in ('GROUPBYS') and a.aud_elementRef = 'INPUT_COLUMN' and b.aud_elementRef = 'OUTPUT_COLUMN' and a.aud_componentName like 'tAggregate%' and b.aud_componentName like 'tAggregate%' union all select a.NameProject, a.namejob, a.aud_componentValue, a.aud_valueElementRef as aud_valueElementRef_input, b.aud_valueElementRef as aud_valueElementRef_output, c.aud_valueElementRef as aud_valueElementRef_function from aud_elementvaluenode a inner join aud_elementvaluenode b on a.aud_id = b.aud_id inner join aud_elementvaluenode c on a.aud_id = c.aud_id where a.aud_componentName like 'tAggregate%' and a.aud_typeField = 'OPERATIONS' and b.aud_componentName like 'tAggregate%' and b.aud_typeField = 'OPERATIONS' and c.aud_componentName like 'tAggregate%' and c.aud_typeField = 'OPERATIONS' and a.aud_elementRef = 'INPUT_COLUMN' and b.aud_elementRef = 'OUTPUT_COLUMN' and c.aud_elementRef = 'FUNCTION'"
   inputtable : "SELECT  aud_nameRowInput ,aud_nameColumnInput,aud_expressionJoin,aud_expressionFilterInput,aud_componentValue,aud_innerJoin,NameProject, NameJob FROM aud_inputtable"
   outputtable : "SELECT aud_componentName,aud_OutputName, aud_sizeState, aud_activateCondensedTool, aud_reject, aud_rejectInnerJoin, aud_expressionOutput, aud_nameColumnOutput, aud_type, aud_nullable, aud_activateExpressionFilter, aud_expressionFilterOutput, aud_componentValue, NameProject,NameJob FROM aud_outputtable"
   aud_vartable : "SELECT V.aud_componentValue,V.aud_Var,V.aud_nameVar,V.aud_expressionVar,V.NameProject,V.NameJob FROM aud_vartable  V"
 
-
-
+  agg_aud_inputtable : "select count(distinct aud_namerowInput) nb_input, aud_componentValue, namejob, nameproject from aud_inputtable  group by aud_componentValue , namejob, nameproject"
+  
 
 
 
@@ -105,7 +105,7 @@ insert_queries:
   aud_doccontextgroup : "INSERT INTO aud_doccontextgroup (namecontextgroup, nameproject, purpose, description, version, statusCode, item, displayName, id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE purpose = VALUES(purpose), description = VALUES(description), version = VALUES(version), statusCode = VALUES(statusCode), item = VALUES(item), displayName = VALUES(displayName), id = VALUES(id)"
 
 
-# brut to agg
+insert_agg_queries:
   aud_agg_tmapinputinoutput : "INSERT INTO aud_agg_tmapinputinoutput (rowName, NameRowInput, composant, expressionOutput, nameColumnOutput, OutputName, reject, rejectInnerJoin, NameProject, NameJob) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE expressionOutput = VALUES(expressionOutput), reject = VALUES(reject),rejectInnerJoin = VALUES(rejectInnerJoin)"
   aud_agg_tmapinputinfilteroutput : "INSERT INTO aud_agg_tmapinputinfilteroutput (rowName, NameRowInput, composant, expressionFilterOutput, aud_OutputName, reject, rejectInnerJoin, NameProject, NameJob) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE expressionFilterOutput = VALUES(expressionFilterOutput),aud_OutputName = VALUES(aud_OutputName),reject = VALUES(reject),rejectInnerJoin = VALUES(rejectInnerJoin)"
   aud_agg_tmapinputinjoininput : "INSERT INTO aud_agg_tmapinputinjoininput (rowName, NameColumnInput, expressionJoin, composant, innerJoin, NameProject, NameJob, is_columnjoined, rowName_join, NameColumnInput_join) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE expressionJoin = VALUES(expressionJoin), innerJoin = VALUES(innerJoin), is_columnjoined = VALUES(is_columnjoined), rowName_join = VALUES(rowName_join), NameColumnInput_join = VALUES(NameColumnInput_join)"
@@ -114,7 +114,7 @@ insert_queries:
 
   aud_agg_tmapvarinfilter : "INSERT INTO aud_agg_tmapvarinfilter (NameRowInput, composant, expressionFilterOutput, OutputName, reject, rejectInnerJoin, NameProject, NameJob) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE expressionFilterOutput = VALUES(expressionFilterOutput), reject = VALUES(reject), rejectInnerJoin = VALUES(rejectInnerJoin)"
   aud_agg_tmapcolumunused : "INSERT INTO aud_agg_tmapcolumunused (rowName, NameColumnInput, composant, NameProject, NameJob) VALUES (?, ?, ?, ?, ?)"
-
+  aud_agg_tmapinput : "INSERT INTO aud_agg_tmapinput (nb_input, aud_componentValue, namejob, nameproject) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE nb_input = VALUES(nb_input)"
 
 
 
