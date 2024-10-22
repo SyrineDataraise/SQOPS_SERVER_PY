@@ -134,11 +134,11 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
         delete_files_in_directory(directory_path)
 
         # Step 2: Execute inputtable  query and write to CSV
-        inputtable_query = config.get_param('agg_queries', 'xml_inputtable')
-        logging.info(f"Executing query: {xml_inputtable_query}")
-        xml_inputtable_results = db.execute_query(xml_inputtable_query)
+        aud_inputtable_query = config.get_param('agg_queries', 'aud_inputtable')
+        logging.info(f"Executing query: {aud_inputtable_query}")
+        aud_inputtable_results = db.execute_query(aud_inputtable_query)
 
-        input_csv_path = os.path.join(directory_path, "aud_xml_inputtable.csv")
+        input_csv_path = os.path.join(directory_path, "aud_aud_inputtable.csv")
         input_csv_header = [
             "rowName", "NameRowInput", "expressionJoin", "expressionFilterInput", 
             "composant", "innerJoin", "NameProject", "NameJob"
@@ -147,14 +147,14 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
         with open(input_csv_path, mode='w', newline='', encoding='utf-8') as input_csvfile:
             writer = csv.writer(input_csvfile)
             writer.writerow(input_csv_header)
-            writer.writerows(xml_inputtable_results)
+            writer.writerows(aud_inputtable_results)
 
         logging.info(f"Input table results written to {input_csv_path}")
 
         # Step 3: Execute outputtable  query and write to CSV
-        outputtable_query = config.get_param('agg_queries', 'outputtable')
-        logging.info(f"Executing query: {outputtable_query}")
-        outputtable_results = db.execute_query(outputtable_query)
+        aud_outputtable_query = config.get_param('agg_queries', 'aud_outputtable')
+        logging.info(f"Executing query: {aud_outputtable_query}")
+        outputtable_results = db.execute_query(aud_outputtable_query)
 
         output_csv_path = os.path.join(directory_path, "aud_outputtable.csv")
         output_csv_header = ["aud_componentName","aud_OutputName", "aud_sizeState","aud_activateCondensedTool", "aud_reject", "aud_rejectInnerJoin", "aud_expressionOutput", "aud_nameColumnOutput", "aud_type", "aud_nullable", "aud_activateExpressionFilter", "aud_expressionFilterOutput", "aud_componentValue", "NameProject", "NameJob" ]
@@ -181,7 +181,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
             output_data = list(reader)
 
         # ==============================================================================================
-        #  Join aud_xml_inputtable.csv & outputtable.csv for `aud_agg_tmapinputinoutput`
+        #  Join aud_aud_inputtable.csv & outputtable.csv for `aud_agg_tmapinputinoutput`
         # ==============================================================================================
         joined_data_output_table = []
 
@@ -221,7 +221,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
         logging.info("Joined data inserted into `aud_agg_tmapinputinoutput`.")
 
         # ==============================================================================================
-        #  Join aud_xml_inputtable.csv & unique outputtable.csv for `aud_agg_tmapinputinfilteroutput`
+        #  Join aud_aud_inputtable.csv & unique outputtable.csv for `aud_agg_tmapinputinfilteroutput`
         # ==============================================================================================
         filtered_joined_data = []
         unique_rows = set()  # Track uniqueness based on (NameJob, NameProject, composant, aud_componentValue)
@@ -269,7 +269,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
         logging.info("Filtered joined data inserted into `aud_agg_tmapinputinfilteroutput`.")
 
         # ==============================================================================================
-        #  Join aud_xml_inputtable.csv & aud_xml_inputtable.csv for `aud_agg_tmapinputinjoininput`
+        #  Join aud_aud_inputtable.csv & aud_aud_inputtable.csv for `aud_agg_tmapinputinjoininput`
         # ==============================================================================================
 
         # Step 1: Read the input CSV file
@@ -329,7 +329,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
 
         logging.info("Data successfully inserted into `aud_agg_tmapinputinjoininput` table.")
         # ==============================================================================================
-        # insert aud_xml_inputtable.csv in `aud_agg_tmapinputinfilterinput`
+        # insert aud_aud_inputtable.csv in `aud_agg_tmapinputinfilterinput`
         # ==============================================================================================
     # Initialize a list to hold the rows to be inserted
         filtered_data = []
@@ -375,7 +375,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
 
         logging.info("Data successfully inserted into `aud_agg_tmapinputinfilterinput` table.")
         # ==============================================================================================
-        # Join aud_xml_inputtable.csv &  aud_vartable for `aud_agg_tmapinputinvar`
+        # Join aud_aud_inputtable.csv &  aud_vartable for `aud_agg_tmapinputinvar`
         # ==============================================================================================
     # Step 1: Execute aud_vartable query
         aud_vartable_query = config.get_param('agg_queries', 'aud_vartable')
@@ -392,7 +392,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
         with open(output_csv_path, mode='r', encoding='utf-8') as output_csvfile:
             reader = csv.DictReader(output_csvfile)
             output_data = list(reader)
-        # Step 4: Join aud_xml_inputtable.csv with aud_vartable based on (NameJob, NameProject, aud_componentValue)
+        # Step 4: Join aud_aud_inputtable.csv with aud_vartable based on (NameJob, NameProject, aud_componentValue)
         filtered_joined_data = []
 
         # Iterate over each row from aud_vartable results
@@ -549,7 +549,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
 
         logging.info("Data successfully inserted into `aud_agg_tmapvarinfilter` table.")
 # ==========================================================================================================================================================================================================================================================================================
-# Catching lookup inner join reject aud_xml_inputtable.csv & aud_agg_tmapinputinoutput & aud_agg_tmapinputinfilteroutput & aud_agg_tmapinputinjoininput & aud_agg_tmapinputinfilterinput & aud_agg_tmapinputinvar for `aud_agg_tmapcolumunused` on rowName, NameColumnInput, composant, NameProject, NameJob
+# Catching lookup inner join reject aud_aud_inputtable.csv & aud_agg_tmapinputinoutput & aud_agg_tmapinputinfilteroutput & aud_agg_tmapinputinjoininput & aud_agg_tmapinputinfilterinput & aud_agg_tmapinputinvar for `aud_agg_tmapcolumunused` on rowName, NameColumnInput, composant, NameProject, NameJob
 # ==========================================================================================================================================================================================================================================================================================
         # Improved Join Logic with input_df as the main DataFrame
         # Function to load SQL table data
@@ -670,20 +670,20 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
         else:
             logging.info("No unused data to insert.")
 
-        # Step 2: Execute agg_aud_xml_inputtable query and write to CSV
-        agg_aud_xml_inputtable_query = config.get_param('agg_queries', 'agg_aud_xml_inputtable')
-        logging.info(f"Executing query: {agg_aud_xml_inputtable_query}")
-        agg_aud_xml_inputtable_results = db.execute_query(agg_aud_xml_inputtable_query)
+        # Step 2: Execute aud_inputtable_nb query and write to CSV
+        aud_inputtable_nb_query = config.get_param('agg_queries', 'aud_inputtable_nb')
+        logging.info(f"Executing query: {aud_inputtable_nb_query}")
+        aud_inputtable_nb_results = db.execute_query(aud_inputtable_nb_query)
 
-        # Prepare and insert batch results from agg_aud_xml_inputtable query
+        # Prepare and insert batch results from aud_inputtable_nb query
         batch_insert = []
         insert_query = config.get_param('insert_agg_queries', 'aud_agg_tmapinput')
 
         # Log the total number of results to be processed
-        logging.info(f"Processing {len(agg_aud_xml_inputtable_results)} rows from agg_aud_xml_inputtable query.")
+        logging.info(f"Processing {len(aud_inputtable_nb_results)} rows from aud_inputtable_nb query.")
 
         # Process results in batches
-        for result in agg_aud_xml_inputtable_results:
+        for result in aud_inputtable_nb_results:
             batch_insert.append(result)
 
             # Insert data in batches
