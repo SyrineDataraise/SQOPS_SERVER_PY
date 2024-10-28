@@ -120,7 +120,7 @@ insert_agg_queries:
   aud_agg_txmlmapinputinfilterinput : "INSERT INTO aud_agg_txmlmapinputinfilterinput (rowName, NameColumnInput, expressionFilterInput, composant, NameProject, NameJob) VALUES (?, ?, ?, ?, ?, ?)"
   aud_agg_txmlmapinputinvar : "INSERT INTO aud_agg_txmlmapinputinvar (rowName, NameRowInput, composant, expressionOutput, nameColumnOutput, NameProject, NameJob) VALUES (?, ?, ?, ?, ?, ?, ?)"
   aud_agg_txmlmapcolumunused : "INSERT INTO aud_agg_txmlmapcolumunused (rowName, NameColumnInput, composant, NameProject, NameJob) VALUES (?, ?, ?, ?, ?)"
-
+  aud_agg_txmlmapinput : "INSERT INTO `sqops_dataraise`.`aud_agg_txmlmapinput` (`nb_input`, `aud_componentValue`, `NameJob`, `NameProject`) VALUES (?, ?, ?, ?)"
 
 
 
