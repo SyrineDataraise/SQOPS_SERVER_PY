@@ -241,83 +241,83 @@ def AUD_405_AGG_TXMLMAP(config: Config, db: Database, execution_date: str, batch
 
         logging.info("Filtered joined data inserted into `aud_agg_txmlmapinputinfilteroutput`.")
 
-     # ==============================================================================================
-    # Join `aud_inputtable_xml.csv` with `aud_inputtable_xml.csv` for `aud_agg_txmlmapinputinjoininput`
-    # Filtering rows based on certain conditions and inserting filtered data into the database
-    # ==============================================================================================
+        # ==============================================================================================
+        # Join `aud_inputtable_xml.csv` with `aud_inputtable_xml.csv` for `aud_agg_txmlmapinputinjoininput`
+        # Filtering rows based on certain conditions and inserting filtered data into the database
+        # ==============================================================================================
 
-    # Step 1: Read the input CSV file
-    input_data = []
-    with open(input_csv_path, mode='r', encoding='utf-8') as input_csvfile:
-        reader = csv.DictReader(input_csvfile)
-        input_data = list(reader)
+        # Step 1: Read the input CSV file
+        input_data = []
+        with open(input_csv_path, mode='r', encoding='utf-8') as input_csvfile:
+            reader = csv.DictReader(input_csvfile)
+            input_data = list(reader)
 
-    # Step 2: Initialize a list to hold the filtered rows for insertion
-    filtered_data = []
+        # Step 2: Initialize a list to hold the filtered rows for insertion
+        filtered_data = []
 
-    # Step 3: Apply filtering and transformation rules
-    for row in input_data:
-        # Rule: Ensure aud_xpathColumnInput is not NULL or empty
-        if row['aud_xpathColumnInput'] and row['aud_xpathColumnInput'].strip():
-            
-            # Rule: Check if the search string exists in aud_xpathColumnInput
-            search_string = f"{row['aud_nameRowInput']}.{row['aud_nameColumnInput']}"
-            if search_string in row['aud_xpathColumnInput']:
+        # Step 3: Apply filtering and transformation rules
+        for row in input_data:
+            # Rule: Ensure aud_xpathColumnInput is not NULL or empty
+            if row['aud_xpathColumnInput'] and row['aud_xpathColumnInput'].strip():
                 
-                # Replace newlines in 'expression' if it is not NULL
-                expression = row['expression'].replace("\n", " ") if row['expression'] else None
-                
-                # Determine is_columnjoined value
-                is_columnjoined = (
-                    row['aud_xpathColumnInput'] is not None and
-                    search_string in row['aud_xpathColumnInput']
-                )
-                
-                # Prepare the row for insertion
-                filtered_row = (
-                    row['aud_nameRowInput'],                 # rowName
-                    row['aud_nameColumnInput'],              # NameRowInput
-                    row['aud_componentName'],                # Component Name
-                    expression,                              # Processed expression for Join
-                    row['NameProject'],                      # NameProject
-                    row['NameJob'],                          # NameJob
-                    is_columnjoined,                         # Column joined flag
-                    row['aud_xpathColumnInput'],             # XPath Column Input
-                    row['aud_type']                          # Type
-                )
-                
-                # Add the filtered row to the list
-                filtered_data.append(filtered_row)
+                # Rule: Check if the search string exists in aud_xpathColumnInput
+                search_string = f"{row['aud_nameRowInput']}.{row['aud_nameColumnInput']}"
+                if search_string in row['aud_xpathColumnInput']:
+                    
+                    # Replace newlines in 'expression' if it is not NULL
+                    expression = row['expression'].replace("\n", " ") if row['expression'] else None
+                    
+                    # Determine is_columnjoined value
+                    is_columnjoined = (
+                        row['aud_xpathColumnInput'] is not None and
+                        search_string in row['aud_xpathColumnInput']
+                    )
+                    
+                    # Prepare the row for insertion
+                    filtered_row = (
+                        row['aud_nameRowInput'],                 # rowName
+                        row['aud_nameColumnInput'],              # NameRowInput
+                        row['aud_componentName'],                # Component Name
+                        expression,                              # Processed expression for Join
+                        row['NameProject'],                      # NameProject
+                        row['NameJob'],                          # NameJob
+                        is_columnjoined,                         # Column joined flag
+                        row['aud_xpathColumnInput'],             # XPath Column Input
+                        row['aud_type']                          # Type
+                    )
+                    
+                    # Add the filtered row to the list
+                    filtered_data.append(filtered_row)
 
-    # Step 4: Insert filtered data into `aud_agg_txmlmapinputinjoininput`
-    insert_query = config.get_param('insert_agg_queries', 'aud_agg_txmlmapinputinjoininput')
-    data_batch = []
+        # Step 4: Insert filtered data into `aud_agg_txmlmapinputinjoininput`
+        insert_query = config.get_param('insert_agg_queries', 'aud_agg_txmlmapinputinjoininput')
+        data_batch = []
 
-    # Insert data in batches
-    for row in filtered_data:
-        data_batch.append(row)
+        # Insert data in batches
+        for row in filtered_data:
+            data_batch.append(row)
 
-        # When the batch reaches the defined size, insert the data into the database
-        if len(data_batch) >= batch_size:
+            # When the batch reaches the defined size, insert the data into the database
+            if len(data_batch) >= batch_size:
+                try:
+                    logging.info(f"Inserting batch of size {len(data_batch)} into `aud_agg_txmlmapinputinjoininput`.")
+                    db.insert_data_batch(insert_query, 'aud_agg_txmlmapinputinjoininput', data_batch)
+                    logging.info(f"Successfully inserted batch of {len(data_batch)} rows.")
+                except Exception as e:
+                    logging.error(f"Error inserting batch: {str(e)}")
+                finally:
+                    data_batch.clear()  # Clear the batch after insertion
+
+        # Insert any remaining data that didn't fill the last batch
+        if data_batch:
             try:
-                logging.info(f"Inserting batch of size {len(data_batch)} into `aud_agg_txmlmapinputinjoininput`.")
+                logging.info(f"Inserting remaining batch of size {len(data_batch)} into `aud_agg_txmlmapinputinjoininput`.")
                 db.insert_data_batch(insert_query, 'aud_agg_txmlmapinputinjoininput', data_batch)
-                logging.info(f"Successfully inserted batch of {len(data_batch)} rows.")
+                logging.info(f"Successfully inserted remaining batch of {len(data_batch)} rows.")
             except Exception as e:
-                logging.error(f"Error inserting batch: {str(e)}")
-            finally:
-                data_batch.clear()  # Clear the batch after insertion
+                logging.error(f"Error inserting remaining batch: {str(e)}")
 
-    # Insert any remaining data that didn't fill the last batch
-    if data_batch:
-        try:
-            logging.info(f"Inserting remaining batch of size {len(data_batch)} into `aud_agg_txmlmapinputinjoininput`.")
-            db.insert_data_batch(insert_query, 'aud_agg_txmlmapinputinjoininput', data_batch)
-            logging.info(f"Successfully inserted remaining batch of {len(data_batch)} rows.")
-        except Exception as e:
-            logging.error(f"Error inserting remaining batch: {str(e)}")
-
-    logging.info("Data successfully inserted into `aud_agg_txmlmapinputinjoininput` table.")
+        logging.info("Data successfully inserted into `aud_agg_txmlmapinputinjoininput` table.")
 
         # ==============================================================================================
         # insert aud_inputtable_xml.csv in `aud_agg_txmlmapinputinfilterinput`
