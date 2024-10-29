@@ -71,7 +71,7 @@ def AUD_301_ALIMELEMENTNODE(config: Config, db: Database, parsed_files_data: Lis
                     componentName = data['componentName']
                     field = elem_param['field']
                     name = elem_param['name']
-                    show = elem_param['show']
+                    show = 1 if elem_param['show'] == 'true' else 0 if elem_param['show'] == 'false' else None
                     value = elem_param['value']
 
                     # Adjust the value of Componement_UniqueName as needed
