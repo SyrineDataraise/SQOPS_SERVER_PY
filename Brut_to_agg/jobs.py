@@ -616,27 +616,60 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
             'aud_agg_tmapinputinvar': ['rowName', 'NameRowInput', 'composant', 'NameProject', 'NameJob']
         }
 
+
         # Load the input CSV file into a DataFrame (input_df is the main DataFrame)
         input_df = pd.read_csv(input_csv_path, usecols=['rowName', 'NameRowInput', 'composant', 'NameProject', 'NameJob'])
 
-        # Load SQL data into DataFrames using the agg_queries and column mappings
-        sql_dataframes = {table: load_sql_table(query, column_mapping[table]) for table, query in sql_tables.items()}
+        # Rename columns to standardized names based on index
+        input_df.columns = [f"col_{i}" for i in range(len(input_df.columns))]
+        logging.info(f"Input CSV Headers by index: {input_df.columns.tolist()}")
+        logging.info(f"Displaying head for 'Input CSV':\n{input_df.head()}")
+
+        # Function to standardize SQL DataFrames by index
+        def load_and_standardize_table(query, num_columns):
+            """
+            Load a SQL table and standardize its column names by index.
+            
+            Args:
+                query (str): SQL query to execute.
+                num_columns (int): Number of columns to rename based on index.
+                
+            Returns:
+                pd.DataFrame: Standardized DataFrame.
+            """
+            data = db.execute_query(query)
+            df = pd.DataFrame(data)
+            df.columns = [f"col_{i}" for i in range(num_columns)]
+            return df
+
+        # SQL Queries and expected column counts for each SQL table
+        sql_queries = {
+            'aud_agg_tmapinputinoutput': ("SELECT DISTINCT rowName, NameRowInput, composant, NameProject, NameJob FROM aud_agg_tmapinputinoutput", 5),
+            'aud_agg_tmapinputinfilteroutput': ("SELECT DISTINCT rowName, NameRowInput, composant, NameProject, NameJob FROM aud_agg_tmapinputinfilteroutput", 5),
+            'aud_agg_tmapinputinjoininput': ("SELECT DISTINCT rowName, NameColumnInput, composant, NameProject, NameJob FROM aud_agg_tmapinputinjoininput", 5),
+            'aud_agg_tmapinputinfilterinput': ("SELECT DISTINCT rowName, NameColumnInput, composant, NameProject, NameJob FROM aud_agg_tmapinputinfilterinput", 5),
+            'aud_agg_tmapinputinvar': ("SELECT DISTINCT rowName, NameRowInput, composant, NameProject, NameJob FROM aud_agg_tmapinputinvar", 5)
+        }
+
+        # Load and standardize each SQL DataFrame
+        sql_dataframes = {table: load_and_standardize_table(query, col_count) for table, (query, col_count) in sql_queries.items()}
+
+        # Display headers of standardized SQL DataFrames
+        for table_name, df in sql_dataframes.items():
+            logging.info(f"Headers for table '{table_name}' by index: {df.columns.tolist()}")
+            logging.info(f"Displaying head for '{table_name}':\n{df.head()}")
 
         # Initialize unmatched_df with input_df (this will hold unmatched rows after each join)
         unmatched_df = input_df.copy()
 
-        # Iteratively perform left anti join with each SQL DataFrame
+        # Iteratively perform left anti join with each SQL DataFrame using standardized columns (col_0, col_1, etc.)
         for table, right_df in sql_dataframes.items():
             logging.info(f"Joining input_df with table: {table}")
             
-            # Determine the join columns dynamically based on column mapping
-            join_columns = [col for col in column_mapping[table] if col in unmatched_df.columns and col in right_df.columns]
+            # Use standardized index-based join columns (col_0, col_1, etc.)
+            join_columns = ['col_0', 'col_1', 'col_2', 'col_3', 'col_4']  # Adjust as necessary based on join criteria
             
-            if join_columns:
-                # Perform the left anti join to capture unmatched rows
-                unmatched_df = left_anti_join(unmatched_df, right_df, join_columns)
-            else:
-                logging.warning(f"No common columns to join for table {table}")
+            unmatched_df = left_anti_join(unmatched_df, right_df, join_columns)
 
         # After all joins, the remaining unmatched rows are stored in `unmatched_df`
         unused_data = unmatched_df
@@ -647,18 +680,12 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
             
             insert_query = config.get_param('insert_agg_queries', 'aud_agg_tmapcolumunused')
             
-            # Select only the relevant columns before insertion
-            relevant_columns = ['rowName', 'NameRowInput', 'composant', 'NameProject', 'NameJob']  # Adjust this list if necessary
-            
             # Prepare the data for insertion
-            insert_data = [tuple(row[col] for col in relevant_columns) for row in unused_data.to_dict(orient='records') if all(row[col] is not None for col in relevant_columns)]
-            
-            # Log the prepared insert data
+            insert_data = [tuple(row[f"col_{i}"] for i in range(5)) for _, row in unused_data.iterrows()]
+
             logging.info(f"Prepared data for insertion: {insert_data[:10]}")  # Log the first 10 rows for inspection
             
-            # Insert data in batches 
-            batch_insert = []
-
+            # Insert data in batches
             batch_size = 1000
             for i in range(0, len(insert_data), batch_size):
                 batch = insert_data[i:i + batch_size]
@@ -669,6 +696,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
                     logging.error(f"Error inserting batch: {str(e)}")
         else:
             logging.info("No unused data to insert.")
+
 
         # Step 2: Execute aud_inputtable_nb query and write to CSV
         aud_inputtable_nb_query = config.get_param('agg_queries', 'aud_inputtable_nb')
