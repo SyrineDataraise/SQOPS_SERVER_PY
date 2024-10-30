@@ -623,7 +623,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
         # Rename columns to standardized names based on index
         input_df.columns = [f"col_{i}" for i in range(len(input_df.columns))]
         logging.info(f"Input CSV Headers by index: {input_df.columns.tolist()}")
-        logging.info(f"Displaying head for 'Input CSV':\n{input_df.head()}")
+        logging.info(f"Displaying head for 'Input CSV':\n{input_df.head(100)}")
 
         # Function to standardize SQL DataFrames by index
         def load_and_standardize_table(query, num_columns):
@@ -668,7 +668,9 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
             
             # Use standardized index-based join columns (col_0, col_1, etc.)
             join_columns = ['col_0', 'col_1', 'col_2', 'col_3', 'col_4']  # Adjust as necessary based on join criteria
-            
+            # Convert unmatched_df and right_df columns to 'object' to prevent dtype mismatches
+            unmatched_df = unmatched_df.astype('object')
+            right_df = right_df.astype('object')
             unmatched_df = left_anti_join(unmatched_df, right_df, join_columns)
 
         # After all joins, the remaining unmatched rows are stored in `unmatched_df`

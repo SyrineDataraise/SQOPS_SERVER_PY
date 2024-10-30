@@ -177,11 +177,17 @@ class XMLParser:
 
             # Parse `nodeData` elements
             for node_data in node.findall('.//nodeData'):
+                # Find various sub-elements within nodeData
                 ui_propefties = node_data.find('.//uiPropefties')
                 var_tables = node_data.find('.//varTables')
                 output_tables = node_data.find('.//outputTables')
                 input_tables = node_data.find('.//inputTables')
+                inputTrees = node_data.find('.//inputTrees')
+                outputTrees = node_data.find('.//outputTrees')
+                varTables = node_data.find('.//varTables')
+                connections = node_data.find('.//connections')
 
+                # Initialize `node_data_info` structure
                 node_data_info = {
                     'type': node_data.get('{http://www.w3.org/2001/XMLSchema-instance}type'),
                     'uiPropefties': {
@@ -213,9 +219,13 @@ class XMLParser:
                         'expressionFilter': input_tables.get('expressionFilter') if input_tables is not None else None,
                         'persistent': input_tables.get('persistent') if input_tables is not None else None,
                         'mapperTableEntries': []
-                    }
+                    },
+                    'inputTrees': [],
+                    'outputTrees': [],
+                    'connections': []
                 }
 
+                # Parse `mapperTableEntries` for `inputTables`
                 for mapper_entry in node_data.findall('.//inputTables/mapperTableEntries'):
                     mapper_entry_info = {
                         'expression': mapper_entry.get('expression'),
@@ -226,6 +236,7 @@ class XMLParser:
                     }
                     node_data_info['inputTables']['mapperTableEntries'].append(mapper_entry_info)
 
+                # Parse `mapperTableEntries` for `outputTables`
                 for mapper_entry in node_data.findall('.//outputTables/mapperTableEntries'):
                     mapper_entry_info = {
                         'expression': mapper_entry.get('expression'),
@@ -235,15 +246,50 @@ class XMLParser:
                     }
                     node_data_info['outputTables']['mapperTableEntries'].append(mapper_entry_info)
 
+                # Parse `inputTrees`
+                for input_tree in node_data.findall('.//inputTrees'):
+                    input_tree_data = {
+                        'name': input_tree.get('name'),
+                        'matchingMode': input_tree.get('matchingMode'),
+                        'lookupMode': input_tree.get('lookupMode'),
+                        'nodes': []
+                    }
+                    for node_item in input_tree.findall('.//nodes'):
+                        node_item_data = {
+                            'name': node_item.get('name'),
+                            'type': node_item.get('type'),
+                            'outgoingConnections': node_item.get('outgoingConnections'),
+                            'xpath': node_item.get('xpath')
+                        }
+                        input_tree_data['nodes'].append(node_item_data)
+                    node_data_info['inputTrees'].append(input_tree_data)
+
+                # Parse `outputTrees`
+                for output_tree in node_data.findall('.//outputTrees'):
+                    output_tree_data = {
+                        'name': output_tree.get('name'),
+                        'expression': output_tree.get('expression'),
+                        'type': output_tree.get('type'),
+                        'nullable': output_tree.get('nullable')
+                    }
+                    node_data_info['outputTrees'].append(output_tree_data)
+
+                # Parse `connections`
+                for connection in node_data.findall('.//connections'):
+                    connection_data = {
+                        'source': connection.get('source'),
+                        'target': connection.get('target'),
+                        'type': connection.get('type')
+                    }
+                    node_data_info['connections'].append(connection_data)
+
                 comp_data['nodeData'].append(node_data_info)
-
-           
-
 
             parsed_data.append(comp_data)
 
-
         return parsed_data
+
+
 
 
     def _parse_Properties(self):
@@ -393,8 +439,8 @@ class XMLParser:
                             parsed_data = self._parse_file_items()
                             # Extract project_name and job_name
                             parts = filename.split('.', 1)
-                            project_name = parts[0]
-                            job_name = parts[1].replace('.item', '') if len(parts) > 1 else None
+                            project_name = str(parts[0])
+                            job_name = str(parts[1]).replace('.item', '') if len(parts) > 1 else None
                             parsed_files_data.append((project_name, job_name, parsed_data))
                         except FileNotFoundError:
                             logging.error(f"File not found: {file_path}")
@@ -430,8 +476,8 @@ class XMLParser:
                             parsed_data = self._parse_file_properties()
                             # Extract project_name and job_name
                             parts = filename.split('.', 1)
-                            project_name = parts[0]
-                            job_name = parts[1].replace('.properties', '') if len(parts) > 1 else None
+                            project_name = str(parts[0])
+                            job_name = str(parts[1]).replace('.properties', '') if len(parts) > 1 else None
                             parsed_files_data.append((project_name, job_name, parsed_data))
                         except FileNotFoundError:
                             logging.error(f"File not found: {file_path}")
@@ -472,8 +518,8 @@ class XMLParser:
 
                         # Extract project_name and job_name from the filename
                         parts = filename.split('.', 1)
-                        project_name = parts[0]
-                        job_name = parts[1].replace('.screenshot', '') if len(parts) > 1 else None
+                        project_name = str(parts[0])
+                        job_name =str(parts[1]).replace('.screenshot', '') if len(parts) > 1 else None
 
                         # Append the result to the list
                         parsed_screenshots_data.append((project_name, job_name, parsed_data))

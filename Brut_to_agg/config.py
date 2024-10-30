@@ -3,7 +3,7 @@ import logging
 
 # Configure logging
 logging.basicConfig(
-    filename='Local_to_brut.log',
+    filename='database_operations.log',
     level=logging.DEBUG,  # Changed to DEBUG to capture all messages
     format='%(asctime)s - %(levelname)s - %(message)s',
     filemode='w'  # Ensure the file is overwritten each time for clean logs

@@ -404,6 +404,10 @@ def AUD_304_ALIMMETADATA(config: Config, db: Database, parsed_files_data: List[T
         for project_name, job_name, parsed_data in parsed_files_data:
             for node_data in parsed_data['nodes']:
                 for elem_param in node_data['elementParameters']:
+                    field = elem_param['field']
+                    name = elem_param['name']
+                    value = elem_param['value']
+                    Componement_UniqueName = value if field == 'TEXT' and name == 'UNIQUE_NAME' else Componement_UniqueName
                     for elem_value in elem_param['elementValue']:
                         for meta in node_data['metadata']:
                             for column in meta['columns']:
@@ -423,7 +427,7 @@ def AUD_304_ALIMMETADATA(config: Config, db: Database, parsed_files_data: List[T
                                     int(column['usefulColumn'] != 'false'),
                                     column['originalLength'],
                                     column['defaultValue'],
-                                    elem_value['value'],
+                                    Componement_UniqueName,
                                     node_data['componentName'],
                                     project_name,
                                     job_name,
