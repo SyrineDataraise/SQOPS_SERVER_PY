@@ -479,7 +479,7 @@ def AUD_405_AGG_TXMLMAP(config: Config, db: Database, execution_date: str, batch
     }
 
     # Load input CSV
-    input_df = pd.read_csv(input_csv_path, usecols=['rowName', 'NameRowInput', 'composant', 'NameProject', 'NameJob'])
+    input_df = pd.read_csv(input_csv_path, usecols=[ 'NameRowInput','aud_nameRowInput', 'aud_componentName', 'NameProject', 'NameJob'])
 
     # Load SQL tables into DataFrames
     sql_dataframes = {table: load_sql_table(query, column_mapping[table]) for table, query in sql_tables.items()}
@@ -512,7 +512,7 @@ def AUD_405_AGG_TXMLMAP(config: Config, db: Database, execution_date: str, batch
                 logging.error(f"Error inserting batch: {str(e)}")
 
     # Execute additional aggregation query and insert results
-    agg_aud_inputtable_xml_query = config.get_param('agg_queries', 'agg_aud_inputtable_xml')
+    agg_aud_inputtable_xml_query = config.get_param('agg_queries', 'aud_inputtable_xml_nb')
     agg_aud_inputtable_xml_results = db.execute_query(agg_aud_inputtable_xml_query)
     insert_query = config.get_param('insert_agg_queries', 'aud_agg_txmlmapinput')
 
