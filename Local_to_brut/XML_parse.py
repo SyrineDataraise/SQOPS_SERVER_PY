@@ -111,6 +111,28 @@ class XMLParser:
 
         """Parse and return data from `node` elements, including additional parameters."""
         parsed_data = []
+        def parse_children(element):
+            """ Recursively parse `children` elements, capturing nested structures. """
+            children_data = {
+                'name': element.get('name'),
+                'type': element.get('type'),
+                'xpath': element.get('xpath'),
+                'nodeType': element.get('nodeType'),
+                'main': element.get('main'),
+                'defaultValue': element.get('defaultValue'),
+                'filterOutGoingConnections': element.get('filterOutGoingConnections'),
+                'lookupOutgoingConnections': element.get('lookupOutgoingConnections'),
+                'outgoingConnections': element.get('outgoingConnections'),
+                'lookupIncomingConnections': element.get('lookupIncomingConnections'),
+                'expression': element.get('expression'),
+                'children': []
+            }
+
+            # Recursively parse any nested `children` elements
+            for child in element.findall('./children'):
+                children_data['children'].append(parse_children(child))
+
+            return children_data
 
         for node in self.root.iter('node'):
             comp_data = {
@@ -252,17 +274,38 @@ class XMLParser:
                         'name': input_tree.get('name'),
                         'matchingMode': input_tree.get('matchingMode'),
                         'lookupMode': input_tree.get('lookupMode'),
-                        'nodes': []
+                        'activateCondensedTool': input_tree.get('activateCondensedTool'),
+                        'activateExpressionFilter': input_tree.get('activateExpressionFilter'),
+                        'activateGlobalMap': input_tree.get('activateGlobalMap'),
+                        'expressionFilter': input_tree.get('expressionFilter'),
+                        'filterIncomingConnections': input_tree.get('filterIncomingConnections'),
+                        'lookup': input_tree.get('lookup'),
+                        'children': []
                     }
+
+                    # Parse `nodes` elements within each `inputTrees`
                     for node_item in input_tree.findall('.//nodes'):
                         node_item_data = {
                             'name': node_item.get('name'),
+                            'expression': node_item.get('expression'),
                             'type': node_item.get('type'),
+                            'xpath': node_item.get('xpath'),
+                            'filterOutGoingConnections': node_item.get('filterOutGoingConnections'),
+                            'lookupOutgoingConnections': node_item.get('lookupOutgoingConnections'),
                             'outgoingConnections': node_item.get('outgoingConnections'),
-                            'xpath': node_item.get('xpath')
+                            'lookupIncomingConnections': node_item.get('lookupIncomingConnections'),
+                            'expression': node_item.get('expression'),
+                            'children': []
                         }
-                        input_tree_data['nodes'].append(node_item_data)
+
+                        # Parse `children` elements within each `node_item`
+                        for child in node_item.findall('./children'):
+                            node_item_data['children'].append(parse_children(child))
+
+                        input_tree_data['children'].append(node_item_data)
+
                     node_data_info['inputTrees'].append(input_tree_data)
+
 
                 # Parse `outputTrees`
                 for output_tree in node_data.findall('.//outputTrees'):

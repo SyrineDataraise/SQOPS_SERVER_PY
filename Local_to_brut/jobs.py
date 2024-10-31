@@ -882,64 +882,66 @@ def AUD_307_ALIMINPUTTABLE_XML(config: Config, db: Database, parsed_files_data: 
         batch_size = 100  # Define your batch size
 
         for NameProject, NameJob, parsed_data in parsed_files_data:
-            # logging.info(f"Processing project: {NameProject}, job: {NameJob}")
             for data in parsed_data['nodes']:
                 aud_componentName = data['componentName']
+                aud_componentValue = None
 
-                # Extract 'aud_componentValue' based on element parameters
-                # aud_componentValue = None
+                # Extract 'aud_componentValue' from element parameters
                 for elem_param in data['elementParameters']:
                     field = elem_param['field']
                     name = elem_param['name']
                     value = elem_param['value']
-                    aud_componentValue = value if field == 'TEXT' and name == 'UNIQUE_NAME'else aud_componentValue
-                        
-                
-                # Process node data
+                    if field == 'TEXT' and name == 'UNIQUE_NAME':
+                        aud_componentValue = value
+
                 for nodeData in data['nodeData']:
-                    input_tables = nodeData.get('inputTables', {})
+                    # Parse `inputTrees` for each nodeData
+                    for input_tree in nodeData.get('inputTrees', []):
+                        aud_nameRowInput = input_tree.get('name')
+                        aud_lookupMode = input_tree.get('lookupMode')
+                        aud_matchingMode = input_tree.get('matchingMode')
+                        aud_activateCondensedTool = input_tree.get('activateCondensedTool')
+                        activateExpressionFilter = input_tree.get('activateExpressionFilter')
+                        activateGlobalMap = input_tree.get('activateGlobalMap')
+                        expressionFilter = input_tree.get('expressionFilter')
+                        filterIncomingConnections = input_tree.get('filterIncomingConnections')
+                        lookup = input_tree.get('lookup')
 
-                    aud_lookupMode = input_tables.get('lookupMode')
-                    aud_matchingMode = input_tables.get('matchingMode')
-                    
-                    # Set default values for aud_nameRowInput and aud_nameColumnInput if they are None
-                    aud_nameRowInput = input_tables.get('nameRowInput') if input_tables.get('nameRowInput') is not None else 'DEFAULT_ROW_VALUE'  # Default value for aud_nameRowInput
-                    aud_nameColumnInput = input_tables.get('nameColumnInput') if input_tables.get('nameColumnInput') is not None else 'DEFAULT_COLUMN_VALUE'  # Default value for aud_nameColumnInput
-                    
-                    aud_sizeState = input_tables.get('sizeState')
-                    aud_activateExpressionFilterInput = input_tables.get('activateExpressionFilterInput')
-                    aud_expressionFilterInput = input_tables.get('expressionFilterInput')
-                    aud_activateCondensedTool = input_tables.get('activateCondensedTool')
-                    aud_innerJoin = input_tables.get('innerJoin')
-                    persistent = input_tables.get('persistent')
+                        # Loop through `nodes` children in each `input_tree`
+                        for node_item in input_tree.get('children', []):
+                            aud_nameColumnInput = node_item.get('name')
+                            aud_type = node_item.get('type')
+                            aud_xpathColumnInput = node_item.get('xpath')
+                            
+                            # Define other placeholders only if they are present in the node_item data
+                            filterOutGoingConnections = node_item.get('filterOutGoingConnections')
+                            lookupOutgoingConnections = node_item.get('lookupOutgoingConnections')
+                            outgoingConnections = node_item.get('outgoingConnections')
+                            lookupIncomingConnections = node_item.get('lookupIncomingConnections')
+                            expression = node_item.get('expression')
 
-                    # Extract mapper table entries
-                    for mapper_entry in input_tables.get('mapperTableEntries', []):
-                        aud_expressionJoin = mapper_entry.get('expression')
-                        aud_type = mapper_entry.get('type')
-                        aud_nullable = 1 if mapper_entry.get('nullable') == 'true' else 0
-                        aud_operator = mapper_entry.get('operator')
+                            # Prepare the parameters for insertion, only including available values
+                            params = (
+                                aud_nameColumnInput, aud_type, aud_xpathColumnInput, aud_nameRowInput,
+                                aud_componentName, aud_componentValue, filterOutGoingConnections,
+                                lookupOutgoingConnections, outgoingConnections, NameJob, NameProject,
+                                execution_date, lookupIncomingConnections, expression, aud_lookupMode,
+                                aud_matchingMode, aud_activateCondensedTool, activateExpressionFilter,
+                                activateGlobalMap, expressionFilter, filterIncomingConnections, lookup
+                            )
 
-                        # Prepare the parameters for insertion
-                        params = (aud_nameColumnInput,aud_type,aud_xpathColumnInput,aud_nameRowInput,aud_componentName,aud_componentValue,filterOutGoingConnections,lookupOutgoingConnections,outgoingConnections,namejob,nameproject,execution_date,lookupIncomingConnections,expression,lookupMode,matchingMode,activateCondensedTool,activateExpressionFilter,activateGlobalMap,expressionFilter,filterIncomingConnections,lookup)
+                            batch_insert.append(params)
 
-                        batch_insert.append(params)
+                            # Insert the batch when the size limit is reached
+                            if len(batch_insert) >= batch_size:
+                                db.insert_data_batch(insert_query, 'aud_inputtable_xml', batch_insert)
+                                batch_insert.clear()
 
-                        # Insert the batch when the size limit is reached
-                        if len(batch_insert) >= batch_size:
-                            db.insert_data_batch(insert_query, 'aud_inputtable_xml', batch_insert)
-                            # #logging.info(f"Inserted batch of data into aud_inputtable_xml: {len(batch_insert)} rows")
-                            batch_insert.clear()
+                    # Insert remaining data after the loop
+                    if batch_insert:
+                        db.insert_data_batch(insert_query, 'aud_inputtable_xml', batch_insert)
+                        # logging.info(f"Inserted remaining batch of data into aud_inputtable_xml: {len(batch_insert)} rows")
 
-                    # Log a warning if aud_nameColumnInput is still None after default value assignment
-                    # if aud_nameColumnInput == 'DEFAULT_COLUMN_VALUE':
-                        # logging.warning("aud_nameColumnInput was None and has been set to 'DEFAULT_COLUMN_VALUE'.")
-
-
-        # Insert remaining data after the loop
-        if batch_insert:
-            db.insert_data_batch(insert_query, 'aud_inputtable_xml', batch_insert)
-            #logging.info(f"Inserted remaining batch of data into aud_inputtable_xml: {len(batch_insert)} rows")
 
         # Step 7: Execute inputtableJoinElemntnode query and delete records
         inputtableJoinElemntnode_query = config.get_param('queries', 'inputtableJoinElemntnode')
@@ -1007,7 +1009,6 @@ def AUD_307_ALIMINPUTTABLE(config: Config, db: Database, parsed_files_data: List
         # Step 6: Insert parsed data into aud_inputtable in batches
         insert_query = config.get_param('insert_queries', 'aud_inputtable')
         batch_insert = []
-        batch_size = 100  # Define your batch size
 
         for NameProject, NameJob, parsed_data in parsed_files_data:
             # logging.info(f"Processing project: {NameProject}, job: {NameJob}")
