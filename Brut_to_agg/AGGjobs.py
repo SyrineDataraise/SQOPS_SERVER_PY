@@ -614,8 +614,8 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
 
         # Rename columns to standardized names based on index
         input_df.columns = [f"col_{i}" for i in range(len(input_df.columns))]
-        logging.info(f"Input CSV Headers by index: {input_df.columns.tolist()}")
-        logging.info(f"Displaying head for 'Input CSV':\n{input_df.head(100)}")
+        # logging.info(f"Input CSV Headers by index: {input_df.columns.tolist()}")
+        # logging.info(f"Displaying head for 'Input CSV':\n{input_df.head(100)}")
 
         # Function to standardize SQL DataFrames by index
         def load_and_standardize_table(query, num_columns):
@@ -647,9 +647,9 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
         sql_dataframes = {table: load_and_standardize_table(query, col_count) for table, (query, col_count) in sql_queries.items()}
 
         # Display headers of standardized SQL DataFrames
-        for table_name, df in sql_dataframes.items():
-            logging.info(f"Headers for table '{table_name}' by index: {df.columns.tolist()}")
-            logging.info(f"Displaying head for '{table_name}':\n{df.head()}")
+        # for table_name, df in sql_dataframes.items():
+        #     logging.info(f"Headers for table '{table_name}' by index: {df.columns.tolist()}")
+        #     logging.info(f"Displaying head for '{table_name}':\n{df.head()}")
 
         # Initialize unmatched_df with input_df (this will hold unmatched rows after each join)
         unmatched_df = input_df.copy()
