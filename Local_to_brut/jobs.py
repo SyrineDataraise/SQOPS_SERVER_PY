@@ -769,49 +769,51 @@ def AUD_306_ALIMOUTPUTTABLE(config: Config, db: Database, parsed_files_data: Lis
             # logging.info(f"Processing project: {project_name}, job: {job_name}")
             for data in parsed_data['nodes']:
                 aud_componentName = data['componentName']
+                if aud_componentName == 'tMap':
 
-                for elem_param in data['elementParameters']:
-                    field = elem_param['field']
-                    name = elem_param['name']
-                    value = elem_param['value']
-                    aud_componentValue = value if field == 'TEXT' and name == 'UNIQUE_NAME' else aud_componentValue
 
-                for nodeData in data['nodeData']:
-                    output_tables = nodeData.get('outputTables', {})
-                    
-                    aud_OutputName = output_tables.get('name')
-                    aud_sizeState = output_tables.get('sizeState')
-                    aud_activateCondensedTool = 1 if output_tables.get('activateCondensedTool') == 'true' else 0
-                    aud_reject = output_tables.get('reject')
-                    aud_rejectInnerJoin = output_tables.get('rejectInnerJoin')
-                    aud_activateExpressionFilter = 1 if output_tables.get('activateExpressionFilter') == 'true' else 0
-                    aud_expressionFilterOutput = output_tables.get('expressionFilter')
+                    for elem_param in data['elementParameters']:
+                        field = elem_param['field']
+                        name = elem_param['name']
+                        value = elem_param['value']
+                        aud_componentValue = value if field == 'TEXT' and name == 'UNIQUE_NAME' else aud_componentValue
 
-                    for mapper_entry in output_tables.get('mapperTableEntries', []):
-                        aud_expressionOutput = mapper_entry.get('expression')
-                        aud_nameColumnOutput = mapper_entry.get('name')
-                        aud_type = mapper_entry.get('type')
-                        aud_nullable = 1 if mapper_entry.get('nullable') == 'true' else 0
+                    for nodeData in data['nodeData']:
+                        output_tables = nodeData.get('outputTables', {})
+                        
+                        aud_OutputName = output_tables.get('name')
+                        aud_sizeState = output_tables.get('sizeState')
+                        aud_activateCondensedTool = 1 if output_tables.get('activateCondensedTool') == 'true' else 0
+                        aud_reject = output_tables.get('reject')
+                        aud_rejectInnerJoin = output_tables.get('rejectInnerJoin')
+                        aud_activateExpressionFilter = 1 if output_tables.get('activateExpressionFilter') == 'true' else 0
+                        aud_expressionFilterOutput = output_tables.get('expressionFilter')
 
-                        if aud_OutputName:
-                            params = (
-                                aud_componentName, aud_OutputName, aud_sizeState, aud_activateCondensedTool, aud_reject, 
-                                aud_rejectInnerJoin, aud_expressionOutput, aud_nameColumnOutput, aud_type, aud_nullable, 
-                                aud_activateExpressionFilter, aud_expressionFilterOutput, aud_componentValue, project_name, 
-                                job_name, execution_date
-                            )
-                            batch_insert.append(params)
+                        for mapper_entry in output_tables.get('mapperTableEntries', []):
+                            aud_expressionOutput = mapper_entry.get('expression')
+                            aud_nameColumnOutput = mapper_entry.get('name')
+                            aud_type = mapper_entry.get('type')
+                            aud_nullable = 1 if mapper_entry.get('nullable') == 'true' else 0
 
-                            if len(batch_insert) >= batch_size:
-                                db.insert_data_batch(insert_query, 'aud_outputTable', batch_insert)
-                                # #logging.info(f"Inserted batch of data into aud_outputTable: {len(batch_insert)} rows")
-                                batch_insert.clear()
-                        else:
-                            logging.warning("aud_OutputName is None, skipping this entry.")
+                            if aud_OutputName:
+                                params = (
+                                    aud_componentName, aud_OutputName, aud_sizeState, aud_activateCondensedTool, aud_reject, 
+                                    aud_rejectInnerJoin, aud_expressionOutput, aud_nameColumnOutput, aud_type, aud_nullable, 
+                                    aud_activateExpressionFilter, aud_expressionFilterOutput, aud_componentValue, project_name, 
+                                    job_name, execution_date
+                                )
+                                batch_insert.append(params)
 
-        if batch_insert:
-            db.insert_data_batch(insert_query, 'aud_outputTable', batch_insert)
-            #logging.info(f"Inserted remaining batch of data into aud_outputTable: {len(batch_insert)} rows")
+                                if len(batch_insert) >= batch_size:
+                                    db.insert_data_batch(insert_query, 'aud_outputTable', batch_insert)
+                                    # #logging.info(f"Inserted batch of data into aud_outputTable: {len(batch_insert)} rows")
+                                    batch_insert.clear()
+                            else:
+                                logging.warning("aud_OutputName is None, skipping this entry.")
+
+            if batch_insert:
+                db.insert_data_batch(insert_query, 'aud_outputTable', batch_insert)
+                #logging.info(f"Inserted remaining batch of data into aud_outputTable: {len(batch_insert)} rows")
 
         # Step 7: Execute outputtableJoinElemntnode query and delete records
         outputtableJoinElemntnode_query = config.get_param('queries', 'outputtableJoinElemntnode')
@@ -884,63 +886,65 @@ def AUD_307_ALIMINPUTTABLE_XML(config: Config, db: Database, parsed_files_data: 
         for NameProject, NameJob, parsed_data in parsed_files_data:
             for data in parsed_data['nodes']:
                 aud_componentName = data['componentName']
-                aud_componentValue = None
+                if aud_componentName == 'tXMLMap':
 
-                # Extract 'aud_componentValue' from element parameters
-                for elem_param in data['elementParameters']:
-                    field = elem_param['field']
-                    name = elem_param['name']
-                    value = elem_param['value']
-                    if field == 'TEXT' and name == 'UNIQUE_NAME':
-                        aud_componentValue = value
+                    aud_componentValue = None
 
-                for nodeData in data['nodeData']:
-                    # Parse `inputTrees` for each nodeData
-                    for input_tree in nodeData.get('inputTrees', []):
-                        aud_nameRowInput = input_tree.get('name')
-                        aud_lookupMode = input_tree.get('lookupMode')
-                        aud_matchingMode = input_tree.get('matchingMode')
-                        aud_activateCondensedTool = input_tree.get('activateCondensedTool')
-                        activateExpressionFilter = input_tree.get('activateExpressionFilter')
-                        activateGlobalMap = input_tree.get('activateGlobalMap')
-                        expressionFilter = input_tree.get('expressionFilter')
-                        filterIncomingConnections = input_tree.get('filterIncomingConnections')
-                        lookup = input_tree.get('lookup')
+                    # Extract 'aud_componentValue' from element parameters
+                    for elem_param in data['elementParameters']:
+                        field = elem_param['field']
+                        name = elem_param['name']
+                        value = elem_param['value']
+                        if field == 'TEXT' and name == 'UNIQUE_NAME':
+                            aud_componentValue = value
 
-                        # Loop through `nodes` children in each `input_tree`
-                        for node_item in input_tree.get('children', []):
-                            aud_nameColumnInput = node_item.get('name')
-                            aud_type = node_item.get('type')
-                            aud_xpathColumnInput = node_item.get('xpath')
-                            
-                            # Define other placeholders only if they are present in the node_item data
-                            filterOutGoingConnections = node_item.get('filterOutGoingConnections')
-                            lookupOutgoingConnections = node_item.get('lookupOutgoingConnections')
-                            outgoingConnections = node_item.get('outgoingConnections')
-                            lookupIncomingConnections = node_item.get('lookupIncomingConnections')
-                            expression = node_item.get('expression')
+                    for nodeData in data['nodeData']:
+                        # Parse `inputTrees` for each nodeData
+                        for input_tree in nodeData.get('inputTrees', []):
+                            aud_nameRowInput = input_tree.get('name')
+                            aud_lookupMode = input_tree.get('lookupMode')
+                            aud_matchingMode = input_tree.get('matchingMode')
+                            aud_activateCondensedTool = input_tree.get('activateCondensedTool')
+                            activateExpressionFilter = input_tree.get('activateExpressionFilter')
+                            activateGlobalMap = input_tree.get('activateGlobalMap')
+                            expressionFilter = input_tree.get('expressionFilter')
+                            filterIncomingConnections = input_tree.get('filterIncomingConnections')
+                            lookup = input_tree.get('lookup')
 
-                            # Prepare the parameters for insertion, only including available values
-                            params = (
-                                aud_nameColumnInput, aud_type, aud_xpathColumnInput, aud_nameRowInput,
-                                aud_componentName, aud_componentValue, filterOutGoingConnections,
-                                lookupOutgoingConnections, outgoingConnections, NameJob, NameProject,
-                                execution_date, lookupIncomingConnections, expression, aud_lookupMode,
-                                aud_matchingMode, aud_activateCondensedTool, activateExpressionFilter,
-                                activateGlobalMap, expressionFilter, filterIncomingConnections, lookup
-                            )
+                            # Loop through `nodes` children in each `input_tree`
+                            for node_item in input_tree.get('children', []):
+                                aud_nameColumnInput = node_item.get('name')
+                                aud_type = node_item.get('type')
+                                aud_xpathColumnInput = node_item.get('xpath')
+                                
+                                # Define other placeholders only if they are present in the node_item data
+                                filterOutGoingConnections = node_item.get('filterOutGoingConnections')
+                                lookupOutgoingConnections = node_item.get('lookupOutgoingConnections')
+                                outgoingConnections = node_item.get('outgoingConnections')
+                                lookupIncomingConnections = node_item.get('lookupIncomingConnections')
+                                expression = node_item.get('expression')
 
-                            batch_insert.append(params)
+                                # Prepare the parameters for insertion, only including available values
+                                params = (
+                                    aud_nameColumnInput, aud_type, aud_xpathColumnInput, aud_nameRowInput,
+                                    aud_componentName, aud_componentValue, filterOutGoingConnections,
+                                    lookupOutgoingConnections, outgoingConnections, NameJob, NameProject,
+                                    execution_date, lookupIncomingConnections, expression, aud_lookupMode,
+                                    aud_matchingMode, aud_activateCondensedTool, activateExpressionFilter,
+                                    activateGlobalMap, expressionFilter, filterIncomingConnections, lookup
+                                )
 
-                            # Insert the batch when the size limit is reached
-                            if len(batch_insert) >= batch_size:
-                                db.insert_data_batch(insert_query, 'aud_inputtable_xml', batch_insert)
-                                batch_insert.clear()
+                                batch_insert.append(params)
 
-                    # Insert remaining data after the loop
-                    if batch_insert:
-                        db.insert_data_batch(insert_query, 'aud_inputtable_xml', batch_insert)
-                        # logging.info(f"Inserted remaining batch of data into aud_inputtable_xml: {len(batch_insert)} rows")
+                                # Insert the batch when the size limit is reached
+                                if len(batch_insert) >= batch_size:
+                                    db.insert_data_batch(insert_query, 'aud_inputtable_xml', batch_insert)
+                                    batch_insert.clear()
+
+                        # Insert remaining data after the loop
+                        if batch_insert:
+                            db.insert_data_batch(insert_query, 'aud_inputtable_xml', batch_insert)
+                            # logging.info(f"Inserted remaining batch of data into aud_inputtable_xml: {len(batch_insert)} rows")
 
 
         # Step 7: Execute inputtableJoinElemntnode query and delete records
@@ -1024,8 +1028,8 @@ def AUD_307_ALIMOUTPUTTABLE_XML(config: Config, db: Database, parsed_files_data:
                             aud_componentValue = value
 
                     for nodeData in data['nodeData']:
-                        if len(nodeData.get('outputTrees', []))!=0:
-                            logging.debug(f"Processing nodeData with outputTrees: {nodeData.get('outputTrees', []), NameProject,NameJob}")
+                        # if len(nodeData.get('outputTrees', []))!=0:
+                           # logging.debug(f"Processing nodeData with outputTrees: {nodeData.get('outputTrees', []), NameProject,NameJob}")
                         # Parse outputTrees for each nodeData
                         for output_tree in nodeData.get('outputTrees', []):
                             aud_nameRowOutput = output_tree.get('name')
@@ -1058,7 +1062,7 @@ def AUD_307_ALIMOUTPUTTABLE_XML(config: Config, db: Database, parsed_files_data:
                                     aud_componentValue, filterOutGoingConnections, incomingConnections, NameJob, NameProject, execution_date, 
                                     expression, activateCondensedTool, activateExpressionFilter, expressionFilter, filterIncomingConnections)
                                 
-                                logging.debug(f"Prepared params for insertion: {params}")
+                               # logging.debug(f"Prepared params for insertion: {params}")
 
                                 batch_insert.append(params)
 
@@ -1143,68 +1147,69 @@ def AUD_307_ALIMINPUTTABLE(config: Config, db: Database, parsed_files_data: List
             # logging.info(f"Processing project: {NameProject}, job: {NameJob}")
             for data in parsed_data['nodes']:
                 aud_componentName = data['componentName']
+                if aud_componentName == 'tMap':
 
-                # Extract 'aud_componentValue' based on element parameters
-                # aud_componentValue = None
-                for elem_param in data['elementParameters']:
-                    field = elem_param['field']
-                    name = elem_param['name']
-                    value = elem_param['value']
-                    aud_componentValue = value if field == 'TEXT' and name == 'UNIQUE_NAME' else aud_componentValue
+                    # Extract 'aud_componentValue' based on element parameters
+                    # aud_componentValue = None
+                    for elem_param in data['elementParameters']:
+                        field = elem_param['field']
+                        name = elem_param['name']
+                        value = elem_param['value']
+                        aud_componentValue = value if field == 'TEXT' and name == 'UNIQUE_NAME' else aud_componentValue
+                            
+                    
+                    # Process node data
+                    for nodeData in data['nodeData']:
+                        input_tables = nodeData.get('inputTables', {})
+
+                        aud_lookupMode = input_tables.get('lookupMode')
+                        aud_matchingMode = input_tables.get('matchingMode')
+                        # Set default values for aud_nameRowInput and aud_nameColumnInput if they are None
+                        aud_nameRowInput = input_tables.get('nameRowInput') if input_tables.get('nameRowInput') is not None else 'DEFAULT_ROW_VALUE'  # Default value for aud_nameRowInput
+                        aud_nameColumnInput = input_tables.get('nameColumnInput') if input_tables.get('nameColumnInput') is not None else 'DEFAULT_COLUMN_VALUE'  # Default value for aud_nameColumnInput
                         
-                
-                # Process node data
-                for nodeData in data['nodeData']:
-                    input_tables = nodeData.get('inputTables', {})
+                        aud_sizeState = input_tables.get('sizeState')
+                        aud_activateExpressionFilterInput = input_tables.get('activateExpressionFilterInput')
+                        aud_expressionFilterInput = input_tables.get('expressionFilterInput')
+                        aud_activateCondensedTool = input_tables.get('activateCondensedTool')
+                        aud_innerJoin = input_tables.get('innerJoin')
+                        persistent = input_tables.get('persistent')
 
-                    aud_lookupMode = input_tables.get('lookupMode')
-                    aud_matchingMode = input_tables.get('matchingMode')
-                    # Set default values for aud_nameRowInput and aud_nameColumnInput if they are None
-                    aud_nameRowInput = input_tables.get('nameRowInput') if input_tables.get('nameRowInput') is not None else 'DEFAULT_ROW_VALUE'  # Default value for aud_nameRowInput
-                    aud_nameColumnInput = input_tables.get('nameColumnInput') if input_tables.get('nameColumnInput') is not None else 'DEFAULT_COLUMN_VALUE'  # Default value for aud_nameColumnInput
-                    
-                    aud_sizeState = input_tables.get('sizeState')
-                    aud_activateExpressionFilterInput = input_tables.get('activateExpressionFilterInput')
-                    aud_expressionFilterInput = input_tables.get('expressionFilterInput')
-                    aud_activateCondensedTool = input_tables.get('activateCondensedTool')
-                    aud_innerJoin = input_tables.get('innerJoin')
-                    persistent = input_tables.get('persistent')
+                        # Extract mapper table entries
+                        for mapper_entry in input_tables.get('mapperTableEntries', []):
+                            aud_expressionJoin = mapper_entry.get('expression')
+                            aud_nameColumnInput = mapper_entry.get('name')
+                            aud_type = mapper_entry.get('type')
+                            aud_nullable = 1 if mapper_entry.get('nullable') == 'true' else 0
+                            aud_operator = mapper_entry.get('operator')
 
-                    # Extract mapper table entries
-                    for mapper_entry in input_tables.get('mapperTableEntries', []):
-                        aud_expressionJoin = mapper_entry.get('expression')
-                        aud_nameColumnInput = mapper_entry.get('name')
-                        aud_type = mapper_entry.get('type')
-                        aud_nullable = 1 if mapper_entry.get('nullable') == 'true' else 0
-                        aud_operator = mapper_entry.get('operator')
+                            # Prepare the parameters for insertion
+                            params = (
+                                aud_componentName, aud_lookupMode, aud_matchingMode, aud_nameRowInput, aud_sizeState,
+                                aud_nameColumnInput, aud_type, aud_nullable, aud_expressionJoin, aud_operator,
+                                aud_activateExpressionFilterInput, aud_expressionFilterInput, aud_componentValue,
+                                aud_activateCondensedTool, aud_innerJoin, persistent, NameProject, NameJob, execution_date
+                            )
 
-                        # Prepare the parameters for insertion
-                        params = (
-                            aud_componentName, aud_lookupMode, aud_matchingMode, aud_nameRowInput, aud_sizeState,
-                            aud_nameColumnInput, aud_type, aud_nullable, aud_expressionJoin, aud_operator,
-                            aud_activateExpressionFilterInput, aud_expressionFilterInput, aud_componentValue,
-                            aud_activateCondensedTool, aud_innerJoin, persistent, NameProject, NameJob, execution_date
-                        )
+                            batch_insert.append(params)
 
-                        batch_insert.append(params)
+                            # Insert the batch when the size limit is reached
+                            if len(batch_insert) >= batch_size:
+                                db.insert_data_batch(insert_query, 'aud_inputtable', batch_insert)
+                                # #logging.info(f"Inserted batch of data into aud_inputtable: {len(batch_insert)} rows")
+                                batch_insert.clear()
 
-                        # Insert the batch when the size limit is reached
-                        if len(batch_insert) >= batch_size:
-                            db.insert_data_batch(insert_query, 'aud_inputtable', batch_insert)
-                            # #logging.info(f"Inserted batch of data into aud_inputtable: {len(batch_insert)} rows")
-                            batch_insert.clear()
+                        # # Log a warning if aud_nameColumnInput & aud_nameRowInput is still None after default value assignment
+                        # if aud_nameColumnInput == 'DEFAULT_COLUMN_VALUE':
+                        #     logging.warning("aud_nameColumnInput was None and has been set to 'DEFAULT_COLUMN_VALUE'.")
+                        # if aud_nameRowInput == 'DEFAULT_COLUMN_VALUE':
+                        #     logging.warning("aud_nameRowInput was None and has been set to 'DEFAULT_COLUMN_VALUE'.")
+                        
 
-                    # # Log a warning if aud_nameColumnInput & aud_nameRowInput is still None after default value assignment
-                    # if aud_nameColumnInput == 'DEFAULT_COLUMN_VALUE':
-                    #     logging.warning("aud_nameColumnInput was None and has been set to 'DEFAULT_COLUMN_VALUE'.")
-                    # if aud_nameRowInput == 'DEFAULT_COLUMN_VALUE':
-                    #     logging.warning("aud_nameRowInput was None and has been set to 'DEFAULT_COLUMN_VALUE'.")
-                    
-
-        # Insert remaining data after the loop
-        if batch_insert:
-            db.insert_data_batch(insert_query, 'aud_inputtable', batch_insert)
-            #logging.info(f"Inserted remaining batch of data into aud_inputtable: {len(batch_insert)} rows")
+            # Insert remaining data after the loop
+            if batch_insert:
+                db.insert_data_batch(insert_query, 'aud_inputtable', batch_insert)
+                #logging.info(f"Inserted remaining batch of data into aud_inputtable: {len(batch_insert)} rows")
 
         # Step 7: Execute inputtableJoinElemntnode query and delete records
         inputtableJoinElemntnode_query = config.get_param('queries', 'inputtableJoinElemntnode')
@@ -2252,7 +2257,7 @@ def AUD_320_ALIMDOCJOBS(config: Config, db: Database, parsed_files_data: List[Tu
 
                     # Create the tuple of values to insert
                     params = (namejob, nameproject, purpose, description, version, statusCode, item, displayName)
-                    # logging.debug(f"Preparing to insert row: {params}")
+                    ## logging.debug(f"Preparing to insert row: {params}")
                     batch_insert.append(params)
 
                     # Insert data in batches if the batch size is reached

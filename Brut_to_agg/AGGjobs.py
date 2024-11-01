@@ -96,18 +96,6 @@ def AUD_404_AGG_TAGGREGATE(
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
     
 def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_size=100):
     """
@@ -129,6 +117,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
         # ==============================================================================================
         #     write into  aud_inputtable.csv & outputtable.csv  
         # ==============================================================================================
+        batch_size = 100
         # Step 1: Clean the directory by deleting existing files
         directory_path = config.get_param('Directories', 'delete_files')
         delete_files_in_directory(directory_path)
@@ -140,7 +129,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
 
         input_csv_path = os.path.join(directory_path, "aud_aud_inputtable.csv")
         input_csv_header = [
-            "rowName", "NameRowInput", "expressionJoin", "expressionFilterInput", 
+            "rowName", "nameColumnInput", "expressionJoin", "expressionFilterInput", 
             "composant", "innerJoin", "NameProject", "NameJob"
         ]
 
@@ -157,7 +146,9 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
         outputtable_results = db.execute_query(aud_outputtable_query)
 
         output_csv_path = os.path.join(directory_path, "aud_outputtable.csv")
-        output_csv_header = ["aud_componentName","aud_OutputName", "aud_sizeState","aud_activateCondensedTool", "aud_reject", "aud_rejectInnerJoin", "aud_expressionOutput", "aud_nameColumnOutput", "aud_type", "aud_nullable", "aud_activateExpressionFilter", "aud_expressionFilterOutput", "aud_componentValue", "NameProject", "NameJob" ]
+        output_csv_header = ["aud_componentName","aud_OutputName", "aud_sizeState","aud_activateCondensedTool", "aud_reject", 
+                             "aud_rejectInnerJoin", "aud_expressionOutput", "aud_nameColumnOutput", "aud_type", "aud_nullable",
+                             "aud_activateExpressionFilter", "aud_expressionFilterOutput", "aud_componentValue", "NameProject", "NameJob" ]
 
         with open(output_csv_path, mode='w', newline='', encoding='utf-8') as output_csvfile:
             writer = csv.writer(output_csvfile)
@@ -194,16 +185,17 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
                     # Prepare the row for insertion into the first table
                     joined_row = (
                         input_row['rowName'],
-                        input_row['NameRowInput'],
+                        input_row['nameColumnInput'],
                         input_row['composant'],
                         output_row['aud_expressionOutput'],  # Assuming 'expression' represents 'expressionOutput'
                         output_row['aud_nameColumnOutput'],  # output_aud_nameColumnInput
                         output_row['aud_OutputName'],
                         output_row['aud_reject'],
                         output_row['aud_rejectInnerJoin'],
-                        output_row['NameJob'],
-                        output_row['NameProject']
+                        output_row['NameProject'],
+                        output_row['NameJob']
                     )
+
                     joined_data_output_table.append(joined_row)
 
         # Insert joined data into `aud_agg_tmapinputinoutput`
@@ -211,7 +203,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
         data_batch = []
         for row in joined_data_output_table:
             data_batch.append(row)
-            if len(data_batch) >= batch_size:
+            if len(data_batch) == batch_size:
                 db.insert_data_batch(insert_query_output_table, 'aud_agg_tmapinputinoutput', data_batch)
                 data_batch.clear()
 
@@ -233,7 +225,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
                     input_row['NameProject'] == output_row['NameProject']):
                     
                     # Check expression filter
-                    search_string = input_row['NameRowInput'] + "." + input_row['rowName']
+                    search_string = input_row['nameColumnInput'] + "." + input_row['rowName']
                     if search_string in (output_row['aud_expressionFilterOutput'] or "") and output_row['aud_expressionFilterOutput'] != None :
                         expression_filter_output = output_row['aud_expressionFilterOutput'].replace("\n", " ") if output_row['aud_expressionFilterOutput'] else None
                         
@@ -242,7 +234,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
                         if row_key not in unique_rows:
                             joined_row = (
                                 input_row['rowName'],
-                                input_row['NameRowInput'],
+                                input_row['nameColumnInput'],
                                 input_row['composant'],
                                 expression_filter_output,
                                 output_row['aud_nameRowOutput'],
@@ -286,8 +278,8 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
             # Apply the rule: !Relational.ISNULL(row8.expressionJoin) && !row8.expressionJoin.isEmpty()
             if row['expressionJoin'] is not None and row['expressionJoin'].strip():
                 
-                # Apply the rule: routines.Utils.containsElementExpression(row8.expressionJoin, row7.rowName + "." + row7.NameRowInput) == 1
-                search_string = row['rowName'] + "." + row['NameRowInput']
+                # Apply the rule: routines.Utils.containsElementExpression(row8.expressionJoin, row7.rowName + "." + row7.nameColumnInput) == 1
+                search_string = row['rowName'] + "." + row['nameColumnInput']
                 if search_string in row['expressionJoin']:
                     
                     # Prepare the expressionJoin: replace newlines if expressionJoin is not NULL
@@ -299,7 +291,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
                     # Prepare the data for insertion
                     filtered_row = (
                         row['rowName'],  # rowName
-                        row['NameRowInput'],  # NameColumnInput
+                        row['nameColumnInput'],  # NameColumnInput
                         expression_join,  # expressionJoin
                         row['composant'],  # composant
                         row['innerJoin'],  # innerJoin
@@ -307,7 +299,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
                         row['NameJob'],  # NameJob
                         is_columnjoined,  # is_columnjoined
                         row['rowName_join'],  # rowName_join
-                        row['NameColumnInput_join']  # NameColumnInput_join
+                        row['NameColumnInput']  # NameColumnInput_join
                     )
                     
                     # Add the row to the list
@@ -340,7 +332,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
             if row['expressionFilterInput'] is not None and row['expressionFilterInput'].strip():
                 
                 # Apply the rule: routines.Utils.containsElementExpression(row9.expressionFilterInput, row9.rowName + "." + row9.NameColumnInput) == 1
-                search_string = row['rowName'] + "." + row['NameRowInput']
+                search_string = row['rowName'] + "." + row['nameColumnInput']
                 if search_string in row['expressionFilterInput']:
                     
                     # Prepare the expressionFilterInput: replace newlines if expressionFilterInput is not NULL
@@ -349,7 +341,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
                     # Prepare the data for insertion
                     filtered_row = (
                         row['rowName'],  # rowName
-                        row['NameRowInput'],  # NameColumnInput
+                        row['nameColumnInput'],  # NameColumnInput
                         expression_filter_input,  # expressionFilterInput
                         row['composant'],  # composant
                         row['NameProject'],  # NameProject
@@ -618,7 +610,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
 
 
         # Load the input CSV file into a DataFrame (input_df is the main DataFrame)
-        input_df = pd.read_csv(input_csv_path, usecols=['rowName', 'NameRowInput', 'composant', 'NameProject', 'NameJob'])
+        input_df = pd.read_csv(input_csv_path, usecols=['rowName', 'nameColumnInput', 'composant', 'NameProject', 'NameJob'])
 
         # Rename columns to standardized names based on index
         input_df.columns = [f"col_{i}" for i in range(len(input_df.columns))]
@@ -644,7 +636,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
 
         # SQL Queries and expected column counts for each SQL table
         sql_queries = {
-            'aud_agg_tmapinputinoutput': ("SELECT DISTINCT rowName, NameRowInput, composant, NameProject, NameJob FROM aud_agg_tmapinputinoutput", 5),
+            'aud_agg_tmapinputinoutput': ("SELECT DISTINCT rowName, NameRowInput, composant, NameProject, NameJob FROM aud_agg_tmapinputinoutput ", 5),
             'aud_agg_tmapinputinfilteroutput': ("SELECT DISTINCT rowName, NameRowInput, composant, NameProject, NameJob FROM aud_agg_tmapinputinfilteroutput", 5),
             'aud_agg_tmapinputinjoininput': ("SELECT DISTINCT rowName, NameColumnInput, composant, NameProject, NameJob FROM aud_agg_tmapinputinjoininput", 5),
             'aud_agg_tmapinputinfilterinput': ("SELECT DISTINCT rowName, NameColumnInput, composant, NameProject, NameJob FROM aud_agg_tmapinputinfilterinput", 5),
@@ -688,7 +680,6 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
             logging.info(f"Prepared data for insertion: {insert_data[:10]}")  # Log the first 10 rows for inspection
             
             # Insert data in batches
-            batch_size = 1000
             for i in range(0, len(insert_data), batch_size):
                 batch = insert_data[i:i + batch_size]
                 try:
@@ -1230,7 +1221,6 @@ def AUD_405_AGG_TXMLMAP(config: Config, db: Database, execution_date: str, batch
             ]
             
             # Batch insert logic
-            batch_size = 1000
             for i in range(0, len(insert_data), batch_size):
                 batch = insert_data[i:i + batch_size]
                 try:
