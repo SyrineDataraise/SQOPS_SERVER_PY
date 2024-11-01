@@ -313,8 +313,35 @@ class XMLParser:
                         'name': output_tree.get('name'),
                         'expression': output_tree.get('expression'),
                         'type': output_tree.get('type'),
-                        'nullable': output_tree.get('nullable')
+                        'nullable': output_tree.get('nullable'),
+                        'allInOne': output_tree.get('allInOne'),
+                        'activateCondensedTool': output_tree.get('activateCondensedTool'),
+                        'activateExpressionFilter': output_tree.get('activateExpressionFilter'),
+                        'expressionFilter' : output_tree.get('expressionFilter'),
+                        'filterIncomingConnections': output_tree.get('expressionFilter'),
+                        'children': []
+
                     }
+                    # Parse `nodes` elements within each `outputTrees`
+                    for node_item in input_tree.findall('.//nodes'):
+                        node_item_data = {
+                            'name': node_item.get('name'),
+                            'expression': node_item.get('expression'),
+                            'type': node_item.get('type'),
+                            'xpath': node_item.get('xpath'),
+                            'filterOutGoingConnections': node_item.get('filterOutGoingConnections'),
+                            'lookupOutgoingConnections': node_item.get('lookupOutgoingConnections'),
+                            'outgoingConnections': node_item.get('outgoingConnections'),
+                            'lookupIncomingConnections': node_item.get('lookupIncomingConnections'),
+                            'expression': node_item.get('expression'),
+                            'children': []
+                        }
+
+                        # Parse `children` elements within each `node_item`
+                        for child in node_item.findall('./children'):
+                            node_item_data['children'].append(parse_children(child))
+
+                        input_tree_data['children'].append(node_item_data)
                     node_data_info['outputTrees'].append(output_tree_data)
 
                 # Parse `connections`
