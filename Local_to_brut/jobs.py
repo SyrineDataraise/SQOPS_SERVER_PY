@@ -805,14 +805,14 @@ def AUD_306_ALIMOUTPUTTABLE(config: Config, db: Database, parsed_files_data: Lis
                                 batch_insert.append(params)
 
                                 if len(batch_insert) >= batch_size:
-                                    db.insert_data_batch(insert_query, 'aud_outputTable', batch_insert)
+                                    db.insert_data_batch(insert_query, 'aud_outputtable', batch_insert)
                                     # #logging.info(f"Inserted batch of data into aud_outputTable: {len(batch_insert)} rows")
                                     batch_insert.clear()
                             else:
                                 logging.warning("aud_OutputName is None, skipping this entry.")
 
             if batch_insert:
-                db.insert_data_batch(insert_query, 'aud_outputTable', batch_insert)
+                db.insert_data_batch(insert_query, 'aud_outputtable', batch_insert)
                 #logging.info(f"Inserted remaining batch of data into aud_outputTable: {len(batch_insert)} rows")
 
         # Step 7: Execute outputtableJoinElemntnode query and delete records
