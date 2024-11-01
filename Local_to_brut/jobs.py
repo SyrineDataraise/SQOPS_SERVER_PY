@@ -944,21 +944,21 @@ def AUD_307_ALIMINPUTTABLE_XML(config: Config, db: Database, parsed_files_data: 
 
 
         # Step 7: Execute inputtableJoinElemntnode query and delete records
-        inputtableJoinElemntnode_query = config.get_param('queries', 'inputtableJoinElemntnode')
-        inputtableJoinElemntnode_results = db.execute_query(inputtableJoinElemntnode_query)
+        inputtablexmlJoinElemntnode_query = config.get_param('queries', 'inputtablexmlJoinElemntnode')
+        inputtablexmlJoinElemntnode_results = db.execute_query(inputtablexmlJoinElemntnode_query)
         #logging.debug(f"inputtableJoinElemntnode_results: {inputtableJoinElemntnode_results}")
 
         delete_conditions = []
-        for result in inputtableJoinElemntnode_results:
+        for result in inputtablexmlJoinElemntnode_results:
             project_name, job_name = result
             delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(delete_conditions) >= batch_size:
-                db.delete_records_batch('inputtableJoinElemntnode_results', delete_conditions)
+                db.delete_records_batch('inputtablexmlJoinElemntnode_results', delete_conditions)
                 #logging.info(f"Batch deleted records from aud_inputtable_xml: {len(delete_conditions)} rows")
                 delete_conditions.clear()
 
         if delete_conditions:
-            db.delete_records_batch('inputtableJoinElemntnode_results', delete_conditions)
+            db.delete_records_batch('inputtablexmlJoinElemntnode_results', delete_conditions)
             # #logging.info(f"Deleted remaining records from aud_inputtable_xml: {len(delete_conditions)} rows")
 
     except Exception as e:
@@ -968,6 +968,132 @@ def AUD_307_ALIMINPUTTABLE_XML(config: Config, db: Database, parsed_files_data: 
             #db.close()
             logging.info("done!")
 
+def AUD_307_ALIMOUTPUTTABLE_XML(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
+    try:
+
+
+        # Step 3: Delete records from aud_outputtable_xml in batches
+        delete_conditions = []
+        for result in local_to_dbbrut_query_results:
+            project_name, job_name, *_ = result
+            delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
+            if len(delete_conditions) >= batch_size:
+                db.delete_records_batch('aud_outputtable_xml', delete_conditions)
+                #logging.info(f"Batch deleted records from aud_outputtable_xml: {len(delete_conditions)} rows")
+                delete_conditions.clear()
+
+        if delete_conditions:
+            db.delete_records_batch('aud_outputtable_xml', delete_conditions)
+            # #logging.info(f"Deleted remaining records from aud_outputtable_xml: {len(delete_conditions)} rows")
+
+        # Step 4: Execute aud_outputtable_xml query
+        aud_outputtable_xml_query = config.get_param('queries', 'aud_outputtable_xml')
+        aud_outputtable_xml_results = db.execute_query(aud_outputtable_xml_query)
+        #logging.debug(f"aud_outputtable_xml_results: {aud_outputtable_xml_results}")
+
+        # Step 5: Delete records from aud_outputtable_xml based on query results
+        delete_conditions = []
+        for result in aud_outputtable_xml_results:
+            project_name, job_name = result
+            delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
+            if len(delete_conditions) >= batch_size:
+                db.delete_records_batch('aud_outputtable_xml', delete_conditions)
+                #logging.info(f"Batch deleted records from aud_outputtable_xml: {len(delete_conditions)} rows")
+                delete_conditions.clear()
+
+        if delete_conditions:
+            db.delete_records_batch('aud_outputtable_xml', delete_conditions)
+            # #logging.info(f"Deleted remaining records from aud_outputtable_xml: {len(delete_conditions)} rows")
+
+        # Step 6: Insert parsed data into aud_outputtable_xml in batches
+        insert_query = config.get_param('insert_queries', 'aud_outputtable_xml')
+        batch_insert = []
+        batch_size = 100  # Define your batch size
+
+        for NameProject, NameJob, parsed_data in parsed_files_data:
+            for data in parsed_data['nodes']:
+                aud_componentName = data['componentName']
+                aud_componentValue = None
+
+                # Extract 'aud_componentValue' from element parameters
+                for elem_param in data['elementParameters']:
+                    field = elem_param['field']
+                    name = elem_param['name']
+                    value = elem_param['value']
+                    if field == 'TEXT' and name == 'UNIQUE_NAME':
+                        aud_componentValue = value
+
+                for nodeData in data['nodeData']:
+                    # Parse `outputTrees` for each nodeData
+                    for output_tree in nodeData.get('outputTrees', []):
+                        aud_nameRowOutput = output_tree.get('name')
+                        # allInOne = output_tree.get('allInOne')
+                        aud_lookupMode = output_tree.get('lookupMode')
+                        aud_matchingMode = output_tree.get('matchingMode')
+                        activateCondensedTool = output_tree.get('activateCondensedTool')
+                        activateExpressionFilter = output_tree.get('activateExpressionFilter')
+                        activateGlobalMap = output_tree.get('activateGlobalMap')
+                        expressionFilter = output_tree.get('expressionFilter')
+                        filterIncomingConnections = output_tree.get('filterIncomingConnections')
+                        # lookup = output_tree.get('lookup')
+
+                        # Loop through `nodes` children in each `output_tree`
+                        for node_item in output_tree.get('children', []):
+                            aud_nameColumnInput = node_item.get('name')
+                            aud_type = node_item.get('type')
+                            aud_xpathColumnInput = node_item.get('xpath')
+                            
+                            # Define other placeholders only if they are present in the node_item data
+                            filterOutGoingConnections = node_item.get('filterOutGoingConnections')
+                            # lookupOutgoingConnections = node_item.get('lookupOutgoingConnections')
+                            outgoingConnections = node_item.get('outgoingConnections')
+                            # lookupIncomingConnections = node_item.get('lookupIncomingConnections')
+                            expression = node_item.get('expression')
+
+                            # Prepare the parameters for insertion, only including available values
+                            params = (
+                                 (aud_nameColumnInput, aud_type, aud_xpathColumnInput, aud_nameRowOutput, aud_componentName, 
+                                  aud_componentValue, filterOutGoingConnections, outgoingConnections, NameJob, NameProject, execution_date, 
+                                  expression, activateCondensedTool, activateExpressionFilter, expressionFilter, filterIncomingConnections)
+                            )
+
+                            batch_insert.append(params)
+
+                            # Insert the batch when the size limit is reached
+                            if len(batch_insert) >= batch_size:
+                                db.insert_data_batch(insert_query, 'aud_outputtable_xml', batch_insert)
+                                batch_insert.clear()
+
+                    # Insert remaining data after the loop
+                    if batch_insert:
+                        db.insert_data_batch(insert_query, 'aud_outputtable_xml', batch_insert)
+                        # logging.info(f"Inserted remaining batch of data into aud_outputtable_xml: {len(batch_insert)} rows")
+
+
+        # Step 7: Execute outputtablexmlJoinElemntnode query and delete records
+        outputtablexmlJoinElemntnode_query = config.get_param('queries', 'outputtablexmlJoinElemntnode')
+        outputtablexmlJoinElemntnode_results = db.execute_query(outputtablexmlJoinElemntnode_query)
+        #logging.debug(f"outputtableJoinElemntnode_results: {outputtableJoinElemntnode_results}")
+
+        delete_conditions = []
+        for result in outputtablexmlJoinElemntnode_results:
+            project_name, job_name = result
+            delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
+            if len(delete_conditions) >= batch_size:
+                db.delete_records_batch('outputtablexmlJoinElemntnode_results', delete_conditions)
+                #logging.info(f"Batch deleted records from aud_outputtable_xml: {len(delete_conditions)} rows")
+                delete_conditions.clear()
+
+        if delete_conditions:
+            db.delete_records_batch('outputtablexmlJoinElemntnode_results', delete_conditions)
+            # #logging.info(f"Deleted remaining records from aud_outputtable_xml: {len(delete_conditions)} rows")
+
+    except Exception as e:
+        logging.error(f"An error occurred: {e}", exc_info=True)
+    finally:
+        if db:
+            #db.close()
+            logging.info("done!")
 
 def AUD_307_ALIMINPUTTABLE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
     try:
