@@ -6,7 +6,7 @@ from typing import List, Tuple
 
 # Configure logging
 logging.basicConfig(
-    filename='Local_to_brut.log',
+    filename='database_operations.log',
     level=logging.DEBUG,  # Changed to DEBUG to capture all messages
     format='%(asctime)s - %(levelname)s - %(message)s',
     filemode='w'  # Ensure the file is overwritten each time for clean logs
@@ -1014,60 +1014,63 @@ def AUD_307_ALIMOUTPUTTABLE_XML(config: Config, db: Database, parsed_files_data:
             for data in parsed_data['nodes']:
                 aud_componentName = data['componentName']
                 aud_componentValue = None
+                if aud_componentName == 'tXMLMap':
+                    # Extract 'aud_componentValue' from element parameters
+                    for elem_param in data['elementParameters']:
+                        field = elem_param['field']
+                        name = elem_param['name']
+                        value = elem_param['value']
+                        if field == 'TEXT' and name == 'UNIQUE_NAME':
+                            aud_componentValue = value
 
-                # Extract 'aud_componentValue' from element parameters
-                for elem_param in data['elementParameters']:
-                    field = elem_param['field']
-                    name = elem_param['name']
-                    value = elem_param['value']
-                    if field == 'TEXT' and name == 'UNIQUE_NAME':
-                        aud_componentValue = value
+                    for nodeData in data['nodeData']:
+                        if len(nodeData.get('outputTrees', []))!=0:
+                            logging.debug(f"Processing nodeData with outputTrees: {nodeData.get('outputTrees', []), NameProject,NameJob}")
+                        # Parse outputTrees for each nodeData
+                        for output_tree in nodeData.get('outputTrees', []):
+                            aud_nameRowOutput = output_tree.get('name')
+                            # allInOne = output_tree.get('allInOne')
+                            # aud_lookupMode = output_tree.get('lookupMode')
+                            # aud_matchingMode = output_tree.get('matchingMode')
+                            activateCondensedTool = output_tree.get('activateCondensedTool')
+                            activateExpressionFilter = output_tree.get('activateExpressionFilter')
+                            # activateGlobalMap = output_tree.get('activateGlobalMap')
+                            expressionFilter = output_tree.get('expressionFilter')
+                            filterIncomingConnections = output_tree.get('filterIncomingConnections')
+                            # lookup = output_tree.get('lookup')
 
-                for nodeData in data['nodeData']:
-                    # Parse `outputTrees` for each nodeData
-                    for output_tree in nodeData.get('outputTrees', []):
-                        aud_nameRowOutput = output_tree.get('name')
-                        # allInOne = output_tree.get('allInOne')
-                        aud_lookupMode = output_tree.get('lookupMode')
-                        aud_matchingMode = output_tree.get('matchingMode')
-                        activateCondensedTool = output_tree.get('activateCondensedTool')
-                        activateExpressionFilter = output_tree.get('activateExpressionFilter')
-                        activateGlobalMap = output_tree.get('activateGlobalMap')
-                        expressionFilter = output_tree.get('expressionFilter')
-                        filterIncomingConnections = output_tree.get('filterIncomingConnections')
-                        # lookup = output_tree.get('lookup')
+                            # Loop through nodes children in each output_tree
+                            for node_item in output_tree.get('children', []):
+                                aud_nameColumnInput = node_item.get('name')
+                                aud_type = node_item.get('type')
+                                aud_xpathColumnInput = node_item.get('xpath')
+                                
+                                # Define other placeholders only if they are present in the node_item data
+                                filterOutGoingConnections = node_item.get('filterOutGoingConnections')
+                                # lookupOutgoingConnections = node_item.get('lookupOutgoingConnections')
+                                incomingConnections = node_item.get('incomingConnections')
+                                # lookupIncomingConnections = node_item.get('lookupIncomingConnections')
+                                expression = node_item.get('expression')
 
-                        # Loop through `nodes` children in each `output_tree`
-                        for node_item in output_tree.get('children', []):
-                            aud_nameColumnInput = node_item.get('name')
-                            aud_type = node_item.get('type')
-                            aud_xpathColumnInput = node_item.get('xpath')
-                            
-                            # Define other placeholders only if they are present in the node_item data
-                            filterOutGoingConnections = node_item.get('filterOutGoingConnections')
-                            # lookupOutgoingConnections = node_item.get('lookupOutgoingConnections')
-                            outgoingConnections = node_item.get('outgoingConnections')
-                            # lookupIncomingConnections = node_item.get('lookupIncomingConnections')
-                            expression = node_item.get('expression')
+                                # Prepare the parameters for insertion, only including available values
+                                params = (
+                                    aud_nameColumnInput, aud_type, aud_xpathColumnInput, aud_nameRowOutput, aud_componentName, 
+                                    aud_componentValue, filterOutGoingConnections, incomingConnections, NameJob, NameProject, execution_date, 
+                                    expression, activateCondensedTool, activateExpressionFilter, expressionFilter, filterIncomingConnections)
+                                
+                                logging.debug(f"Prepared params for insertion: {params}")
 
-                            # Prepare the parameters for insertion, only including available values
-                            params = (
-                                 (aud_nameColumnInput, aud_type, aud_xpathColumnInput, aud_nameRowOutput, aud_componentName, 
-                                  aud_componentValue, filterOutGoingConnections, outgoingConnections, NameJob, NameProject, execution_date, 
-                                  expression, activateCondensedTool, activateExpressionFilter, expressionFilter, filterIncomingConnections)
-                            )
+                                batch_insert.append(params)
 
-                            batch_insert.append(params)
+                                # Insert the batch when the size limit is reached
+                                if len(batch_insert) >= batch_size:
+                                    db.insert_data_batch(insert_query, 'aud_outputtable_xml', batch_insert)
+                                    batch_insert.clear()
 
-                            # Insert the batch when the size limit is reached
-                            if len(batch_insert) >= batch_size:
-                                db.insert_data_batch(insert_query, 'aud_outputtable_xml', batch_insert)
-                                batch_insert.clear()
-
-                    # Insert remaining data after the loop
-                    if batch_insert:
-                        db.insert_data_batch(insert_query, 'aud_outputtable_xml', batch_insert)
-                        # logging.info(f"Inserted remaining batch of data into aud_outputtable_xml: {len(batch_insert)} rows")
+                        # Insert remaining data after the loop
+                        if batch_insert:
+                            db.insert_data_batch(insert_query, 'aud_outputtable_xml', batch_insert)
+                            # logging.info(f"Inserted remaining batch of data into aud_outputtable_xml: {len(batch_insert)} rows")
 
 
         # Step 7: Execute outputtablexmlJoinElemntnode query and delete records

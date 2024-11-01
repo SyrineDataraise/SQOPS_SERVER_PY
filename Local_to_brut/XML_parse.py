@@ -331,7 +331,7 @@ class XMLParser:
                             'xpath': node_item.get('xpath'),
                             'filterOutGoingConnections': node_item.get('filterOutGoingConnections'),
                             'lookupOutgoingConnections': node_item.get('lookupOutgoingConnections'),
-                            'outgoingConnections': node_item.get('outgoingConnections'),
+                            'incomingConnections': node_item.get('incomingConnections'),
                             'lookupIncomingConnections': node_item.get('lookupIncomingConnections'),
                             'expression': node_item.get('expression'),
                             'children': []
@@ -341,7 +341,7 @@ class XMLParser:
                         for child in node_item.findall('./children'):
                             node_item_data['children'].append(parse_children(child))
 
-                        input_tree_data['children'].append(node_item_data)
+                        output_tree_data['children'].append(node_item_data)
                     node_data_info['outputTrees'].append(output_tree_data)
 
                 # Parse `connections`
