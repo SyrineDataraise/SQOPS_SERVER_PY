@@ -127,7 +127,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
         logging.info(f"Executing query: {aud_inputtable_query}")
         aud_inputtable_results = db.execute_query(aud_inputtable_query)
 
-        input_csv_path = os.path.join(directory_path, "aud_aud_inputtable.csv")
+        input_csv_path = os.path.join(directory_path, "aud_inputtable.csv")
         input_csv_header = [
             "rowName", "nameColumnInput", "expressionJoin", "expressionFilterInput", 
             "composant", "innerJoin", "NameProject", "NameJob"
@@ -631,8 +631,17 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
             """
             data = db.execute_query(query)
             df = pd.DataFrame(data)
-            df.columns = [f"col_{i}" for i in range(num_columns)]
+
+            # Check if DataFrame is empty
+            if df.empty:
+                # Create empty DataFrame with specified column names if no data is returned
+                df = pd.DataFrame(columns=[f"col_{i}" for i in range(num_columns)])
+            else:
+                # Rename columns if data is present
+                df.columns = [f"col_{i}" for i in range(num_columns)]
+
             return df
+
 
         # SQL Queries and expected column counts for each SQL table
         sql_queries = {
@@ -753,7 +762,7 @@ def AUD_405_AGG_TXMLMAP(config: Config, db: Database, execution_date: str, batch
 
         # Step 1: Clean the directory by deleting existing files
         directory_path = config.get_param('Directories', 'delete_files')
-        delete_files_in_directory(directory_path)
+        # delete_files_in_directory(directory_path)
 
         # Step 2: Execute inputtable_xml XML query and write to CSV
         aud_inputtable_xml_query = config.get_param('agg_queries', 'aud_inputtable_xml')

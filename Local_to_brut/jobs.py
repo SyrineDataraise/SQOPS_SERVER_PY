@@ -65,7 +65,7 @@ def AUD_301_ALIMELEMENTNODE(config: Config, db: Database, parsed_files_data: Lis
         insert_query = config.get_param('insert_queries', 'aud_elementnode')
         batch_insert = []
 
-        for project_name, job_name, parsed_data in parsed_files_data:
+        for project_name, job_name, version, parsed_data in parsed_files_data:
             for data in parsed_data['nodes']:
                 for elem_param in data['elementParameters']:
                     componentName = data['componentName']
@@ -128,7 +128,7 @@ def AUD_302_ALIMCONTEXTJOB(config: Config, db: Database, parsed_files_data: List
         aud_contextjob_data_batch = []
         aud_contextgroupdetail_data_batch = []
 
-        for project_name, job_name, parsed_data in parsed_files_data:
+        for project_name, job_name, version, parsed_data in parsed_files_data:
             for context in parsed_data['contexts']:
                 environementContextName = context['name']
                 for param in context['contextParameters']:
@@ -199,7 +199,7 @@ def AUD_303_ALIMNODE(config: Config, db: Database, parsed_files_data: List[Tuple
         # Step 6: Prepare data batch for insertion into aud_elementnode
         insert_query = config.get_param('insert_queries', 'aud_node')
         batch_insert = []
-        for project_name, job_name, parsed_data in parsed_files_data:
+        for project_name, job_name, version, parsed_data in parsed_files_data:
             for data in parsed_data['nodes']:
                 for elem_param in data['elementParameters']:
                     componentName = data['componentName']
@@ -300,7 +300,7 @@ def AUD_303_BIGDATA_PARAMETERS(
         aud_bigdata_batch = []
         aud_bigdata_elementvalue_batch = []
 
-        for project_name, job_name, parsed_data in parsed_files_data:
+        for project_name, job_name, version, parsed_data in parsed_files_data:
             # Prepare aud_bigdata batch
             for param_data in parsed_data['parameters']:
                 aud_bigdata_batch.append((
@@ -365,7 +365,7 @@ def AUD_304_ALIMMETADATA(config: Config, db: Database, parsed_files_data: List[T
     Args:
         config (Config): An instance of the Config class for retrieving configuration parameters.
         db (Database): An instance of the Database class for executing database operations.
-        parsed_files_data (List[Tuple[str, str, dict]]): A list where each tuple contains (project_name, job_name, parsed_data).
+        parsed_files_data (List[Tuple[str, str, dict]]): A list where each tuple contains (project_name, job_name, version, parsed_data).
         batch_size (int): The number of rows to insert in each batch.
     """
     try:
@@ -401,7 +401,7 @@ def AUD_304_ALIMMETADATA(config: Config, db: Database, parsed_files_data: List[T
 
         # Step 6: Collect parsed parameters data into batches
         data_batch = []
-        for project_name, job_name, parsed_data in parsed_files_data:
+        for project_name, job_name, version, parsed_data in parsed_files_data:
             for node_data in parsed_data['nodes']:
                 for elem_param in node_data['elementParameters']:
                     field = elem_param['field']
@@ -525,7 +525,7 @@ def AUD_305_ALIMVARTABLE_XML(config: Config, db: Database, parsed_files_data: Li
         batch_insert = []
         insert_batch_size = batch_size  # Use the provided batch size
 
-        for project_name, job_name, parsed_data in parsed_files_data:
+        for project_name, job_name, version, parsed_data in parsed_files_data:
             # logging.info(f"Processing project: {project_name}, job: {job_name}")
             for data in parsed_data['nodes']:
                 componentName = data['componentName']
@@ -653,7 +653,7 @@ def AUD_305_ALIMVARTABLE(config: Config, db: Database, parsed_files_data: List[T
         batch_insert = []
         insert_batch_size = batch_size  # Use the provided batch size
 
-        for project_name, job_name, parsed_data in parsed_files_data:
+        for project_name, job_name, version, parsed_data in parsed_files_data:
             # logging.info(f"Processing project: {project_name}, job: {job_name}")
             for data in parsed_data['nodes']:
                 componentName = data['componentName']
@@ -728,44 +728,44 @@ def AUD_305_ALIMVARTABLE(config: Config, db: Database, parsed_files_data: List[T
 def AUD_306_ALIMOUTPUTTABLE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
     try:
        
-        # Step 3: Delete records from aud_outputTable in batches
+        # Step 3: Delete records from aud_outputtable in batches
         delete_conditions = []
         for result in local_to_dbbrut_query_results:
             project_name, job_name, *_ = result
             delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(delete_conditions) >= batch_size:
-                db.delete_records_batch('aud_outputTable', delete_conditions)
-                #logging.info(f"Batch deleted records from aud_outputTable: {len(delete_conditions)} rows")
+                db.delete_records_batch('aud_outputtable', delete_conditions)
+                #logging.info(f"Batch deleted records from aud_outputtable: {len(delete_conditions)} rows")
                 delete_conditions.clear()
 
         if delete_conditions:
-            db.delete_records_batch('aud_outputTable', delete_conditions)
-            # #logging.info(f"Deleted remaining records from aud_outputTable: {len(delete_conditions)} rows")
+            db.delete_records_batch('aud_outputtable', delete_conditions)
+            # #logging.info(f"Deleted remaining records from aud_outputtable: {len(delete_conditions)} rows")
 
-        # Step 4: Execute aud_outputTable query
-        aud_outputTable_query = config.get_param('queries', 'aud_outputTable')
-        aud_outputTable_results = db.execute_query(aud_outputTable_query)
-        #logging.debug(f"aud_outputTable_results: {aud_outputTable_results}")
+        # Step 4: Execute aud_outputtable query
+        aud_outputtable_query = config.get_param('queries', 'aud_outputtable')
+        aud_outputtable_results = db.execute_query(aud_outputtable_query)
+        #logging.debug(f"aud_outputtable_results: {aud_outputtable_results}")
 
-        # Step 5: Delete records from aud_outputTable based on query results
+        # Step 5: Delete records from aud_outputtable based on query results
         delete_conditions = []
-        for result in aud_outputTable_results:
+        for result in aud_outputtable_results:
             project_name, job_name = result
             delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(delete_conditions) >= batch_size:
-                db.delete_records_batch('aud_outputTable', delete_conditions)
-                #logging.info(f"Batch deleted records from aud_outputTable: {len(delete_conditions)} rows")
+                db.delete_records_batch('aud_outputtable', delete_conditions)
+                #logging.info(f"Batch deleted records from aud_outputtable: {len(delete_conditions)} rows")
                 delete_conditions.clear()
 
         if delete_conditions:
-            db.delete_records_batch('aud_outputTable', delete_conditions)
-            # #logging.info(f"Deleted remaining records from aud_outputTable: {len(delete_conditions)} rows")
+            db.delete_records_batch('aud_outputtable', delete_conditions)
+            # #logging.info(f"Deleted remaining records from aud_outputtable: {len(delete_conditions)} rows")
 
-        # Step 6: Insert parsed data into aud_outputTable in batches
-        insert_query = config.get_param('insert_queries', 'aud_outputTable')
+        # Step 6: Insert parsed data into aud_outputtable in batches
+        insert_query = config.get_param('insert_queries', 'aud_outputtable')
         batch_insert = []
 
-        for project_name, job_name, parsed_data in parsed_files_data:
+        for project_name, job_name, version, parsed_data in parsed_files_data:
             # logging.info(f"Processing project: {project_name}, job: {job_name}")
             for data in parsed_data['nodes']:
                 aud_componentName = data['componentName']
@@ -806,14 +806,14 @@ def AUD_306_ALIMOUTPUTTABLE(config: Config, db: Database, parsed_files_data: Lis
 
                                 if len(batch_insert) >= batch_size:
                                     db.insert_data_batch(insert_query, 'aud_outputtable', batch_insert)
-                                    # #logging.info(f"Inserted batch of data into aud_outputTable: {len(batch_insert)} rows")
+                                    # #logging.info(f"Inserted batch of data into aud_outputtable: {len(batch_insert)} rows")
                                     batch_insert.clear()
                             else:
                                 logging.warning("aud_OutputName is None, skipping this entry.")
 
             if batch_insert:
                 db.insert_data_batch(insert_query, 'aud_outputtable', batch_insert)
-                #logging.info(f"Inserted remaining batch of data into aud_outputTable: {len(batch_insert)} rows")
+                #logging.info(f"Inserted remaining batch of data into aud_outputtable: {len(batch_insert)} rows")
 
         # Step 7: Execute outputtableJoinElemntnode query and delete records
         outputtableJoinElemntnode_query = config.get_param('queries', 'outputtableJoinElemntnode')
@@ -826,12 +826,12 @@ def AUD_306_ALIMOUTPUTTABLE(config: Config, db: Database, parsed_files_data: Lis
             delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
             if len(delete_conditions) >= batch_size:
                 db.delete_records_batch('aud_outputtable', delete_conditions)
-                #logging.info(f"Batch deleted records from aud_outputTable: {len(delete_conditions)} rows")
+                #logging.info(f"Batch deleted records from aud_outputtable: {len(delete_conditions)} rows")
                 delete_conditions.clear()
 
         if delete_conditions:
             db.delete_records_batch('aud_outputtable', delete_conditions)
-            # #logging.info(f"Deleted remaining records from aud_outputTable: {len(delete_conditions)} rows")
+            # #logging.info(f"Deleted remaining records from aud_outputtable: {len(delete_conditions)} rows")
 
     except Exception as e:
         logging.error(f"An error occurred: {e}", exc_info=True)
@@ -883,7 +883,7 @@ def AUD_307_ALIMINPUTTABLE_XML(config: Config, db: Database, parsed_files_data: 
         batch_insert = []
         batch_size = 100  # Define your batch size
 
-        for NameProject, NameJob, parsed_data in parsed_files_data:
+        for NameProject, NameJob, version , parsed_data in parsed_files_data:
             for data in parsed_data['nodes']:
                 aud_componentName = data['componentName']
                 if aud_componentName == 'tXMLMap':
@@ -1014,7 +1014,7 @@ def AUD_307_ALIMOUTPUTTABLE_XML(config: Config, db: Database, parsed_files_data:
         batch_insert = []
         batch_size = 100  # Define your batch size
 
-        for NameProject, NameJob, parsed_data in parsed_files_data:
+        for NameProject, NameJob, version , parsed_data in parsed_files_data:
             for data in parsed_data['nodes']:
                 aud_componentName = data['componentName']
                 aud_componentValue = None
@@ -1143,7 +1143,7 @@ def AUD_307_ALIMINPUTTABLE(config: Config, db: Database, parsed_files_data: List
         insert_query = config.get_param('insert_queries', 'aud_inputtable')
         batch_insert = []
 
-        for NameProject, NameJob, parsed_data in parsed_files_data:
+        for NameProject, NameJob, version , parsed_data in parsed_files_data:
             # logging.info(f"Processing project: {NameProject}, job: {NameJob}")
             for data in parsed_data['nodes']:
                 aud_componentName = data['componentName']
@@ -1279,7 +1279,7 @@ def AUD_308_ALIMCONNECTIONCOMPONENT(config: Config, db: Database, parsed_files_d
         #logging.debug(f"Insert Query: {insert_query}")
         batch_insert = []
 
-        for project_name, job_name, parsed_data in parsed_files_data:
+        for project_name, job_name, version, parsed_data in parsed_files_data:
             # logging.info(f"Processing project: {project_name}, job: {job_name}")
             for connection in parsed_data.get('connections', []):
                 aud_connectorName = connection.get('connectorName')
@@ -1375,7 +1375,7 @@ def AUD_309_ALIMELEMENTPARAMETER(config: Config, db: Database, parsed_files_data
         #logging.debug(f"Insert Query: {insert_query}")
         batch_insert = []
 
-        for NameProject, NameJob, parsed_data in parsed_files_data:
+        for NameProject, NameJob, version , parsed_data in parsed_files_data:
             # logging.info(f"Processing project: {project_name}, job: {job_name}")
             for parameter in parsed_data['parameters']:
                 aud_field = parameter['field']
@@ -1453,7 +1453,7 @@ def AUD_309_ALIMROUTINES(config: Config, db: Database, parsed_files_data: List[T
         #logging.debug(f"Insert Query: {insert_query}")
         batch_insert = []
 
-        for project_name, job_name, parsed_data in parsed_files_data:
+        for project_name, job_name, version, parsed_data in parsed_files_data:
             # logging.info(f"Processing project: {project_name}, job: {job_name}")
             for parameter in parsed_data['parameters']:
 
@@ -1530,7 +1530,7 @@ def AUD_310_ALIMLIBRARY(config: Config, db: Database, parsed_files_data: List[Tu
         insert_query = config.get_param('insert_queries', 'aud_library')
         #logging.debug(f"Insert Query: {insert_query}")
         batch_insert = []
-        for project_name, job_name, parsed_data in parsed_files_data:
+        for project_name, job_name, version, parsed_data in parsed_files_data:
             for data in parsed_data['nodes']:
                 for elem_param in data['elementParameters']:
                     # Assign componentName based on specific condition
@@ -1614,7 +1614,7 @@ def AUD_311_ALIMELEMENTVALUENODE(config: Config, db: Database, parsed_files_data
         batch_insert = []
         aud_id = 1
         
-        for NameProject, NameJob, parsed_data in parsed_files_data:
+        for NameProject, NameJob, version , parsed_data in parsed_files_data:
             for data in parsed_data['nodes']:
                 for elem_param in data['elementParameters']:
                     aud_componentName = data['componentName']
@@ -1741,7 +1741,7 @@ def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tu
         batch_insert = []
 
 
-        for project_name, job_name, parsed_data in parsed_files_data:
+        for project_name, job_name, version, parsed_data in parsed_files_data:
             for data in parsed_data['nodes']:
                 for elem_param in data['elementParameters']:
                     if data['componentName'] == "tRunJob":
@@ -1846,7 +1846,7 @@ def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tu
         batch_insert = []
 
 
-        for project_name, job_name, parsed_data in parsed_files_data:
+        for project_name, job_name, version, parsed_data in parsed_files_data:
             for data in parsed_data['nodes']:
                 for elem_param in data['elementParameters']:
                     if elem_param['value'] == "Joblets":
@@ -1956,7 +1956,7 @@ def AUD_314_ALIMSUBJOBS_OPT(config: Config, db: Database, parsed_files_data: Lis
         insert_query = config.get_param('insert_queries', 'aud_subjobs')
         batch_insert = []
 
-        for project_name, job_name, parsed_data in parsed_files_data:
+        for project_name, job_name, version, parsed_data in parsed_files_data:
             for data in parsed_data['subjobs']:
                 for elem_param in data['elementParameters']:
                     if elem_param['name'] == "UNIQUE_NAME" or elem_param['name'] == "SUBJOB_TITLE":
@@ -2139,7 +2139,7 @@ def AUD_319_ALIMDOCCONTEXTGROUP(config: Config, db: Database, parsed_files_data:
 
         # Step 3: Iterate over parsed files and insert context group data
         logging.info(f"Starting to process {len(parsed_files_data)} files.")
-        for nameproject, job_name, parsed_data in parsed_files_data:
+        for nameproject, job_name,version, parsed_data in parsed_files_data:
             # #logging.debug(f"Processing project: {nameproject}, job: {job_name}")
             for data in parsed_data['TalendProperties']:
                 for prop in data['properties']:
@@ -2242,7 +2242,7 @@ def AUD_320_ALIMDOCJOBS(config: Config, db: Database, parsed_files_data: List[Tu
 
         # Step 3: Iterate over parsed files and insert context group data
         logging.info(f"Starting to process {len(parsed_files_data)} files.")
-        for nameproject, namejob, parsed_data in parsed_files_data:
+        for nameproject, namejob, version, parsed_data in parsed_files_data:
             # #logging.debug(f"Processing project: {nameproject}, job: {job_name}")
             for data in parsed_data['TalendProperties']:
                 for prop in data['properties']:
@@ -2453,7 +2453,7 @@ def AUD_701_CONVERTSCREENSHOT(
         # Step 4: Prepare batch data for insertion into 'aud_screenshot'
         aud_screenshot_batch = []
 
-        for nameproject, namejob, parsed_data in parsed_files_data:
+        for nameproject, namejob,version, parsed_data in parsed_files_data:
             for screenshot in parsed_data.get('screenshots', []):
                 cle = screenshot.get('key')
                 screenshot_value = screenshot.get('value')

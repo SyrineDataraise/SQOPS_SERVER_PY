@@ -27,7 +27,7 @@ queries:
   aud_vartable_xml : "select distinct namejob, nameproject from aud_vartable_xml where NameJob not in (select job_name from audit_jobs)"
   vartableJoinElemntnode : "select distinct N.NameProject, N.NameJob, N.aud_componentValue from aud_vartable N inner join aud_elementnode E on (N.namejob = E.namejob and N.nameproject = E.nameproject and N.aud_componentValue = E.aud_ComponementValue) where E.aud_nameElementNode = 'ACTIVATE' and E.aud_valueElementNode = 'false' and E.exec_date = (select max(lastexecutiondate) from executiondate)"
   vartable_xmlJoinElemntnode : "select distinct N.NameProject, N.NameJob, N.aud_componentValue from aud_vartable_xml N inner join aud_elementnode E on (N.namejob = E.namejob and N.nameproject = E.nameproject and N.aud_componentValue = E.aud_ComponementValue) where E.aud_nameElementNode = 'ACTIVATE' and E.aud_valueElementNode = 'false' and E.exec_date = (select max(lastexecutiondate) from executiondate)"
-  aud_outputTable : "select distinct namejob, nameproject from aud_outputtable where NameJob not in (select job_name from audit_jobs)"
+  aud_outputtable : "select distinct namejob, nameproject from aud_outputtable where NameJob not in (select job_name from audit_jobs)"
   aud_outputtable_xml: "select distinct namejob, nameproject from aud_outputtable_xml where NameJob not in (select job_name from audit_jobs)"
   outputtableJoinElemntnode : "select distinct N.NameProject, N.NameJob, N.aud_componentValue from aud_outputtable N inner join aud_elementnode E on (N.namejob = E.namejob and N.nameproject = E.nameproject and N.aud_componentValue = E.aud_ComponementValue) where E.aud_nameElementNode = 'ACTIVATE' and E.aud_valueElementNode = 'false' and E.exec_date = (select max(lastexecutiondate) from executiondate)"
   aud_inputtable : "select distinct namejob, nameproject from aud_inputtable where NameJob not in (select job_name from audit_jobs)"
@@ -130,7 +130,7 @@ insert_agg_queries:
 
 Directories:
   items_directory: "C:/Users/sonia/Downloads/KEOLISTOURS/KEOLISTOURS/process"
-  screenshots_directory : "C:/Users/sonia/Desktop/TOS_ESB/Studio/workspace/SERVER/process"
+  screenshots_directory : "C:/Users/sonia/Desktop/TOS_ESB/Studio/workspace/SERVER/process/ANALYSE/BRUT_TO_AGG"
   delete_files : "C:/Users/sonia/Desktop/FilesList"
 database:
   type: "mysql"  # Example database type

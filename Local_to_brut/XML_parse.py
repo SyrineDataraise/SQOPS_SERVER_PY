@@ -485,100 +485,158 @@ class XMLParser:
 
 
 
+
+
+
+
+
+
     def loop_parse_items(self, items_directory):
-            """
-            Parses XML files from the specified directory and extracts relevant data.
+        """
+        Parses XML files from the specified directory and extracts relevant data.
 
-            Args:
-                items_directory (str): The directory containing XML files to be parsed.
+        Args:
+            items_directory (str): The directory containing XML files to be parsed.
 
-            Returns:
-                list of tuples: A list where each tuple contains (project_name, job_name, parsed_data).
-            """
-            parsed_files_data = []
-            i=0
-            for root, dirs, files in os.walk(items_directory):
-                for filename in files:
-                    if filename.endswith('.item'):
-                        i+=1
-                        file_path = os.path.join(root, filename)  # Use 'root' to construct the full file path
-                        # logging.info(f"Processing file: {file_path}")
-                        try:
-                            self.tree = ET.parse(file_path)
-                            self.root = self.tree.getroot()
-                            parsed_data = self._parse_file_items()
-                            # Extract project_name and job_name
-                            parts = filename.split('.', 1)
-                            project_name = str(parts[0])
-                            job_name = str(parts[1]).replace('.item', '') if len(parts) > 1 else None
-                            parsed_files_data.append((project_name, job_name, parsed_data))
-                        except FileNotFoundError:
-                            logging.error(f"File not found: {file_path}")
-                        except ET.ParseError:
-                            logging.error(f"Error parsing file: {file_path}")
-                        except Exception as e:
-                            logging.error(f"Unexpected error with file {file_path}: {e}", exc_info=True)
-            logging.info(f"Processed {i} files ")
-               
-            return parsed_files_data
+        Returns:
+            list of tuples: A list where each tuple contains (project_name, job_name, version, parsed_data).
+        """
+        parsed_files_data = []
+        i = 0
+
+        for root, dirs, files in os.walk(items_directory):
+            for filename in files:
+                if filename.endswith('.item'):
+                    i += 1
+                    file_path = os.path.join(root, filename)
+                    logging.debug(f"Processing file: {file_path}")
+
+                    try:
+                        self.tree = ET.parse(file_path)
+                        self.root = self.tree.getroot()
+                        parsed_data = self._parse_file_items()
+
+                        # Extract project_name, job_name, and version
+                        parts = filename.split('.', 1)
+                        project_name = parts[0]
+                        job_name_version = parts[1].replace('.item', '') if len(parts) > 1 else None
+                        job_name = '_'.join(job_name_version.split('_')[:-1])  # Exclude the version part
+                        version = job_name_version.split('_')[-1]  # Last part as version
+                        logging.debug(f"Extracted: project_name={project_name}, job_name={job_name}, version={version}")
+
+                        # Check if job_name already exists and if so, compare versions
+                        existing_entry = next((entry for entry in parsed_files_data if entry[1] == job_name), None)
+                        if existing_entry:
+                            existing_version = existing_entry[2]  # Access existing version directly
+                            logging.debug(f"Existing entry found for job_name={job_name}: existing_version={existing_version}")
+
+                            # Compare versions (assuming simple numeric comparison)
+                            if version > existing_version:
+                                logging.debug(f"Newer version found for job_name={job_name}: replacing version {existing_version} with {version}")
+                                parsed_files_data.remove(existing_entry)
+                                parsed_files_data.append((project_name, job_name, version, parsed_data))
+                            else:
+                                logging.debug(f"Current version for job_name={job_name} ({version}) is not newer than existing version ({existing_version}); skipping.")
+                        else:
+                            # No existing entry, so add new entry with version included
+                            logging.debug(f"No existing entry found for job_name={job_name}. Adding new entry.")
+                            parsed_files_data.append((project_name, job_name, version, parsed_data))
+
+                    except FileNotFoundError:
+                        logging.error(f"File not found: {file_path}")
+                    except ET.ParseError:
+                        logging.error(f"Error parsing file: {file_path}")
+                    except Exception as e:
+                        logging.error(f"Unexpected error with file {file_path}: {e}", exc_info=True)
+
+        logging.info(f"Processed {i} files")
+        return parsed_files_data
+
+
 
     def loop_parse_properties(self, items_directory):
-            """
-            Parses XML files from the specified directory and extracts relevant data.
+        """
+        Parses XML files from the specified directory and extracts relevant data.
 
-            Args:
-                items_directory (str): The directory containing XML files to be parsed.
+        Args:
+            items_directory (str): The directory containing XML files to be parsed.
 
-            Returns:
-                list of tuples: A list where each tuple contains (project_name, job_name, parsed_data).
-            """
-            parsed_files_data = []
-            i=0
-            for root, dirs, files in os.walk(items_directory):
-                for filename in files:
-                    if filename.endswith('.properties'):
-                        i+=1
-                        file_path = os.path.join(root, filename)  # Use 'root' to construct the full file path
-                        # logging.info(f"Processing file: {file_path}")
-                        try:
-                            self.tree = ET.parse(file_path)
-                            self.root = self.tree.getroot()
-                            parsed_data = self._parse_file_properties()
-                            # Extract project_name and job_name
-                            parts = filename.split('.', 1)
-                            project_name = str(parts[0])
-                            job_name = str(parts[1]).replace('.properties', '') if len(parts) > 1 else None
-                            parsed_files_data.append((project_name, job_name, parsed_data))
-                        except FileNotFoundError:
-                            logging.error(f"File not found: {file_path}")
-                        except ET.ParseError:
-                            logging.error(f"Error parsing file: {file_path}")
-                        except Exception as e:
-                            logging.error(f"Unexpected error with file {file_path}: {e}", exc_info=True)
-            logging.info(f"Processed {i} files ")
-                
-            return parsed_files_data
+        Returns:
+            list of tuples: A list where each tuple contains (project_name, job_name, version, parsed_data).
+        """
+        parsed_files_data = []
+        i = 0
+
+        for root, dirs, files in os.walk(items_directory):
+            for filename in files:
+                if filename.endswith('.properties'):
+                    i += 1
+                    file_path = os.path.join(root, filename)
+                    logging.debug(f"Processing file: {file_path}")
+
+                    try:
+                        self.tree = ET.parse(file_path)
+                        self.root = self.tree.getroot()
+                        parsed_data = self._parse_file_properties()
+
+                        # Extract project_name, job_name, and version
+                        parts = filename.split('.', 1)
+                        project_name = parts[0]
+                        job_name_version = parts[1].replace('.properties', '') if len(parts) > 1 else None
+                        job_name = '_'.join(job_name_version.split('_')[:-1])  # Exclude the version part
+                        version = job_name_version.split('_')[-1]  # Last part as version
+                        logging.debug(f"Extracted: project_name={project_name}, job_name={job_name}, version={version}")
+
+                        # Check if job_name already exists and if so, compare versions
+                        existing_entry = next((entry for entry in parsed_files_data if entry[1] == job_name), None)
+                        if existing_entry:
+                            existing_version = existing_entry[2]
+                            logging.debug(f"Existing entry found for job_name={job_name}: existing_version={existing_version}")
+
+                            # Compare versions (assuming simple numeric comparison)
+                            if version > existing_version:
+                                logging.debug(f"Newer version found for job_name={job_name}: replacing version {existing_version} with {version}")
+                                parsed_files_data.remove(existing_entry)
+                                parsed_files_data.append((project_name, job_name, version, parsed_data))
+                            else:
+                                logging.debug(f"Current version for job_name={job_name} ({version}) is not newer than existing version ({existing_version}); skipping.")
+                        else:
+                            # No existing entry, so add new entry with version included
+                            logging.debug(f"No existing entry found for job_name={job_name}. Adding new entry.")
+                            parsed_files_data.append((project_name, job_name, version, parsed_data))
+
+                    except FileNotFoundError:
+                        logging.error(f"File not found: {file_path}")
+                    except ET.ParseError:
+                        logging.error(f"Error parsing file: {file_path}")
+                    except Exception as e:
+                        logging.error(f"Unexpected error with file {file_path}: {e}", exc_info=True)
+
+        logging.info(f"Processed {i} files")
+        return parsed_files_data
+
+
 
 
     def loop_parse_screenshots(self, screenshots_directory):
         """
         Parses XML files related to screenshots from the specified directory and all its subdirectories.
-        
+
         Args:
             screenshots_directory (str): The directory containing screenshot XML files to be parsed.
-        
+
         Returns:
-            list of tuples: A list where each tuple contains (project_name, job_name, parsed_data).
+            list of tuples: A list where each tuple contains (project_name, job_name, version, parsed_data).
         """
         parsed_screenshots_data = []
-        i=0
-        
-        for root, dirs, files in os.walk(screenshots_directory):  # Traverse directories and subdirectories
+        i = 0
+
+        for root, dirs, files in os.walk(screenshots_directory):
             for filename in files:
-                if filename.endswith('.screenshot'):  # Process only files with `.screenshot` extension
-                    i+=1
+                if filename.endswith('.screenshot'):
+                    i += 1
                     file_path = os.path.join(root, filename)
-                    # logging.info(f"Processing screenshot file: {file_path}")
+                    logging.debug(f"Processing screenshot file: {file_path}")
 
                     try:
                         # Parse XML file
@@ -586,20 +644,40 @@ class XMLParser:
                         self.root = self.tree.getroot()
                         parsed_data = self._parse_file_screenshots()
 
-                        # Extract project_name and job_name from the filename
+                        # Extract project_name, job_name, and version
                         parts = filename.split('.', 1)
-                        project_name = str(parts[0])
-                        job_name =str(parts[1]).replace('.screenshot', '') if len(parts) > 1 else None
+                        project_name = parts[0]
+                        job_name_version = parts[1].replace('.screenshot', '') if len(parts) > 1 else None
+                        job_name = '_'.join(job_name_version.split('_')[:-1])  # Exclude the version part
+                        version = job_name_version.split('_')[-1]  # Last part as version
+                        logging.debug(f"Extracted: project_name={project_name}, job_name={job_name}, version={version}")
 
-                        # Append the result to the list
-                        parsed_screenshots_data.append((project_name, job_name, parsed_data))
+                        # Check if job_name already exists and if so, compare versions
+                        existing_entry = next((entry for entry in parsed_screenshots_data if entry[1] == job_name), None)
+                        if existing_entry:
+                            existing_version = existing_entry[2]
+                            logging.debug(f"Existing entry found for job_name={job_name}: existing_version={existing_version}")
+
+                            # Compare versions (assuming simple numeric comparison)
+                            if version > existing_version:
+                                logging.debug(f"Newer version found for job_name={job_name}: replacing version {existing_version} with {version}")
+                                parsed_screenshots_data.remove(existing_entry)
+                                parsed_screenshots_data.append((project_name, job_name, version, parsed_data))
+                            else:
+                                logging.debug(f"Current version for job_name={job_name} ({version}) is not newer than existing version ({existing_version}); skipping.")
+                        else:
+                            # No existing entry, so add new entry with version included
+                            logging.debug(f"No existing entry found for job_name={job_name}. Adding new entry.")
+                            parsed_screenshots_data.append((project_name, job_name, version, parsed_data))
 
                     except ET.ParseError as e:
                         logging.error(f"Failed to parse screenshot XML file: {file_path}. Error: {e}")
                     except Exception as e:
                         logging.error(f"An error occurred while processing the screenshot file: {file_path}. Error: {e}")
-        logging.info(f"Processed {i} files ")
+
+        logging.info(f"Processed {i} screenshot files")
         return parsed_screenshots_data
+
     
 
     def _parse_screenshot(self):
