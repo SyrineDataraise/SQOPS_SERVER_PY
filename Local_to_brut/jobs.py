@@ -1165,9 +1165,7 @@ def AUD_307_ALIMINPUTTABLE(config: Config, db: Database, parsed_files_data: List
                         aud_lookupMode = input_tables.get('lookupMode')
                         aud_matchingMode = input_tables.get('matchingMode')
                         # Set default values for aud_nameRowInput and aud_nameColumnInput if they are None
-                        aud_nameRowInput = input_tables.get('nameRowInput') if input_tables.get('nameRowInput') is not None else 'DEFAULT_ROW_VALUE'  # Default value for aud_nameRowInput
-                        aud_nameColumnInput = input_tables.get('nameColumnInput') if input_tables.get('nameColumnInput') is not None else 'DEFAULT_COLUMN_VALUE'  # Default value for aud_nameColumnInput
-                        
+                        aud_nameRowInput = input_tables.get('name') 
                         aud_sizeState = input_tables.get('sizeState')
                         aud_activateExpressionFilterInput = input_tables.get('activateExpressionFilterInput')
                         aud_expressionFilterInput = input_tables.get('expressionFilterInput')
