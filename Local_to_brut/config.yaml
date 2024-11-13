@@ -129,7 +129,7 @@ insert_agg_queries:
 
 
 Directories:
-  items_directory: "C:/Users/sonia/Downloads/KEOLISTOURS/KEOLISTOURS/process"
+  items_directory: "C:/Users/sonia/Desktop/KEOLISTOURS/process"
   screenshots_directory : "C:/Users/sonia/Desktop/TOS_ESB/Studio/workspace/SERVER/process/ANALYSE/BRUT_TO_AGG"
   delete_files : "C:/Users/sonia/Desktop/FilesList"
 database:

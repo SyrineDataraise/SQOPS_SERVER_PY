@@ -770,51 +770,51 @@ def AUD_306_ALIMOUTPUTTABLE(config: Config, db: Database, parsed_files_data: Lis
             for data in parsed_data['nodes']:
                 aud_componentName = data['componentName']
                 if aud_componentName == 'tMap':
-
-
                     for elem_param in data['elementParameters']:
                         field = elem_param['field']
                         name = elem_param['name']
                         value = elem_param['value']
                         aud_componentValue = value if field == 'TEXT' and name == 'UNIQUE_NAME' else aud_componentValue
 
-                    for nodeData in data['nodeData']:
-                        output_tables = nodeData.get('outputTables', {})
+                    for nodeData in data.get('nodeData', []):
+                        for output_table in  nodeData.get('outputTables', []) :
                         
-                        aud_OutputName = output_tables.get('name')
-                        aud_sizeState = output_tables.get('sizeState')
-                        aud_activateCondensedTool = 1 if output_tables.get('activateCondensedTool') == 'true' else 0
-                        aud_reject = output_tables.get('reject')
-                        aud_rejectInnerJoin = output_tables.get('rejectInnerJoin')
-                        aud_activateExpressionFilter = 1 if output_tables.get('activateExpressionFilter') == 'true' else 0
-                        aud_expressionFilterOutput = output_tables.get('expressionFilter')
+                            aud_OutputName = output_table.get('name')
+                            aud_sizeState = output_table.get('sizeState')
+                            aud_activateCondensedTool = 1 if output_table.get('activateCondensedTool') == 'true' else 0 if output_table.get('activateCondensedTool') == 'false' else None
+                            aud_reject = 1 if output_table.get('reject')  == 'true' else 0 if output_table.get('reject')  == 'false' else None
+                            aud_rejectInnerJoin = 1 if output_table.get('rejectInnerJoin') == 'true' else 0 if output_table.get('rejectInnerJoin') == 'false' else None
+                            aud_activateExpressionFilter = 1 if output_table.get('activateExpressionFilter') == 'true' else 0 if output_table.get('activateExpressionFilter') == 'false' else None
+                            aud_expressionFilterOutput = output_table.get('expressionFilter')
 
-                        for mapper_entry in output_tables.get('mapperTableEntries', []):
-                            aud_expressionOutput = mapper_entry.get('expression')
-                            aud_nameColumnOutput = mapper_entry.get('name')
-                            aud_type = mapper_entry.get('type')
-                            aud_nullable = 1 if mapper_entry.get('nullable') == 'true' else 0
+                            for mapper_entry in output_table.get('mapperTableEntries', []):
+                                aud_expressionOutput = mapper_entry.get('expression')
+                                aud_nameColumnOutput = mapper_entry.get('name')
+                                aud_type = mapper_entry.get('type')
+                                aud_nullable = 1 if mapper_entry.get('nullable') == 'true' else 0 if mapper_entry.get('nullable') == 'false' else None
 
-                            if aud_OutputName:
-                                params = (
-                                    aud_componentName, aud_OutputName, aud_sizeState, aud_activateCondensedTool, aud_reject, 
-                                    aud_rejectInnerJoin, aud_expressionOutput, aud_nameColumnOutput, aud_type, aud_nullable, 
-                                    aud_activateExpressionFilter, aud_expressionFilterOutput, aud_componentValue, project_name, 
-                                    job_name, execution_date
-                                )
-                                batch_insert.append(params)
+                                
+                                # Check if aud_OutputName exists before adding to the batch
+                                if aud_OutputName:
+                                    params = (
+                                        aud_componentName, aud_OutputName, aud_sizeState, aud_activateCondensedTool, aud_reject, 
+                                        aud_rejectInnerJoin, aud_expressionOutput, aud_nameColumnOutput, aud_type, aud_nullable, 
+                                        aud_activateExpressionFilter, aud_expressionFilterOutput, aud_componentValue, project_name, 
+                                        job_name, execution_date
+                                    )
+                                    batch_insert.append(params)
 
-                                if len(batch_insert) >= batch_size:
-                                    db.insert_data_batch(insert_query, 'aud_outputtable', batch_insert)
-                                    # #logging.info(f"Inserted batch of data into aud_outputtable: {len(batch_insert)} rows")
-                                    batch_insert.clear()
-                            else:
-                                logging.warning("aud_OutputName is None, skipping this entry.")
+                                    # Insert batch if it reaches batch size
+                                    if len(batch_insert) == batch_size:
+                                        db.insert_data_batch(insert_query, 'aud_outputtable', batch_insert)
+                                        batch_insert.clear()  # Clear batch after insertion
+                                else:
+                                    logging.warning("aud_OutputName is None, skipping this entry.")
 
-            if batch_insert:
-                db.insert_data_batch(insert_query, 'aud_outputtable', batch_insert)
-                #logging.info(f"Inserted remaining batch of data into aud_outputtable: {len(batch_insert)} rows")
-
+                        # Insert any remaining records in the batch
+                        if batch_insert:
+                            db.insert_data_batch(insert_query, 'aud_outputtable', batch_insert)
+                            batch_insert.clear()
         # Step 7: Execute outputtableJoinElemntnode query and delete records
         outputtableJoinElemntnode_query = config.get_param('queries', 'outputtableJoinElemntnode')
         outputtableJoinElemntnode_results = db.execute_query(outputtableJoinElemntnode_query)
@@ -1012,7 +1012,6 @@ def AUD_307_ALIMOUTPUTTABLE_XML(config: Config, db: Database, parsed_files_data:
         # Step 6: Insert parsed data into aud_outputtable_xml in batches
         insert_query = config.get_param('insert_queries', 'aud_outputtable_xml')
         batch_insert = []
-        batch_size = 100  # Define your batch size
 
         for NameProject, NameJob, version , parsed_data in parsed_files_data:
             for data in parsed_data['nodes']:
@@ -1027,55 +1026,56 @@ def AUD_307_ALIMOUTPUTTABLE_XML(config: Config, db: Database, parsed_files_data:
                         if field == 'TEXT' and name == 'UNIQUE_NAME':
                             aud_componentValue = value
 
+                    def process_node_item(node_item, aud_nameRowOutput, aud_componentName, aud_componentValue, NameJob, NameProject, execution_date, batch_insert):
+                        # Extract node_item attributes
+                        aud_nameColumnInput = node_item.get('name')
+                        aud_type = node_item.get('type')
+                        aud_xpathColumnInput = node_item.get('xpath')
+                        filterOutGoingConnections = node_item.get('filterOutGoingConnections')
+                        incomingConnections = node_item.get('incomingConnections')
+                        expression = node_item.get('expression')
+
+                        # Prepare parameters for insertion, handling only available values
+                        params = (
+                            aud_nameColumnInput, aud_type, aud_xpathColumnInput, aud_nameRowOutput, aud_componentName, 
+                            aud_componentValue, filterOutGoingConnections, incomingConnections, NameJob, NameProject, execution_date, 
+                            expression, activateCondensedTool, activateExpressionFilter, expressionFilter, filterIncomingConnections
+                        )
+                        
+                        # Log and add to batch
+                        logging.debug(f"Prepared params for insertion: {params}")
+                        batch_insert.append(params)
+
+                        # Process nested children recursively if present
+                        for child in node_item.get('children', []):
+                            process_node_item(child, aud_nameRowOutput, aud_componentName, aud_componentValue, NameJob, NameProject, execution_date, batch_insert)
+
+
+                    # Main loop to process `nodeData`
                     for nodeData in data['nodeData']:
-                        # if len(nodeData.get('outputTrees', []))!=0:
-                           # logging.debug(f"Processing nodeData with outputTrees: {nodeData.get('outputTrees', []), NameProject,NameJob}")
-                        # Parse outputTrees for each nodeData
                         for output_tree in nodeData.get('outputTrees', []):
                             aud_nameRowOutput = output_tree.get('name')
-                            # allInOne = output_tree.get('allInOne')
-                            # aud_lookupMode = output_tree.get('lookupMode')
-                            # aud_matchingMode = output_tree.get('matchingMode')
-                            activateCondensedTool = output_tree.get('activateCondensedTool')
-                            activateExpressionFilter = output_tree.get('activateExpressionFilter')
-                            # activateGlobalMap = output_tree.get('activateGlobalMap')
+                            activateCondensedTool = 1 if output_tree.get('activateCondensedTool') == 'true' else 0
+                            activateExpressionFilter = 1 if output_tree.get('activateExpressionFilter') == 'true' else 0
                             expressionFilter = output_tree.get('expressionFilter')
                             filterIncomingConnections = output_tree.get('filterIncomingConnections')
-                            # lookup = output_tree.get('lookup')
 
-                            # Loop through nodes children in each output_tree
+                            # Process each node_item and nested children in the output_tree
                             for node_item in output_tree.get('children', []):
-                                aud_nameColumnInput = node_item.get('name')
-                                aud_type = node_item.get('type')
-                                aud_xpathColumnInput = node_item.get('xpath')
-                                
-                                # Define other placeholders only if they are present in the node_item data
-                                filterOutGoingConnections = node_item.get('filterOutGoingConnections')
-                                # lookupOutgoingConnections = node_item.get('lookupOutgoingConnections')
-                                incomingConnections = node_item.get('incomingConnections')
-                                # lookupIncomingConnections = node_item.get('lookupIncomingConnections')
-                                expression = node_item.get('expression')
+                                process_node_item(
+                                    node_item, aud_nameRowOutput, aud_componentName, aud_componentValue, 
+                                    NameJob, NameProject, execution_date, batch_insert
+                                )
 
-                                # Prepare the parameters for insertion, only including available values
-                                params = (
-                                    aud_nameColumnInput, aud_type, aud_xpathColumnInput, aud_nameRowOutput, aud_componentName, 
-                                    aud_componentValue, filterOutGoingConnections, incomingConnections, NameJob, NameProject, execution_date, 
-                                    expression, activateCondensedTool, activateExpressionFilter, expressionFilter, filterIncomingConnections)
-                                
-                               # logging.debug(f"Prepared params for insertion: {params}")
-
-                                batch_insert.append(params)
-
-                                # Insert the batch when the size limit is reached
+                                # Insert batch when the limit is reached
                                 if len(batch_insert) >= batch_size:
                                     db.insert_data_batch(insert_query, 'aud_outputtable_xml', batch_insert)
                                     batch_insert.clear()
 
-                        # Insert remaining data after the loop
+                        # Insert any remaining data after processing all outputTrees
                         if batch_insert:
                             db.insert_data_batch(insert_query, 'aud_outputtable_xml', batch_insert)
-                            # logging.info(f"Inserted remaining batch of data into aud_outputtable_xml: {len(batch_insert)} rows")
-
+                            batch_insert.clear()
 
         # Step 7: Execute outputtablexmlJoinElemntnode query and delete records
         outputtablexmlJoinElemntnode_query = config.get_param('queries', 'outputtablexmlJoinElemntnode')
@@ -1159,37 +1159,37 @@ def AUD_307_ALIMINPUTTABLE(config: Config, db: Database, parsed_files_data: List
                             
                     
                     # Process node data
-                    for nodeData in data['nodeData']:
-                        input_tables = nodeData.get('inputTables', {})
+                    for node_data in data.get('nodeData', []):
+                        # Loop through each inputTable in the current nodeData
+                        for input_table in node_data.get('inputTables', []):
+                            aud_lookupMode = input_table.get('lookupMode')
+                            aud_matchingMode = input_table.get('matchingMode')
+                            aud_nameRowInput = input_table.get('name')
+                            aud_sizeState = input_table.get('sizeState')
+                            aud_activateExpressionFilterInput = 1 if input_table.get('activateExpressionFilterInput') == 'true' else 0 if input_table.get('activateExpressionFilterInput') == 'false' else None
+                            aud_expressionFilterInput = input_table.get('expressionFilter')
+                            aud_activateCondensedTool = 1 if input_table.get('activateCondensedTool') == 'true' else 0 if input_table.get('activateCondensedTool') == 'false' else None
+                            aud_innerJoin = 1 if input_table.get('innerJoin') == 'true' else 0 if input_table.get('innerJoin') == 'false' else None
+                            persistent = input_table.get('persistent')
 
-                        aud_lookupMode = input_tables.get('lookupMode')
-                        aud_matchingMode = input_tables.get('matchingMode')
-                        # Set default values for aud_nameRowInput and aud_nameColumnInput if they are None
-                        aud_nameRowInput = input_tables.get('name') 
-                        aud_sizeState = input_tables.get('sizeState')
-                        aud_activateExpressionFilterInput = input_tables.get('activateExpressionFilterInput')
-                        aud_expressionFilterInput = input_tables.get('expressionFilterInput')
-                        aud_activateCondensedTool = input_tables.get('activateCondensedTool')
-                        aud_innerJoin = input_tables.get('innerJoin')
-                        persistent = input_tables.get('persistent')
+                            # Extract mapper table entries within each inputTable
+                            for mapper_entry in input_table.get('mapperTableEntries', []):
+                                aud_expressionJoin = mapper_entry.get('expression')
+                                aud_nameColumnInput = mapper_entry.get('name')
+                                aud_type = mapper_entry.get('type')
+                                aud_nullable = 1 if mapper_entry.get('nullable') == 'true' else 0 if mapper_entry.get('nullable') == 'false' else None
+                                aud_operator = mapper_entry.get('operator')
 
-                        # Extract mapper table entries
-                        for mapper_entry in input_tables.get('mapperTableEntries', []):
-                            aud_expressionJoin = mapper_entry.get('expression')
-                            aud_nameColumnInput = mapper_entry.get('name')
-                            aud_type = mapper_entry.get('type')
-                            aud_nullable = 1 if mapper_entry.get('nullable') == 'true' else 0
-                            aud_operator = mapper_entry.get('operator')
-
-                            # Prepare the parameters for insertion
-                            params = (
-                                aud_componentName, aud_lookupMode, aud_matchingMode, aud_nameRowInput, aud_sizeState,
-                                aud_nameColumnInput, aud_type, aud_nullable, aud_expressionJoin, aud_operator,
-                                aud_activateExpressionFilterInput, aud_expressionFilterInput, aud_componentValue,
-                                aud_activateCondensedTool, aud_innerJoin, persistent, NameProject, NameJob, execution_date
-                            )
-
-                            batch_insert.append(params)
+   
+                                # Prepare the parameters for insertion
+                                params = (
+                                    aud_componentName, aud_lookupMode, aud_matchingMode, aud_nameRowInput, aud_sizeState,
+                                    aud_nameColumnInput, aud_type, aud_nullable, aud_expressionJoin, aud_operator,
+                                    aud_activateExpressionFilterInput, aud_expressionFilterInput, aud_componentValue,
+                                    aud_activateCondensedTool, aud_innerJoin, persistent, NameProject, NameJob, execution_date
+                                )
+                                logging.debug(f"Inserted batch of data into aud_inputtable: {params}")
+                                batch_insert.append(params)
 
                             # Insert the batch when the size limit is reached
                             if len(batch_insert) >= batch_size:

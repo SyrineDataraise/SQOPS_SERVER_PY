@@ -202,12 +202,6 @@ class XMLParser:
                 # Find various sub-elements within nodeData
                 ui_propefties = node_data.find('.//uiPropefties')
                 var_tables = node_data.find('.//varTables')
-                output_tables = node_data.find('.//outputTables')
-                input_tables = node_data.find('.//inputTables')
-                inputTrees = node_data.find('.//inputTrees')
-                outputTrees = node_data.find('.//outputTrees')
-                varTables = node_data.find('.//varTables')
-                connections = node_data.find('.//connections')
 
                 # Initialize `node_data_info` structure
                 node_data_info = {
@@ -219,54 +213,65 @@ class XMLParser:
                         'name': var_tables.get('name') if var_tables is not None else None,
                         'sizeState': var_tables.get('sizeState') if var_tables is not None else None
                     },
-                    'mapperTableEntries': [],
-                    'outputTables': {
-                        'activateExpressionFilter': output_tables.get('activateExpressionFilter') if output_tables is not None else None,
-                        'expressionFilter': output_tables.get('expressionFilter') if output_tables is not None else None,
-                        'name': output_tables.get('name') if output_tables is not None else None,
-                        'sizeState': output_tables.get('sizeState') if output_tables is not None else None,
-                        'activateCondensedTool': output_tables.get('activateCondensedTool') if output_tables is not None else None,
-                        'reject': output_tables.get('reject') if output_tables is not None else None,
-                        'rejectInnerJoin': output_tables.get('rejectInnerJoin') if output_tables is not None else None,
-                        'mapperTableEntries': []
-                    },
-                    'inputTables': {
-                        'lookupMode': input_tables.get('lookupMode') if input_tables is not None else None,
-                        'matchingMode': input_tables.get('matchingMode') if input_tables is not None else None,
-                        'name': input_tables.get('name') if input_tables is not None else None,
-                        'sizeState': input_tables.get('sizeState') if input_tables is not None else None,
-                        'activateCondensedTool': input_tables.get('activateCondensedTool') if input_tables is not None else None,
-                        'activateExpressionFilter': input_tables.get('activateExpressionFilter') if input_tables is not None else None,
-                        'innerJoin': input_tables.get('innerJoin') if input_tables is not None else None,
-                        'expressionFilter': input_tables.get('expressionFilter') if input_tables is not None else None,
-                        'persistent': input_tables.get('persistent') if input_tables is not None else None,
-                        'mapperTableEntries': []
-                    },
+                    'inputTables': [],
+                    'outputTables': [],
                     'inputTrees': [],
                     'outputTrees': [],
                     'connections': []
                 }
 
-                # Parse `mapperTableEntries` for `inputTables`
-                for mapper_entry in node_data.findall('.//inputTables/mapperTableEntries'):
-                    mapper_entry_info = {
-                        'expression': mapper_entry.get('expression'),
-                        'name': mapper_entry.get('name'),
-                        'type': mapper_entry.get('type'),
-                        'nullable': mapper_entry.get('nullable'),
-                        'operator': mapper_entry.get('operator')
+                # Parse multiple `inputTables`
+                for input_table in node_data.findall('.//inputTables'):
+                    input_table_info = {
+                        'lookupMode': input_table.get('lookupMode'),
+                        'matchingMode': input_table.get('matchingMode'),
+                        'name': input_table.get('name'),
+                        'sizeState': input_table.get('sizeState'),
+                        'activateCondensedTool': input_table.get('activateCondensedTool'),
+                        'activateExpressionFilter': input_table.get('activateExpressionFilter'),
+                        'innerJoin': input_table.get('innerJoin'),
+                        'expressionFilter': input_table.get('expressionFilter'),
+                        'persistent': input_table.get('persistent'),
+                        'mapperTableEntries': []
                     }
-                    node_data_info['inputTables']['mapperTableEntries'].append(mapper_entry_info)
+                    
+                    # Parse `mapperTableEntries` for each `inputTable`
+                    for mapper_entry in input_table.findall('.//mapperTableEntries'):
+                        mapper_entry_info = {
+                            'expression': mapper_entry.get('expression'),
+                            'name': mapper_entry.get('name'),
+                            'type': mapper_entry.get('type'),
+                            'nullable': mapper_entry.get('nullable'),
+                            'operator': mapper_entry.get('operator')
+                        }
+                        input_table_info['mapperTableEntries'].append(mapper_entry_info)
 
-                # Parse `mapperTableEntries` for `outputTables`
-                for mapper_entry in node_data.findall('.//outputTables/mapperTableEntries'):
-                    mapper_entry_info = {
-                        'expression': mapper_entry.get('expression'),
-                        'name': mapper_entry.get('name'),
-                        'type': mapper_entry.get('type'),
-                        'nullable': mapper_entry.get('nullable')
+                    node_data_info['inputTables'].append(input_table_info)
+
+                # Parse multiple `outputTables`
+                for output_table in node_data.findall('.//outputTables'):
+                    output_table_info = {
+                        'activateExpressionFilter': output_table.get('activateExpressionFilter'),
+                        'expressionFilter': output_table.get('expressionFilter'),
+                        'name': output_table.get('name'),
+                        'sizeState': output_table.get('sizeState'),
+                        'activateCondensedTool': output_table.get('activateCondensedTool'),
+                        'reject': output_table.get('reject'),
+                        'rejectInnerJoin': output_table.get('rejectInnerJoin'),
+                        'mapperTableEntries': []
                     }
-                    node_data_info['outputTables']['mapperTableEntries'].append(mapper_entry_info)
+                    
+                    # Parse `mapperTableEntries` for each `outputTable`
+                    for mapper_entry in output_table.findall('.//mapperTableEntries'):
+                        mapper_entry_info = {
+                            'expression': mapper_entry.get('expression'),
+                            'name': mapper_entry.get('name'),
+                            'type': mapper_entry.get('type'),
+                            'nullable': mapper_entry.get('nullable')
+                        }
+                        output_table_info['mapperTableEntries'].append(mapper_entry_info)
+
+                    node_data_info['outputTables'].append(output_table_info)
 
                 # Parse `inputTrees`
                 for input_tree in node_data.findall('.//inputTrees'):
@@ -323,7 +328,7 @@ class XMLParser:
 
                     }
                     # Parse `nodes` elements within each `outputTrees`
-                    for node_item in input_tree.findall('.//nodes'):
+                    for node_item in output_tree.findall('./nodes'):
                         node_item_data = {
                             'name': node_item.get('name'),
                             'expression': node_item.get('expression'),
