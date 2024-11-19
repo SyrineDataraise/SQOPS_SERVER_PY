@@ -233,13 +233,13 @@ class XMLParser:
                         }
 
                         # Debug logging to check the entry being added
-                        logging.debug(f"Adding mapperTableEntry: {entry_data}")
+                        # logging.debug(f"Adding mapperTableEntry: {entry_data}")
 
                         # Append each entry to `mapperTableEntries`
                         node_data_info['varTables']['mapperTableEntries'].append(entry_data)
                 
                 # Optional: Debug log to check the final structure of node_data_info
-                logging.debug(f"Final node_data_info for node: {node_data_info}")
+                # logging.debug(f"Final node_data_info for node: {node_data_info}")
 
 
                 # Parse multiple `inputTables`

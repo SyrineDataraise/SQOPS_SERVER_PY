@@ -1611,7 +1611,7 @@ def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tu
             logging.info("done!")
 
 
-def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,batch_size=100):
+def AUD_313_ALIMJOBLETS(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,batch_size=100):
     """
     Perform operations including retrieving JDBC parameters, executing queries,
     deleting records, and inserting data in batches.
