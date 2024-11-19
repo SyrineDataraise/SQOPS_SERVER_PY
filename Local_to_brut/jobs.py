@@ -230,7 +230,6 @@ def AUD_303_BIGDATA_PARAMETERS(
     db: Database,
     parsed_files_data: List[Tuple[str, str, dict]],
     execution_date: str,
-    local_to_dbbrut_query_results: tuple,
     batch_size=100
 ):
     """
@@ -2002,7 +2001,7 @@ def AUD_319_ALIMDOCCONTEXTGROUP(config: Config, db: Database, parsed_files_data:
 
 
 
-def AUD_320_ALIMDOCJOBS(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],local_to_dbbrut_query_results: list, batch_size: int = 100):
+def AUD_320_ALIMDOCJOBS(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]], batch_size: int = 100):
     """
     Perform operations including retrieving JDBC parameters, executing queries,
     deleting records, and inserting data in batches.
