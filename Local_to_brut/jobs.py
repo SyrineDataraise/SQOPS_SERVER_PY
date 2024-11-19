@@ -540,15 +540,18 @@ def AUD_305_ALIMVARTABLE_XML(config: Config, db: Database, parsed_files_data: Li
                     ##logging.debug(f"Element parameter - field: {field}, name: {name}, value: {value}")
 
                 for nodeData in data['nodeData']:
-                    aud_Var = nodeData['varTables'].get('name', '')
-                    aud_sizeState = nodeData['varTables'].get('sizeState', '')
-                    ##logging.debug(f"Node data -  aud_Var: {aud_Var}, aud_sizeState: {aud_sizeState}")
+                    # Access 'varTables' and its properties
+                    aud_Var = nodeData.get('varTables', {}).get('name', '')
+                    aud_sizeState = nodeData.get('varTables', {}).get('sizeState', '')
+                    # logging.debug(f"Node data - aud_Var: {aud_Var}, aud_sizeState: {aud_sizeState}")
 
-                    for mapperTableEntries in nodeData['mapperTableEntries']:
-                        aud_nameVar = mapperTableEntries.get('name', '')
-                        aud_expressionVar = mapperTableEntries.get('expression', '')
-                        aud_type = mapperTableEntries.get('type', '')
-                        ##logging.debug(f"mapperTableEntries - nameVar: {aud_nameVar}, expressionVar: {aud_expressionVar}, type: {aud_type}")
+                    # Access 'mapperTableEntries' within 'varTables'
+                    for mapperTableEntry in nodeData.get('varTables', {}).get('mapperTableEntries', []):
+                        aud_nameVar = mapperTableEntry.get('name', '')
+                        aud_expressionVar = mapperTableEntry.get('expression', '')
+                        aud_type = mapperTableEntry.get('type', '')
+                        # logging.debug(f"mapperTableEntries - nameVar: {aud_nameVar}, expressionVar: {aud_expressionVar}, type: {aud_type}")
+
 
                         params = (
                             componentName, Componement_UniqueName, aud_Var, aud_sizeState, 
@@ -658,43 +661,51 @@ def AUD_305_ALIMVARTABLE(config: Config, db: Database, parsed_files_data: List[T
             for data in parsed_data['nodes']:
                 componentName = data['componentName']
                 # #logging.debug(f"Processing component: {componentName}")
+                if componentName == 'tMap':
 
-                for elem_param in data['elementParameters']:
-                    field = elem_param['field']
-                    name = elem_param['name']
-                    show = elem_param['show']
-                    value = elem_param['value']
-                    Componement_UniqueName = value if field == 'TEXT' and name == 'UNIQUE_NAME' else Componement_UniqueName
-                    # #logging.debug(f"Element parameter - field: {field}, name: {name}, value: {value}")
+                    for elem_param in data['elementParameters']:
+                        field = elem_param['field']
+                        name = elem_param['name']
+                        show = elem_param['show']
+                        value = elem_param['value']
+                        Componement_UniqueName = value if field == 'TEXT' and name == 'UNIQUE_NAME' else Componement_UniqueName
+                        # #logging.debug(f"Element parameter - field: {field}, name: {name}, value: {value}")
+                        for nodeData in data['nodeData']:
+                            # Access 'varTables' and its properties safely
+                            # logging.debug(f"nodeData : {nodeData}")
+                            var_tables = nodeData.get('varTables', {})
+                            aud_Var = var_tables.get('name', '')
+                            aud_sizeState = var_tables.get('sizeState', '')
+                            shellMaximized = nodeData.get('uiPropefties', {}).get('shellMaximized', 0)
 
-                for nodeData in data['nodeData']:
-                    shellMaximized = nodeData['uiPropefties'].get('shellMaximized', 0)
-                    aud_Var = nodeData['varTables'].get('name', '')
-                    aud_sizeState = nodeData['varTables'].get('sizeState', '')
-                    # #logging.debug(f"Node data - shellMaximized: {shellMaximized}, aud_Var: {aud_Var}, aud_sizeState: {aud_sizeState}")
+                            # logging.debug(f"Node data - aud_Var: {aud_Var}, aud_sizeState: {aud_sizeState}")
 
-                    for mapperTableEntries in nodeData['mapperTableEntries']:
-                        aud_nameVar = mapperTableEntries.get('name', '')
-                        aud_expressionVar = mapperTableEntries.get('expression', '')
-                        aud_type = mapperTableEntries.get('type', '')
-                        # #logging.debug(f"mapperTableEntries - nameVar: {aud_nameVar}, expressionVar: {aud_expressionVar}, type: {aud_type}")
+                            # Access 'mapperTableEntries' within 'varTables' safely
+                            mapper_table_entries = var_tables.get('mapperTableEntries', [])
+                            # logging.debug(f"mapperTableEntries : {mapper_table_entries}")
+                            for mapperTableEntry in mapper_table_entries:
+                                aud_nameVar = mapperTableEntry.get('name', '')
+                                aud_expressionVar = mapperTableEntry.get('expression', '')
+                                aud_type = mapperTableEntry.get('type', '')
+                                # logging.debug(f"mapperTableEntries - nameVar: {aud_nameVar}, expressionVar: {aud_expressionVar}, type: {aud_type}")
 
-                        params = (
-                            componentName, Componement_UniqueName, aud_Var, aud_sizeState, 
-                            aud_nameVar, aud_expressionVar, aud_type, shellMaximized, 
-                            project_name, job_name, execution_date
-                        )
-                        batch_insert.append(params)
+                                params = (
+                                    componentName, Componement_UniqueName, aud_Var, aud_sizeState, 
+                                    aud_nameVar, aud_expressionVar, aud_type, shellMaximized, 
+                                    project_name, job_name, execution_date
+                                )
 
-                        if len(batch_insert) >= insert_batch_size:
-                            db.insert_data_batch(insert_query, 'aud_vartable', batch_insert)
-                            # #logging.info(f"Inserted batch of data into aud_vartable: {len(batch_insert)} rows")
-                            batch_insert.clear()
+                                batch_insert.append(params)
 
-        # Insert remaining data in the batch
-        if batch_insert:
-            db.insert_data_batch(insert_query, 'aud_vartable', batch_insert)
-            #logging.info(f"Inserted remaining batch of data into aud_vartable: {len(batch_insert)} rows")
+                            if len(batch_insert) >= insert_batch_size:
+                                db.insert_data_batch(insert_query, 'aud_vartable', batch_insert)
+                                # #logging.info(f"Inserted batch of data into aud_vartable: {len(batch_insert)} rows")
+                                batch_insert.clear()
+
+            # Insert remaining data in the batch
+            if batch_insert:
+                db.insert_data_batch(insert_query, 'aud_vartable', batch_insert)
+                #logging.info(f"Inserted remaining batch of data into aud_vartable: {len(batch_insert)} rows")
 
         # Step 7: Execute vartableJoinElemntnode query
         vartableJoinElemntnode_query = config.get_param('queries', 'vartableJoinElemntnode')
@@ -1043,7 +1054,7 @@ def AUD_307_ALIMOUTPUTTABLE_XML(config: Config, db: Database, parsed_files_data:
                         )
                         
                         # Log and add to batch
-                        logging.debug(f"Prepared params for insertion: {params}")
+                        # logging.debug(f"Prepared params for insertion: {params}")
                         batch_insert.append(params)
 
                         # Process nested children recursively if present
@@ -1188,7 +1199,7 @@ def AUD_307_ALIMINPUTTABLE(config: Config, db: Database, parsed_files_data: List
                                     aud_activateExpressionFilterInput, aud_expressionFilterInput, aud_componentValue,
                                     aud_activateCondensedTool, aud_innerJoin, persistent, NameProject, NameJob, execution_date
                                 )
-                                logging.debug(f"Inserted batch of data into aud_inputtable: {params}")
+                                # logging.debug(f"Inserted batch of data into aud_inputtable: {params}")
                                 batch_insert.append(params)
 
                             # Insert the batch when the size limit is reached

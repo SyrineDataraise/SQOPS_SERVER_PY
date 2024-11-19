@@ -197,13 +197,13 @@ class XMLParser:
 
                 comp_data['metadata'].append(meta_data)
 
-            # Parse `nodeData` elements
+            # Loop through nodes and parse `nodeData` elements
             for node_data in node.findall('.//nodeData'):
                 # Find various sub-elements within nodeData
                 ui_propefties = node_data.find('.//uiPropefties')
                 var_tables = node_data.find('.//varTables')
 
-                # Initialize `node_data_info` structure
+                # Initialize `node_data_info` structure for each `nodeData`
                 node_data_info = {
                     'type': node_data.get('{http://www.w3.org/2001/XMLSchema-instance}type'),
                     'uiPropefties': {
@@ -211,7 +211,8 @@ class XMLParser:
                     },
                     'varTables': {
                         'name': var_tables.get('name') if var_tables is not None else None,
-                        'sizeState': var_tables.get('sizeState') if var_tables is not None else None
+                        'sizeState': var_tables.get('sizeState') if var_tables is not None else None,
+                        'mapperTableEntries': []  # Initialize empty list for each `varTables`
                     },
                     'inputTables': [],
                     'outputTables': [],
@@ -219,6 +220,27 @@ class XMLParser:
                     'outputTrees': [],
                     'connections': []
                 }
+
+                # Check if 'varTables' exists and parse `mapperTableEntries` if present
+                if var_tables is not None:
+                    # Parse `mapperTableEntries`
+                    for mapperTableEntry in var_tables.findall('.//mapperTableEntries'):
+                        # Extract the attributes for `mapperTableEntry`
+                        entry_data = {
+                            'name': mapperTableEntry.get('name'),
+                            'expression': mapperTableEntry.get('expression'),
+                            'type': mapperTableEntry.get('type')
+                        }
+
+                        # Debug logging to check the entry being added
+                        logging.debug(f"Adding mapperTableEntry: {entry_data}")
+
+                        # Append each entry to `mapperTableEntries`
+                        node_data_info['varTables']['mapperTableEntries'].append(entry_data)
+                
+                # Optional: Debug log to check the final structure of node_data_info
+                logging.debug(f"Final node_data_info for node: {node_data_info}")
+
 
                 # Parse multiple `inputTables`
                 for input_table in node_data.findall('.//inputTables'):
@@ -328,7 +350,7 @@ class XMLParser:
 
                     }
                     # Parse `nodes` elements within each `outputTrees`
-                    for node_item in output_tree.findall('./nodes'):
+                    for node_item in output_tree.findall('.//nodes'):
                         node_item_data = {
                             'name': node_item.get('name'),
                             'expression': node_item.get('expression'),
