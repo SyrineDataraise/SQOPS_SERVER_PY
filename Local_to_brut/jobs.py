@@ -241,17 +241,10 @@ def AUD_303_BIGDATA_PARAMETERS(
         db (Database): Database instance for executing queries.
         parsed_files_data (List[Tuple[str, str, dict]]): List of parsed data from XML files.
         execution_date (str): The execution date to use in data insertion.
-        local_to_dbbrut_query_results (tuple): Results from the local to DB brut query.
         batch_size (int): Number of rows to insert in each batch.
     """
     try:
-        # Step 3: Delete output from aud_bigdata based on query results
-        aud_bigdata_conditions_batch = [
-            {'NameProject': result[0], 'NameJob': result[1]}
-            for result in local_to_dbbrut_query_results
-        ]
-        if aud_bigdata_conditions_batch:
-            db.delete_records_batch('aud_bigdata', aud_bigdata_conditions_batch)
+        
 
         # Step 4: Execute aud_bigdata query
         aud_bigdata_query = config.get_param('queries', 'aud_bigdata')
@@ -2016,21 +2009,7 @@ def AUD_320_ALIMDOCJOBS(config: Config, db: Database, parsed_files_data: List[Tu
     try:
 
 
-        # Step 3: Delete records from aud_docjobs in batches
-        batch_delete_conditions = []
-        for result in local_to_dbbrut_query_results:
-            project_name, job_name, *_ = result
-            batch_delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
-
-            if len(batch_delete_conditions) >= batch_size:
-                db.delete_records_batch('aud_docjobs', batch_delete_conditions)
-                #logging.info(f"Batch deleted records from aud_docjobs: {len(batch_delete_conditions)} rows")
-                batch_delete_conditions.clear()
-
-        # Delete remaining records
-        if batch_delete_conditions:
-            db.delete_records_batch('aud_docjobs', batch_delete_conditions)
-           # logging.info(f"Batch deleted remaining records from aud_docjobs: {len(batch_delete_conditions)} rows")
+        
 
         # Step 4: Execute aud_subjobs query
         aud_subjobs_query = config.get_param('queries', 'aud_subjobs')
@@ -2229,7 +2208,6 @@ def AUD_701_CONVERTSCREENSHOT(
     db: Database,
     parsed_files_data: List[Tuple[str, str, dict]],
     execution_date: str,
-    local_to_dbbrut_query_results: tuple,
     batch_size=100
 ):
     """
@@ -2241,18 +2219,10 @@ def AUD_701_CONVERTSCREENSHOT(
         db (Database): Database instance for executing queries.
         parsed_files_data (List[Tuple[str, str, dict]]): List of parsed data from XML files.
         execution_date (str): The execution date to use in data insertion.
-        local_to_dbbrut_query_results (tuple): Results from the local to DB brut query.
         batch_size (int): Number of rows to insert in each batch.
     """
     try:
-        # Step 1: Delete records from 'aud_screenshot' based on query results
-        aud_screenshot_conditions_batch = [
-            {'NameProject': result[0], 'NameJob': result[1]}
-            for result in local_to_dbbrut_query_results
-        ]
-        if aud_screenshot_conditions_batch:
-            # logging.info(f"Deleting records from aud_screenshot: {len(aud_screenshot_conditions_batch)} items.")
-            db.delete_records_batch('aud_screenshot', aud_screenshot_conditions_batch)
+        
 
         # Step 2: Execute 'aud_screenshot' query and retrieve results
         aud_screenshot_query = config.get_param('queries', 'aud_screenshot')
