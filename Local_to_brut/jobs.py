@@ -12,7 +12,7 @@ logging.basicConfig(
     filemode='w'  # Ensure the file is overwritten each time for clean logs
 )
 
-def AUD_301_ALIMELEMENTNODE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
+def AUD_301_ALIMELEMENTNODE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,batch_size=100 ):
     """
     Perform operations including retrieving JDBC parameters, executing queries,
     deleting records, and inserting data in batches.
@@ -24,21 +24,7 @@ def AUD_301_ALIMELEMENTNODE(config: Config, db: Database, parsed_files_data: Lis
     """
     try:
 
-        # Step 3: Delete records from aud_elementvaluenode in batches
-        batch_delete_conditions = []
-
-        for result in local_to_dbbrut_query_results:
-            project_name, job_name, *_ = result
-            batch_delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
-            if len(batch_delete_conditions) >= batch_size:
-                db.delete_records_batch('aud_elementvaluenode', batch_delete_conditions)
-                #logging.info(f"Batch deleted records from aud_elementvaluenode: {len(batch_delete_conditions)} rows")
-                batch_delete_conditions.clear()
-
-        # Delete remaining records
-        if batch_delete_conditions:
-            db.delete_records_batch('aud_elementvaluenode', batch_delete_conditions)
-           # logging.info(f"Batch deleted remaining records from aud_elementvaluenode: {len(batch_delete_conditions)} rows")
+        
 
         # Step 4: Execute aud_elementnode query
         aud_elementnode_query = config.get_param('queries', 'aud_elementnode')
@@ -97,17 +83,10 @@ def AUD_301_ALIMELEMENTNODE(config: Config, db: Database, parsed_files_data: Lis
             logging.info("done!")
 
 
-def AUD_302_ALIMCONTEXTJOB(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
+def AUD_302_ALIMCONTEXTJOB(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,batch_size=100 ):
     try:
 
-        # Step 3: Delete the output from aud_contextjob based on the query results
-        aud_contextjob_conditions_batch = [
-            {'NameProject': result[0], 'NameJob': result[1]}
-            for result in local_to_dbbrut_query_results
-        ]
-        if aud_contextjob_conditions_batch:
-            db.delete_records_batch('aud_contextjob', aud_contextjob_conditions_batch)
-            logging.info(f"Deleted {len(aud_contextjob_conditions_batch)} records from aud_contextjob")
+        
 
         # Step 4: Execute aud_contextjob query
         aud_contextjob_query = config.get_param('queries', 'aud_contextjob')
@@ -168,20 +147,13 @@ def AUD_302_ALIMCONTEXTJOB(config: Config, db: Database, parsed_files_data: List
             logging.info("done!")
 
 
-def AUD_303_ALIMNODE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
+def AUD_303_ALIMNODE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,batch_size=100 ):
     try:
 
 
 
 
-        # Step 3: Delete the output from aud_node based on the query results
-        aud_node_conditions_batch = [
-            {'NameProject': result[0], 'NameJob': result[1]}
-            for result in local_to_dbbrut_query_results
-        ]
-        if aud_node_conditions_batch:
-            db.delete_records_batch('aud_node', aud_node_conditions_batch)
-
+        
         # Step 4: Execute aud_node query
         aud_node_query = config.get_param('queries', 'aud_node')
         logging.info(f"Executing query: {aud_node_query}")
@@ -357,7 +329,7 @@ def AUD_303_BIGDATA_PARAMETERS(
             # db.close()
 
 
-def AUD_304_ALIMMETADATA(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
+def AUD_304_ALIMMETADATA(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,batch_size=100 ):
     """
     Perform various database operations including retrieving JDBC parameters, 
     executing queries, deleting records, and inserting data.
@@ -370,16 +342,7 @@ def AUD_304_ALIMMETADATA(config: Config, db: Database, parsed_files_data: List[T
     """
     try:
 
-        # Step 3: Delete the output from aud_metadata based on the query results
-        delete_conditions = []
-        for result in local_to_dbbrut_query_results:
-            project_name, job_name, _, _, _ = result  # Assuming result contains these fields in order
-            delete_conditions.append({
-                'NameProject': project_name,
-                'NameJob': job_name
-            })
-        db.delete_records_batch('aud_metadata', delete_conditions)
-        # logging.info(f"Deleted records for projects/jobs: {[(d['NameProject'], d['NameJob']) for d in delete_conditions]}")
+        
 
         # Step 4: Execute aud_metadata query
         aud_metadata_query = config.get_param('queries', 'aud_metadata')
@@ -470,7 +433,7 @@ def AUD_304_ALIMMETADATA(config: Config, db: Database, parsed_files_data: List[T
             logging.info("Database connection closed")
 
 
-def AUD_305_ALIMVARTABLE_XML(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
+def AUD_305_ALIMVARTABLE_XML(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,batch_size=100 ):
     """
     Perform operations including retrieving JDBC parameters, executing queries,
     deleting records, and inserting data in batches.
@@ -483,21 +446,7 @@ def AUD_305_ALIMVARTABLE_XML(config: Config, db: Database, parsed_files_data: Li
     """
     try:
 
-        # Step 3: Delete records from aud_vartable_xml in batches
-        batch_delete_conditions = []
-
-        for result in local_to_dbbrut_query_results:
-            project_name, job_name, *_ = result
-            batch_delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
-            if len(batch_delete_conditions) >= batch_size:
-                db.delete_records_batch('aud_vartable_xml', batch_delete_conditions)
-                #logging.info(f"Batch deleted records from aud_vartable_xml: {len(batch_delete_conditions)} rows")
-                batch_delete_conditions.clear()
-
-        # Delete remaining records
-        if batch_delete_conditions:
-            db.delete_records_batch('aud_vartable_xml', batch_delete_conditions)
-           # logging.info(f"Batch deleted remaining records from aud_vartable_xml: {len(batch_delete_conditions)} rows")
+        
 
         # Step 4: Execute aud_vartable_xml query
         vartableJoinElemntnode_query = config.get_param('queries', 'aud_vartable_xml')
@@ -601,7 +550,7 @@ def AUD_305_ALIMVARTABLE_XML(config: Config, db: Database, parsed_files_data: Li
             
 
 
-def AUD_305_ALIMVARTABLE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
+def AUD_305_ALIMVARTABLE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,batch_size=100 ):
     """
     Perform operations including retrieving JDBC parameters, executing queries,
     deleting records, and inserting data in batches.
@@ -614,21 +563,7 @@ def AUD_305_ALIMVARTABLE(config: Config, db: Database, parsed_files_data: List[T
     """
     try:
 
-        # Step 3: Delete records from aud_vartable in batches
-        batch_delete_conditions = []
-
-        for result in local_to_dbbrut_query_results:
-            project_name, job_name, *_ = result
-            batch_delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
-            if len(batch_delete_conditions) >= batch_size:
-                db.delete_records_batch('aud_vartable', batch_delete_conditions)
-                #logging.info(f"Batch deleted records from aud_vartable: {len(batch_delete_conditions)} rows")
-                batch_delete_conditions.clear()
-
-        # Delete remaining records
-        if batch_delete_conditions:
-            db.delete_records_batch('aud_vartable', batch_delete_conditions)
-           # logging.info(f"Batch deleted remaining records from aud_vartable: {len(batch_delete_conditions)} rows")
+        
 
         # Step 4: Execute aud_vartable query
         vartableJoinElemntnode_query = config.get_param('queries', 'aud_vartable')
@@ -736,22 +671,10 @@ def AUD_305_ALIMVARTABLE(config: Config, db: Database, parsed_files_data: List[T
             logging.info("done!")
 
 
-def AUD_306_ALIMOUTPUTTABLE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
+def AUD_306_ALIMOUTPUTTABLE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,batch_size=100 ):
     try:
        
-        # Step 3: Delete records from aud_outputtable in batches
-        delete_conditions = []
-        for result in local_to_dbbrut_query_results:
-            project_name, job_name, *_ = result
-            delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
-            if len(delete_conditions) >= batch_size:
-                db.delete_records_batch('aud_outputtable', delete_conditions)
-                #logging.info(f"Batch deleted records from aud_outputtable: {len(delete_conditions)} rows")
-                delete_conditions.clear()
-
-        if delete_conditions:
-            db.delete_records_batch('aud_outputtable', delete_conditions)
-            # #logging.info(f"Deleted remaining records from aud_outputtable: {len(delete_conditions)} rows")
+        
 
         # Step 4: Execute aud_outputtable query
         aud_outputtable_query = config.get_param('queries', 'aud_outputtable')
@@ -852,25 +775,11 @@ def AUD_306_ALIMOUTPUTTABLE(config: Config, db: Database, parsed_files_data: Lis
             logging.info("done!")
 
 
-def AUD_307_ALIMINPUTTABLE_XML(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
+def AUD_307_ALIMINPUTTABLE_XML(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,batch_size=100 ):
     try:
 
 
-        # Step 3: Delete records from aud_inputtable_xml in batches
-        delete_conditions = []
-        for result in local_to_dbbrut_query_results:
-            project_name, job_name, *_ = result
-            delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
-            if len(delete_conditions) >= batch_size:
-                db.delete_records_batch('aud_inputtable_xml', delete_conditions)
-                #logging.info(f"Batch deleted records from aud_inputtable_xml: {len(delete_conditions)} rows")
-                delete_conditions.clear()
-
-        if delete_conditions:
-            db.delete_records_batch('aud_inputtable_xml', delete_conditions)
-            # #logging.info(f"Deleted remaining records from aud_inputtable_xml: {len(delete_conditions)} rows")
-
-        # Step 4: Execute aud_inputtable_xml query
+        
         aud_inputtable_xml_query = config.get_param('queries', 'aud_inputtable_xml')
         aud_inputtable_xml_results = db.execute_query(aud_inputtable_xml_query)
         #logging.debug(f"aud_inputtable_xml_results: {aud_inputtable_xml_results}")
@@ -983,24 +892,11 @@ def AUD_307_ALIMINPUTTABLE_XML(config: Config, db: Database, parsed_files_data: 
             #db.close()
             logging.info("done!")
 
-def AUD_307_ALIMOUTPUTTABLE_XML(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
+def AUD_307_ALIMOUTPUTTABLE_XML(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,batch_size=100 ):
     try:
 
 
-        # Step 3: Delete records from aud_outputtable_xml in batches
-        delete_conditions = []
-        for result in local_to_dbbrut_query_results:
-            project_name, job_name, *_ = result
-            delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
-            if len(delete_conditions) >= batch_size:
-                db.delete_records_batch('aud_outputtable_xml', delete_conditions)
-                #logging.info(f"Batch deleted records from aud_outputtable_xml: {len(delete_conditions)} rows")
-                delete_conditions.clear()
-
-        if delete_conditions:
-            db.delete_records_batch('aud_outputtable_xml', delete_conditions)
-            # #logging.info(f"Deleted remaining records from aud_outputtable_xml: {len(delete_conditions)} rows")
-
+        
         # Step 4: Execute aud_outputtable_xml query
         aud_outputtable_xml_query = config.get_param('queries', 'aud_outputtable_xml')
         aud_outputtable_xml_results = db.execute_query(aud_outputtable_xml_query)
@@ -1113,24 +1009,11 @@ def AUD_307_ALIMOUTPUTTABLE_XML(config: Config, db: Database, parsed_files_data:
             #db.close()
             logging.info("done!")
 
-def AUD_307_ALIMINPUTTABLE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
+def AUD_307_ALIMINPUTTABLE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,batch_size=100 ):
     try:
 
 
-        # Step 3: Delete records from aud_inputtable in batches
-        delete_conditions = []
-        for result in local_to_dbbrut_query_results:
-            project_name, job_name, *_ = result
-            delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
-            if len(delete_conditions) >= batch_size:
-                db.delete_records_batch('aud_inputtable', delete_conditions)
-                #logging.info(f"Batch deleted records from aud_inputtable: {len(delete_conditions)} rows")
-                delete_conditions.clear()
-
-        if delete_conditions:
-            db.delete_records_batch('aud_inputtable', delete_conditions)
-            # #logging.info(f"Deleted remaining records from aud_inputtable: {len(delete_conditions)} rows")
-
+        
         # Step 4: Execute aud_inputtable query
         aud_inputtable_query = config.get_param('queries', 'aud_inputtable')
         aud_inputtable_results = db.execute_query(aud_inputtable_query)
@@ -1246,23 +1129,10 @@ def AUD_307_ALIMINPUTTABLE(config: Config, db: Database, parsed_files_data: List
             logging.info("done!")
 
 
-def AUD_308_ALIMCONNECTIONCOMPONENT(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
+def AUD_308_ALIMCONNECTIONCOMPONENT(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,batch_size=100 ):
     try:
        
 
-        # Step 3: Delete records from aud_connectioncomponent in batches
-        delete_conditions = []
-        for result in local_to_dbbrut_query_results:
-            project_name, job_name, *_ = result
-            delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
-            if len(delete_conditions) >= batch_size:
-                db.delete_records_batch('aud_connectioncomponent', delete_conditions)
-                #logging.info(f"Batch deleted records from aud_connectioncomponent: {len(delete_conditions)} rows")
-                delete_conditions.clear()
-
-        if delete_conditions:
-            db.delete_records_batch('aud_connectioncomponent', delete_conditions)
-            #logging.info(f"Deleted remaining records from aud_connectioncomponent: {len(delete_conditions)} rows")
 
         # Step 4: Execute aud_connectioncomponent query
         aud_connectioncomponent_query = config.get_param('queries', 'aud_connectioncomponent')
@@ -1341,25 +1211,12 @@ def AUD_308_ALIMCONNECTIONCOMPONENT(config: Config, db: Database, parsed_files_d
             logging.info("done!")
 
 
-def AUD_309_ALIMELEMENTPARAMETER(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
+def AUD_309_ALIMELEMENTPARAMETER(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,batch_size=100 ):
     try:
 
        
 
-        # Step 3: Delete records from aud_elementparameter in batches
-        delete_conditions = []
-        for result in local_to_dbbrut_query_results:
-            project_name, job_name, *_ = result
-            delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
-            if len(delete_conditions) >= batch_size:
-                db.delete_records_batch('aud_elementparameter', delete_conditions)
-                #logging.info(f"Batch deleted records from aud_elementparameter: {len(delete_conditions)} rows")
-                delete_conditions.clear()
-
-        if delete_conditions:
-            db.delete_records_batch('aud_elementparameter', delete_conditions)
-            #logging.info(f"Deleted remaining records from aud_elementparameter: {len(delete_conditions)} rows")
-
+       
         # Step 4: Execute aud_elementparameter query
         aud_elementparameter_query = config.get_param('queries', 'aud_elementparameter')
         aud_elementparameter_results = db.execute_query(aud_elementparameter_query)
@@ -1420,24 +1277,11 @@ def AUD_309_ALIMELEMENTPARAMETER(config: Config, db: Database, parsed_files_data
             logging.info("done!")
 
 
-def AUD_309_ALIMROUTINES(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
+def AUD_309_ALIMROUTINES(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,batch_size=100 ):
     try:
        
 
-        # Step 3: Delete records from aud_routines in batches
-        delete_conditions = []
-        for result in local_to_dbbrut_query_results:
-            project_name, job_name, *_ = result
-            delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
-            if len(delete_conditions) >= batch_size:
-                db.delete_records_batch('aud_routines', delete_conditions)
-                #logging.info(f"Batch deleted records from aud_routines: {len(delete_conditions)} rows")
-                delete_conditions.clear()
-
-        if delete_conditions:
-            db.delete_records_batch('aud_routines', delete_conditions)
-            #logging.info(f"Deleted remaining records from aud_routines: {len(delete_conditions)} rows")
-
+     
         # Step 4: Execute aud_routines query
         aud_routines_query = config.get_param('queries', 'aud_routines')
         aud_routines_results = db.execute_query(aud_routines_query)
@@ -1498,24 +1342,11 @@ def AUD_309_ALIMROUTINES(config: Config, db: Database, parsed_files_data: List[T
             logging.info("done!")
 
 
-def AUD_310_ALIMLIBRARY(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
+def AUD_310_ALIMLIBRARY(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,batch_size=100 ):
     try:
        
 
-        # Step 3: Delete records from aud_library in batches
-        delete_conditions = []
-        for result in local_to_dbbrut_query_results:
-            project_name, job_name, *_ = result
-            delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
-            if len(delete_conditions) >= batch_size:
-                db.delete_records_batch('aud_library', delete_conditions)
-                #logging.info(f"Batch deleted records from aud_library: {len(delete_conditions)} rows")
-                delete_conditions.clear()
-
-        if delete_conditions:
-            db.delete_records_batch('aud_library', delete_conditions)
-            #logging.info(f"Deleted remaining records from aud_library: {len(delete_conditions)} rows")
-
+      
         # Step 4: Execute aud_library query
         aud_library_query = config.get_param('queries', 'aud_library')
         aud_library_results = db.execute_query(aud_library_query)
@@ -1588,7 +1419,7 @@ def AUD_310_ALIMLIBRARY(config: Config, db: Database, parsed_files_data: List[Tu
             logging.info("done!")
 
 
-def AUD_311_ALIMELEMENTVALUENODE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
+def AUD_311_ALIMELEMENTVALUENODE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,batch_size=100 ):
     try:
         # Initialize variables
         aud_elementRef = ""
@@ -1596,13 +1427,7 @@ def AUD_311_ALIMELEMENTVALUENODE(config: Config, db: Database, parsed_files_data
         aud_columnName = ""
         
 
-        # Step 3: Delete the output from aud_elementvaluenode based on the query results
-        aud_elementvaluenode_conditions_batch = [
-            {'NameProject': result[0], 'NameJob': result[1]}
-            for result in local_to_dbbrut_query_results
-        ]
-        if aud_elementvaluenode_conditions_batch:
-            db.delete_records_batch('aud_elementvaluenode', aud_elementvaluenode_conditions_batch)
+        
 
         # Step 4: Execute aud_elementvaluenode query
         aud_elementvaluenode_query = config.get_param('queries', 'aud_elementvaluenode')
@@ -1908,7 +1733,7 @@ def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tu
             logging.info("Done.")
 
 
-def AUD_314_ALIMSUBJOBS_OPT(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,local_to_dbbrut_query_results:tuple,batch_size=100 ):
+def AUD_314_ALIMSUBJOBS_OPT(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,batch_size=100 ):
     """
     Perform operations including retrieving JDBC parameters, executing queries,
     deleting records, and inserting data in batches.
@@ -1923,22 +1748,7 @@ def AUD_314_ALIMSUBJOBS_OPT(config: Config, db: Database, parsed_files_data: Lis
     try:
         
 
-        # Step 3: Delete records from aud_elementvaluenode in batches
-        batch_delete_conditions = []
-        for result in local_to_dbbrut_query_results:
-            project_name, job_name, *_ = result
-            batch_delete_conditions.append({'NameProject': project_name, 'NameJob': job_name})
-
-            if len(batch_delete_conditions) >= batch_size:
-                db.delete_records_batch('aud_elementvaluenode', batch_delete_conditions)
-                #logging.info(f"Batch deleted records from aud_elementvaluenode: {len(batch_delete_conditions)} rows")
-                batch_delete_conditions.clear()
-
-        # Delete remaining records
-        if batch_delete_conditions:
-            db.delete_records_batch('aud_elementvaluenode', batch_delete_conditions)
-           # logging.info(f"Batch deleted remaining records from aud_elementvaluenode: {len(batch_delete_conditions)} rows")
-
+        
         # Step 4: Execute aud_subjobs query
         aud_subjobs_query = config.get_param('queries', 'aud_subjobs')
         logging.info(f"Executing query: {aud_subjobs_query}")
