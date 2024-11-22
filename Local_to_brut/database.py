@@ -115,7 +115,7 @@ class Database:
                 with self.connection.cursor() as cursor:
                     for row in data_batch:
                         try:
-                            cursor.execute(insert_query, row)
+                            insert_data_batch(insert_query, data_batch)
                         except Exception as e:
                             logging.warning(f"Skipping row due to error: {e}, row data: {row}")
                     self.connection.commit()  # Ensure the changes are committed

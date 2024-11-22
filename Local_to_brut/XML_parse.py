@@ -57,7 +57,7 @@ class XMLParser:
                 'offsetLabelY': connection.get('offsetLabelY'),
                 'source': connection.get('source'),
                 'target': connection.get('target'),
-                'r_outputId': connection.get('r_outputId'),
+                'outputId': connection.get('outputId'),
                 'elementParameters': []
             }
 
@@ -108,11 +108,11 @@ class XMLParser:
 
             
     def _parse_nodes(self):
-
         """Parse and return data from `node` elements, including additional parameters."""
         parsed_data = []
+
         def parse_children(element):
-            """ Recursively parse `children` elements, capturing nested structures. """
+            """Recursively parse `children` elements, capturing nested structures."""
             children_data = {
                 'name': element.get('name'),
                 'type': element.get('type'),
@@ -128,7 +128,6 @@ class XMLParser:
                 'children': []
             }
 
-            # Recursively parse any nested `children` elements
             for child in element.findall('./children'):
                 children_data['children'].append(parse_children(child))
 
@@ -145,10 +144,11 @@ class XMLParser:
                 'elementParameters': [],
                 'metadata': [],
                 'nodeData': [],
-                'connection' : []
+                'connection': []
             }
 
             # Parse `elementParameters`
+            skip_node = False
             for elem_param in node.findall('.//elementParameter'):
                 elem_data = {
                     'field': elem_param.get('field'),
@@ -157,6 +157,15 @@ class XMLParser:
                     'value': elem_param.get('value'),
                     'elementValue': []
                 }
+
+                # Check the condition to skip further processing
+                if (
+                    elem_data['field'] == 'CHECK'
+                    and elem_data['name'] == 'ACTIVATE'
+                    and elem_data['value'] == 'false'
+                ):
+                    skip_node = True
+                    break  # Exit the loop and skip this node
 
                 for elem_value in elem_param.findall('.//elementValue'):
                     value_data = {
@@ -167,6 +176,8 @@ class XMLParser:
 
                 comp_data['elementParameters'].append(elem_data)
 
+            if skip_node:
+                continue  # Skip processing the rest of this node
             # Parse `metadata`
             for metadata in node.findall('.//metadata'):
                 meta_data = {
@@ -549,24 +560,25 @@ class XMLParser:
                         job_name_version = parts[1].replace('.item', '') if len(parts) > 1 else None
                         job_name = '_'.join(job_name_version.split('_')[:-1])  # Exclude the version part
                         version = job_name_version.split('_')[-1]  # Last part as version
-                        logging.debug(f"Extracted: project_name={project_name}, job_name={job_name}, version={version}")
+                        # logging.debug(f"Extracted: project_name={project_name}, job_name={job_name}, version={version}")
 
                         # Check if job_name already exists and if so, compare versions
                         existing_entry = next((entry for entry in parsed_files_data if entry[1] == job_name), None)
                         if existing_entry:
                             existing_version = existing_entry[2]  # Access existing version directly
-                            logging.debug(f"Existing entry found for job_name={job_name}: existing_version={existing_version}")
+                            # logging.debug(f"Existing entry found for job_name={job_name}: existing_version={existing_version}")
 
                             # Compare versions (assuming simple numeric comparison)
                             if version > existing_version:
-                                logging.debug(f"Newer version found for job_name={job_name}: replacing version {existing_version} with {version}")
+                                # logging.debug(f"Newer version found for job_name={job_name}: replacing version {existing_version} with {version}")
                                 parsed_files_data.remove(existing_entry)
                                 parsed_files_data.append((project_name, job_name, version, parsed_data))
                             else:
-                                logging.debug(f"Current version for job_name={job_name} ({version}) is not newer than existing version ({existing_version}); skipping.")
+                                # logging.debug(f"Current version for job_name={job_name} ({version}) is not newer than existing version ({existing_version}); skipping.")
+                                i=0
                         else:
                             # No existing entry, so add new entry with version included
-                            logging.debug(f"No existing entry found for job_name={job_name}. Adding new entry.")
+                            # logging.debug(f"No existing entry found for job_name={job_name}. Adding new entry.")
                             parsed_files_data.append((project_name, job_name, version, parsed_data))
 
                     except FileNotFoundError:
@@ -578,7 +590,67 @@ class XMLParser:
 
         logging.info(f"Processed {i} files")
         return parsed_files_data
+    def loop_parse_context (self, items_directory):
+        """
+        Parses XML files from the specified directory and extracts relevant data.
 
+        Args:
+            items_directory (str): The directory containing XML files to be parsed.
+
+        Returns:
+            list of tuples: A list where each tuple contains (project_name, job_name, version, parsed_data).
+        """
+        parsed_files_data = []
+        i = 0
+
+        for root, dirs, files in os.walk(items_directory):
+            for filename in files:
+                if filename.endswith('.item'):
+                    i += 1
+                    file_path = os.path.join(root, filename)
+                    logging.debug(f"Processing file: {file_path}")
+
+                    try:
+                        self.tree = ET.parse(file_path)
+                        self.root = self.tree.getroot()
+                        parsed_data = self._parse_file_items()
+
+                        # Extract project_name, job_name, and version
+                        parts = filename.split('.', 1)
+                        project_name = root
+                        job_name_version = parts[1].replace('.item', '') if len(parts) > 1 else None
+                        job_name = '_'.join(job_name_version.split('_')[:-1])  # Exclude the version part
+                        version = job_name_version.split('_')[-1]  # Last part as version
+                        # logging.debug(f"Extracted: project_name={project_name}, job_name={job_name}, version={version}")
+
+                        # Check if job_name already exists and if so, compare versions
+                        existing_entry = next((entry for entry in parsed_files_data if entry[1] == job_name), None)
+                        if existing_entry:
+                            existing_version = existing_entry[2]  # Access existing version directly
+                            # logging.debug(f"Existing entry found for job_name={job_name}: existing_version={existing_version}")
+
+                            # Compare versions (assuming simple numeric comparison)
+                            if version > existing_version:
+                                # logging.debug(f"Newer version found for job_name={job_name}: replacing version {existing_version} with {version}")
+                                parsed_files_data.remove(existing_entry)
+                                parsed_files_data.append((project_name, job_name, version, parsed_data))
+                            else:
+                                # logging.debug(f"Current version for job_name={job_name} ({version}) is not newer than existing version ({existing_version}); skipping.")
+                                i=0
+                        else:
+                            # No existing entry, so add new entry with version included
+                            # logging.debug(f"No existing entry found for job_name={job_name}. Adding new entry.")
+                            parsed_files_data.append((project_name, job_name, version, parsed_data))
+
+                    except FileNotFoundError:
+                        logging.error(f"File not found: {file_path}")
+                    except ET.ParseError:
+                        logging.error(f"Error parsing file: {file_path}")
+                    except Exception as e:
+                        logging.error(f"Unexpected error with file {file_path}: {e}", exc_info=True)
+
+        logging.info(f"Processed {i} files")
+        return parsed_files_data
 
 
     def loop_parse_properties(self, items_directory):
@@ -641,6 +713,7 @@ class XMLParser:
 
         logging.info(f"Processed {i} files")
         return parsed_files_data
+    
 
 
 
