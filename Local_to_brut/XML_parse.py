@@ -41,6 +41,61 @@ class XMLParser:
     def _parse_file_screenshots(self):
         Screenshots_data = self._parse_screenshot()
         return{'screenshots' :Screenshots_data }
+    def _parse_context_file_items(self):
+        Contexts_data = self._parse_context()
+        return{'contexts' :Contexts_data }
+
+    def _parse_context(self):
+        """
+        Parses 'context' elements from the loaded XML tree.
+
+        Returns:
+            list of dict: A list of dictionaries where each dictionary contains the details of a `ContextType` element
+                        and its associated `contextParameter` elements.
+        """
+        if not self.root:
+            raise ValueError("XML tree root is not initialized. Please load an XML file first.")
+
+        data = []
+        namespace = {'xmi': "http://www.omg.org/XMI", 'talendfile': "platform:/resource/org.talend.model/model/TalendFile.xsd"}
+
+        # Check if the root element is the 'talendfile:ContextType'
+        if self.root.tag != f"{{{namespace['talendfile']}}}ContextType":
+            # If the root is not a 'ContextType', adjust the search or behavior accordingly
+            context_elements = self.root.findall(".//talendfile:ContextType",namespace)
+        else:
+            context_elements = [self.root]
+
+        # Find all ContextType elements (either in the root or sub-elements)
+        for context in context_elements:
+            context_data = {
+                "id": context.get(f"{{{namespace['xmi']}}}id"),
+                "environment_name": context.get("name"),
+                "confirmationNeeded": context.get("confirmationNeeded"),
+                "parameters": []
+            }
+
+            # Find all contextParameter elements within the current ContextType
+            for param in context.findall(".//contextParameter"):
+                parameter_data = {
+                    "id": param.get(f"{{{namespace['xmi']}}}id"),
+                    "name": param.get("name"),
+                    "type": param.get("type"),
+                    "value": param.get("value"),
+                    "prompt": param.get("prompt"),
+                    "promptNeeded": param.get("promptNeeded"),
+                    "comment": param.get("comment"),
+                }
+                context_data["parameters"].append(parameter_data)
+
+            data.append(context_data)
+
+        return data
+
+
+
+
+
 
 
     def _parse_connection(self):
@@ -590,7 +645,9 @@ class XMLParser:
 
         logging.info(f"Processed {i} files")
         return parsed_files_data
-    def loop_parse_context (self, items_directory):
+
+
+    def loop_parse_contexts(self, items_directory):
         """
         Parses XML files from the specified directory and extracts relevant data.
 
@@ -598,49 +655,47 @@ class XMLParser:
             items_directory (str): The directory containing XML files to be parsed.
 
         Returns:
-            list of tuples: A list where each tuple contains (project_name, job_name, version, parsed_data).
+            list of tuples: A list where each tuple contains (project_name, context_name, version, parsed_data).
         """
         parsed_files_data = []
-        i = 0
+        processed_file_count = 0
 
-        for root, dirs, files in os.walk(items_directory):
+        for root, _, files in os.walk(items_directory):
+            # Derive project_name from the directory
+            # project_name = os.path.basename(root)
+            project_name = "KEOLISTOURS"
             for filename in files:
                 if filename.endswith('.item'):
-                    i += 1
+                    processed_file_count += 1
                     file_path = os.path.join(root, filename)
                     logging.debug(f"Processing file: {file_path}")
 
                     try:
                         self.tree = ET.parse(file_path)
                         self.root = self.tree.getroot()
-                        parsed_data = self._parse_file_items()
+                        parsed_data = self._parse_context_file_items()
 
-                        # Extract project_name, job_name, and version
-                        parts = filename.split('.', 1)
-                        project_name = root
-                        job_name_version = parts[1].replace('.item', '') if len(parts) > 1 else None
-                        job_name = '_'.join(job_name_version.split('_')[:-1])  # Exclude the version part
-                        version = job_name_version.split('_')[-1]  # Last part as version
-                        # logging.debug(f"Extracted: project_name={project_name}, job_name={job_name}, version={version}")
-
-                        # Check if job_name already exists and if so, compare versions
-                        existing_entry = next((entry for entry in parsed_files_data if entry[1] == job_name), None)
-                        if existing_entry:
-                            existing_version = existing_entry[2]  # Access existing version directly
-                            # logging.debug(f"Existing entry found for job_name={job_name}: existing_version={existing_version}")
-
-                            # Compare versions (assuming simple numeric comparison)
-                            if version > existing_version:
-                                # logging.debug(f"Newer version found for job_name={job_name}: replacing version {existing_version} with {version}")
-                                parsed_files_data.remove(existing_entry)
-                                parsed_files_data.append((project_name, job_name, version, parsed_data))
-                            else:
-                                # logging.debug(f"Current version for job_name={job_name} ({version}) is not newer than existing version ({existing_version}); skipping.")
-                                i=0
+                        # Extract context_name and version from the filename
+                        context_parts = filename.rsplit('.', 1)[0]  # Remove `.item`
+                        if "_" in context_parts:
+                            context_name, version = context_parts.rsplit('_', 1)
                         else:
-                            # No existing entry, so add new entry with version included
-                            # logging.debug(f"No existing entry found for job_name={job_name}. Adding new entry.")
-                            parsed_files_data.append((project_name, job_name, version, parsed_data))
+                            context_name, version = context_parts, "unknown"
+
+                        # Check if context_name already exists and compare versions
+                        existing_entry = next((entry for entry in parsed_files_data if entry[1] == context_name), None)
+                        if existing_entry:
+                            existing_version = existing_entry[2]
+                            if version > existing_version:  # Assuming version is comparable lexically
+                                logging.debug(f"Newer version found for context_name={context_name}: replacing version {existing_version} with {version}")
+                                parsed_files_data.remove(existing_entry)
+                                parsed_files_data.append((project_name, context_name, version, parsed_data))
+                            else:
+                                logging.debug(f"Current version for context_name={context_name} ({version}) is not newer than existing version ({existing_version}); skipping.")
+                        else:
+                            # Add new entry
+                            logging.debug(f"No existing entry found for context_name={context_name}. Adding new entry.")
+                            parsed_files_data.append((project_name, context_name, version, parsed_data))
 
                     except FileNotFoundError:
                         logging.error(f"File not found: {file_path}")
@@ -649,7 +704,7 @@ class XMLParser:
                     except Exception as e:
                         logging.error(f"Unexpected error with file {file_path}: {e}", exc_info=True)
 
-        logging.info(f"Processed {i} files")
+        logging.info(f"Processed {processed_file_count} files")
         return parsed_files_data
 
 

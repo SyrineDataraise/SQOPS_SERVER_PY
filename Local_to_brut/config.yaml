@@ -56,7 +56,7 @@ queries:
   aud_docjobs : "select distinct namejob, nameproject from aud_docjobs where NameJob not in (select job_name from audit_jobs)"
   aud_inputtable_xml : "select distinct namejob, nameproject from aud_inputtable_xml where NameJob not in (select job_name from audit_jobs)"
   aud_screenshot : "select distinct namejob, nameproject from aud_screenshot where NameJob not in (select job_name from audit_jobs)"
-
+  audit_contextgroup : "select PROJECT_NAME, CONTEXT_NAME, CONTEXT_VERSION, Talend_Version, CONTEXT_PATH from audit_contextgroup"
 
 
 
@@ -130,6 +130,7 @@ insert_agg_queries:
 Directories:
   items_directory: "C:/Users/sonia/Desktop/KEOLISTOURS/process"
   screenshots_directory : "C:/Users/sonia/Desktop/TOS_ESB/Studio/workspace/SERVER/process/ANALYSE/BRUT_TO_AGG"
+  contexts_directory : "C:/Users/sonia/Desktop/KEOLISTOURS/context"
   delete_files : "C:/Users/sonia/Desktop/FilesList"
 database:
   type: "mysql"  # Example database type

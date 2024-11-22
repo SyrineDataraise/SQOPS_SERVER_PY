@@ -86,8 +86,7 @@ def AUD_301_ALIMELEMENTNODE(config: Config, db: Database, parsed_files_data: Lis
 def AUD_302_ALIMCONTEXTJOB(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,batch_size=100 ):
     try:
 
-        
-
+    
         # Step 4: Execute aud_contextjob query
         aud_contextjob_query = config.get_param('queries', 'aud_contextjob')
         logging.info(f"Executing query: {aud_contextjob_query}")
@@ -105,7 +104,7 @@ def AUD_302_ALIMCONTEXTJOB(config: Config, db: Database, parsed_files_data: List
 
         # Step 6: Prepare batch insertion for aud_contextjob
         aud_contextjob_data_batch = []
-        aud_contextgroupdetail_data_batch = []
+        insert_query = config.get_param('insert_queries', 'aud_contextjob')
 
         for project_name, job_name, version, parsed_data in parsed_files_data:
             for context in parsed_data['contexts']:
@@ -124,27 +123,63 @@ def AUD_302_ALIMCONTEXTJOB(config: Config, db: Database, parsed_files_data: List
                         environementContextName, nameContext, prompt, promptNeeded, typeContext, valueContext, repositoryContextId, project_name, job_name, execution_date
                     ))
 
-                    # Prepare data for insertion into aud_contextgroupdetail
-                    aud_contextgroupdetail_data_batch.append((
-                        nameContext, comment, project_name, environementContextName, execution_date
-                    ))
 
+                    if len(aud_contextjob_data_batch) == batch_size:
+                        db.insert_data_batch(insert_query, 'aud_contextjob', aud_contextjob_data_batch)
+                        # #logging.info(f"Inserted batch of data into aud_elementnode: {len(batch_insert)} rows")
+                        aud_contextjob_data_batch.clear()
+
+        # Insert remaining data in the batch
         if aud_contextjob_data_batch:
-            insert_query = config.get_param('insert_queries', 'aud_contextjob')
             db.insert_data_batch(insert_query, 'aud_contextjob', aud_contextjob_data_batch)
-            # logging.info(f"Inserted {len(aud_contextjob_data_batch)} rows into aud_contextjob")
-
-        if aud_contextgroupdetail_data_batch:
-            insert_query = config.get_param('insert_queries', 'aud_contextgroupdetail')
-            db.insert_data_batch(insert_query, 'aud_contextgroupdetail', aud_contextgroupdetail_data_batch)
-            # logging.info(f"Inserted {len(aud_contextgroupdetail_data_batch)} rows into aud_contextgroupdetail")
-
+            #logging.info(f"Inserted remaining batch of data into aud_elementnode: {len(batch_insert)} rows")
     except Exception as e:
         logging.error(f"An error occurred: {str(e)}", exc_info=True)
     finally:
         if db:
             #db.close()  # Ensure the database connection is closed
             logging.info("done!")
+
+
+
+
+
+def AUD_302_ALIMCONTEXTGroupDetail(config: Config, db: Database, parsed_context_data: List[Tuple[str, str, dict]],exec_date : str,batch_size=100 ):
+    try:
+
+        aud_contextGroup_data_batch= []
+        insert_query = config.get_param('insert_queries', 'aud_contextgroupdetail')
+        for NameProject, context_name, version, parsed_data in parsed_context_data:
+            for context in parsed_data['contexts']:
+                NameContextGroup = context_name
+                for param in context['parameters']:
+                    aud_commentContext = param['comment']
+                    aud_nameContext = param['name']
+
+
+                    # Prepare data for insertion into aud_contextGroup
+                    aud_contextGroup_data_batch.append((
+                        aud_nameContext, aud_commentContext, NameProject, NameContextGroup, exec_date
+                    ))
+
+
+                    if len(aud_contextGroup_data_batch) == batch_size:
+                        db.insert_data_batch(insert_query, 'aud_contextgroupdetail', aud_contextGroup_data_batch)
+                        # #logging.info(f"Inserted batch of data into aud_elementnode: {len(batch_insert)} rows")
+                        aud_contextGroup_data_batch.clear()
+
+        # Insert remaining data in the batch
+        if aud_contextGroup_data_batch:
+            db.insert_data_batch(insert_query, 'aud_contextgroupdetail', aud_contextGroup_data_batch)
+            #logging.info(f"Inserted remaining batch of data into aud_elementnode: {len(batch_insert)} rows")
+    except Exception as e:
+        logging.error(f"An error occurred: {str(e)}", exc_info=True)
+    finally:
+        if db:
+            #db.close()  # Ensure the database connection is closed
+            logging.info("done!")
+
+
 
 
 def AUD_303_ALIMNODE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,batch_size=100 ):
