@@ -151,7 +151,6 @@ def AUD_302_ALIMCONTEXTGroupDetail(config: Config, db: Database, parsed_context_
         insert_query = config.get_param('insert_queries', 'aud_contextgroupdetail')
         for NameProject, context_name, version, parsed_data in parsed_context_data:
             for context in parsed_data['contexts']:
-                NameContextGroup = context_name
                 for param in context['parameters']:
                     aud_commentContext = param['comment']
                     aud_nameContext = param['name']
@@ -159,7 +158,7 @@ def AUD_302_ALIMCONTEXTGroupDetail(config: Config, db: Database, parsed_context_
 
                     # Prepare data for insertion into aud_contextGroup
                     aud_contextGroup_data_batch.append((
-                        aud_nameContext, aud_commentContext, NameProject, NameContextGroup, exec_date
+                        aud_nameContext, aud_commentContext, NameProject, context_name, exec_date
                     ))
 
 

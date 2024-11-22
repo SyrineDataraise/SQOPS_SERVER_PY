@@ -239,7 +239,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
                                 expression_filter_output,
                                 output_row['aud_nameRowOutput'],
                                 output_row['innerJoin'],  # aud_reject
-                                output_row['rejectInnerJoin'],  # aud_rejectInnerJoin
+                                0 if output_row['rejectInnerJoin']== 'false' else 1 if output_row['rejectInnerJoin']== 'true' else None,  # aud_rejectInnerJoin
                                 output_row['NameProject'],
                                 output_row['NameJob']
                             )
@@ -465,7 +465,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
                                 expression_filter,       # expressionFilterOutput
                                 output_row['aud_nameRowOutput'],        # OutputName
                                 output_row['aud_reject'],               # reject
-                                output_row['aud_rejectInnerJoin'],      # rejectInnerJoin
+                                0 if output_row['rejectInnerJoin']== 'false' else 1 if output_row['rejectInnerJoin']== 'true' else None,      # rejectInnerJoin
                                 var_row[4],  # NameProject
                                 var_row[5]                   # NameJob
                             )
@@ -517,7 +517,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
                                 output_row['aud_expressionFilterOutput'],  # expressionFilterOutput
                                 output_row['aud_nameRowOutput'],  # OutputName
                                 output_row['aud_reject'],  # reject
-                                output_row['aud_rejectInnerJoin'],  # rejectInnerJoin
+                                0 if output_row['rejectInnerJoin']== 'false' else 1 if output_row['rejectInnerJoin']== 'true' else None,  # rejectInnerJoin
                                 var_row[4],  # NameProject
                                 var_row[5]   # NameJob
                             )

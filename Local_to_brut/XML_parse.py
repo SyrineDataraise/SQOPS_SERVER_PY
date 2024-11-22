@@ -42,10 +42,15 @@ class XMLParser:
         Screenshots_data = self._parse_screenshot()
         return{'screenshots' :Screenshots_data }
     def _parse_context_file_items(self):
-        Contexts_data = self._parse_context()
-        return{'contexts' :Contexts_data }
+        Contexts_items_data = self._parse_context_items()
+        return{'contexts' :Contexts_items_data }
+    
+    def parse_context_properties_file(self):
+        Contexts_properties_data = self._parse_context_properties()
+        return{'contexts' : Contexts_properties_data }
+    
 
-    def _parse_context(self):
+    def _parse_context_items(self):
         """
         Parses 'context' elements from the loaded XML tree.
 
@@ -93,6 +98,60 @@ class XMLParser:
         return data
 
 
+    def _parse_context_properties(self):
+        """
+        Parses 'context' elements in TalendProperties:Property from the loaded XML tree.
+
+        Returns:
+            list of dict: A list of dictionaries where each dictionary represents a context and its associated details.
+        """
+        parsed_contexts = []
+
+        # Ensure that the XML tree is loaded
+        if not self.root:
+            raise ValueError("No XML tree loaded. Ensure the XML file is parsed before calling this method.")
+
+        logging.debug("Starting to parse 'TalendProperties:Property' elements.")
+
+        # Find all 'TalendProperties:Property' elements
+        properties = self.root.findall(".//TalendProperties:Property", namespaces={
+            "TalendProperties": "http://www.talend.org/properties"
+        })
+
+        logging.debug(f"Found {len(properties)} 'TalendProperties:Property' elements.")
+
+        for property_elem in properties:
+            # Extract attributes of the Property
+            property_id = property_elem.get("id")
+            label = property_elem.get("label")
+            version = property_elem.get("version")
+            display_name = property_elem.get("displayName")
+            purpose = property_elem.get("purpose")
+            description = property_elem.get("description")
+            item = property_elem.get("item")
+            statusCode = property_elem.get("statusCode")
+
+            logging.debug(f"Parsing Property element with ID: {property_id}, Label: {label}, Version: {version}")
+
+            # Build the context entry
+            context_data = {
+                "property_id": property_id,
+                "label": label,
+                "version": version,
+                "display_name": display_name,
+                "purpose": purpose,
+                "description": description,
+                "item": item,
+                "statusCode": statusCode
+            }
+
+            logging.debug(f"Extracted context data: {context_data}")
+
+            parsed_contexts.append(context_data)
+
+        logging.info(f"Parsed {len(parsed_contexts)} 'TalendProperties:Property' elements successfully.")
+
+        return parsed_contexts
 
 
 
@@ -645,9 +704,8 @@ class XMLParser:
 
         logging.info(f"Processed {i} files")
         return parsed_files_data
+    def loop_parse_contexts_items(self, items_directory):
 
-
-    def loop_parse_contexts(self, items_directory):
         """
         Parses XML files from the specified directory and extracts relevant data.
 
@@ -676,7 +734,7 @@ class XMLParser:
                         parsed_data = self._parse_context_file_items()
 
                         # Extract context_name and version from the filename
-                        context_parts = filename.rsplit('.', 1)[0]  # Remove `.item`
+                        context_parts = filename.rsplit('.', 1)[0]  # Remove .item
                         if "_" in context_parts:
                             context_name, version = context_parts.rsplit('_', 1)
                         else:
@@ -701,6 +759,63 @@ class XMLParser:
                         logging.error(f"File not found: {file_path}")
                     except ET.ParseError:
                         logging.error(f"Error parsing file: {file_path}")
+                    except Exception as e:
+                        logging.error(f"Unexpected error with file {file_path}: {e}", exc_info=True)
+
+        logging.info(f"Processed {processed_file_count} files")
+        return parsed_files_data 
+
+
+    def loop_parse_contexts_properties(self, properties_directory):
+        """
+        Parses XML and properties files from the specified directory and extracts relevant data.
+
+        Args:
+            items_directory (str): The directory containing files to be parsed.
+
+        Returns:
+            list of tuples: A list where each tuple contains (project_name, context_name, version, parsed_data).
+        """
+        parsed_files_data = []
+        processed_file_count = 0
+
+        for root, _, files in os.walk(properties_directory):
+            # Derive project_name from the directory
+            project_name = "KEOLISTOURS"
+            for filename in files:
+                if filename.endswith('.properties'):  # Adjust for `.properties` extension
+                    processed_file_count += 1
+                    file_path = os.path.join(root, filename)
+                    logging.debug(f"Processing file: {file_path}")
+
+                    try:
+                        self.tree = ET.parse(file_path)
+                        self.root = self.tree.getroot()
+                        parsed_data = self.parse_context_properties_file()
+                        # Extract context_name and version from the filename
+                        context_parts = filename.rsplit('.', 1)[0]  # Remove `.properties`
+                        if "_" in context_parts:
+                            context_name, version = context_parts.rsplit('_', 1)
+                        else:
+                            context_name, version = context_parts, "unknown"
+
+                        # Check if context_name already exists and compare versions
+                        existing_entry = next((entry for entry in parsed_files_data if entry[1] == context_name), None)
+                        if existing_entry:
+                            existing_version = existing_entry[2]
+                            if version > existing_version:  # Assuming version is comparable lexically
+                                logging.debug(f"Newer version found for context_name={context_name}: replacing version {existing_version} with {version}")
+                                parsed_files_data.remove(existing_entry)
+                                parsed_files_data.append((project_name, context_name, version, parsed_data))
+                            else:
+                                logging.debug(f"Current version for context_name={context_name} ({version}) is not newer than existing version ({existing_version}); skipping.")
+                        else:
+                            # Add new entry
+                            logging.debug(f"No existing entry found for context_name={context_name}. Adding new entry.")
+                            parsed_files_data.append((project_name, context_name, version, parsed_data))
+
+                    except FileNotFoundError:
+                        logging.error(f"File not found: {file_path}")
                     except Exception as e:
                         logging.error(f"Unexpected error with file {file_path}: {e}", exc_info=True)
 

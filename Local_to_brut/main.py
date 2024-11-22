@@ -52,6 +52,10 @@ def main():
     AUD_302_ALIMCONTEXTJOB(config, db, parsed_files_data, "2024-11-05 15:10:03")
     log_execution_time("AUD_302_ALIMCONTEXTJOB", start_time)
 
+    # start_time = time.time()
+    logging.info("Starting AUD_302_ALIMCONTEXTGroupDetail...")
+    AUD_302_ALIMCONTEXTGroupDetail(config, db, parsed_files_items, "2024-11-05 15:10:03")
+    # log_execution_time("AUD_302_ALIMCONTEXTGroupDetail", start_time)
     start_time = time.time()
     logging.info("Starting AUD_303_ALIMNODE...")
     AUD_303_ALIMNODE(config, db, parsed_files_data, "2024-11-05 15:10:03")
