@@ -1470,22 +1470,22 @@ def AUD_310_ALIMLIBRARY(config: Config, db: Database, parsed_files_data: List[Tu
         if db:
             #db.close()
             logging.info("done!")
-
-
-def AUD_311_ALIMELEMENTVALUENODE(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,batch_size=100 ):
+def AUD_311_ALIMELEMENTVALUENODE(
+    config: Config,
+    db: Database,
+    parsed_files_data: List[Tuple[str, str, dict]],
+    execution_date: str,
+    batch_size=100
+):
     try:
-        # Initialize variables
-        aud_elementRef = ""
-        aud_valueElementRef = ""
-        aud_columnName = ""
  
-        # Step 4: Execute aud_elementvaluenode query
+
+        # Step 2: Execute aud_elementvaluenode query
         aud_elementvaluenode_query = config.get_param('queries', 'aud_elementvaluenode')
         logging.info(f"Executing query: {aud_elementvaluenode_query}")
         aud_elementvaluenode_results = db.execute_query(aud_elementvaluenode_query)
-        #logging.debug(f"aud_elementvaluenode_results: {aud_elementvaluenode_results}")
 
-        # Step 5: Delete the output from aud_contextjob based on the query results
+        # Step 3: Delete records from aud_contextjob based on query results
         aud_contextjob_conditions_batch = [
             {'NameProject': result[0], 'NameJob': result[1]}
             for result in aud_elementvaluenode_results
@@ -1493,60 +1493,65 @@ def AUD_311_ALIMELEMENTVALUENODE(config: Config, db: Database, parsed_files_data
         if aud_contextjob_conditions_batch:
             db.delete_records_batch('aud_contextjob', aud_contextjob_conditions_batch)
 
-        # Step 6: Prepare data batch for insertion into aud_elementvaluenode
+        # Step 4: Prepare data for insertion into aud_elementvaluenode
         insert_query = config.get_param('insert_queries', 'aud_elementvaluenode')
         batch_insert = []
-        aud_id = 1
-        
-        for NameProject, NameJob, version , parsed_data in parsed_files_data:
+
+        for NameProject, NameJob, version, parsed_data in parsed_files_data:
+            cmpt = 1
             for data in parsed_data['nodes']:
+                
                 for elem_param in data['elementParameters']:
                     aud_componentName = data['componentName']
                     aud_posX = data['posX']
                     aud_posY = data['posY']
-                    aud_typeField = elem_param['field']  
-                    name = elem_param['name']
-                    show = elem_param['show']
+                    field = elem_param['field']
+                    aud_typeField = elem_param['name']
                     value = elem_param['value']
-                   
 
+                    # Adjust aud_componentValue
+                    aud_componentValue =  value if field == 'TEXT' and aud_typeField == 'UNIQUE_NAME' else aud_componentValue
+                    
+                    if field == "TABLE" and aud_typeField != "TRIM_COLUMN":
+                        context = {"colonne": "", "value": "" }
+                        for elemValue in elem_param['elementValue']:
+                            aud_elementRef = elemValue['elementRef']
+                            aud_valueElementRef = elemValue['value'].replace("\"", "")
 
-                    for elemValue in elem_param['elementValue']:
+                            # Context handling for colonne and value
+                            if context["colonne"] == "":
+                                context["colonne"] = aud_elementRef
+                                context["value"] = aud_valueElementRef
+                                
+                            elif context["colonne"] == aud_elementRef:
+                                cmpt+= 1
+                                context["value"] = aud_valueElementRef
 
-                        aud_columnName = elemValue['value'].replace("\"", "")
-                        aud_elementRef = elemValue['elementRef']
-                        aud_valueElementRef = elemValue['value']
+                            # Prepare parameters for batch insert
+                            params = (
+                                aud_componentName, aud_posX, aud_posY, aud_typeField, 
+                                aud_elementRef, aud_valueElementRef, cmpt, context["value"], 
+                                aud_componentValue, NameProject, NameJob, execution_date
+                            )
+                            logging.debug(f": {params} row")
 
-                    # Adjust the value of Componement_UniqueName as needed
-                    aud_componentValue = value if aud_typeField == 'TEXT' and name == 'UNIQUE_NAME' else aud_componentValue
-                    if elem_param['field'] != "TRIM_COLUMN":
-                        params = (
-                            aud_componentName, aud_posX, aud_posY, aud_typeField, 
-                            aud_elementRef, aud_valueElementRef, aud_id, aud_columnName, 
-                            aud_componentValue, NameProject, NameJob, execution_date
-                        )
-                        
-                        batch_insert.append(params)
+                            batch_insert.append(params)
 
-                    if len(batch_insert) == batch_size:
-                        db.insert_data_batch(insert_query, 'aud_elementvaluenode', batch_insert)
-                        # #logging.info(f"Inserted batch of data into aud_elementvaluenode: {len(batch_insert)} rows")
-                        batch_insert.clear()
-                
-                    aud_id += 1
+                            # Insert data in batches
+                            if len(batch_insert) >= batch_size:
+                                db.insert_data_batch(insert_query, 'aud_elementvaluenode', batch_insert)
+                                batch_insert.clear()
 
-        # Insert remaining data in the batch
+        # Insert remaining data
         if batch_insert:
             db.insert_data_batch(insert_query, 'aud_elementvaluenode', batch_insert)
-            #logging.info(f"Inserted remaining batch of data into aud_elementvaluenode: {len(batch_insert)} rows")
 
-        # Step 7: Execute elementvaluenodeJoinelementnode query
+        # Step 5: Execute elementvaluenodeJoinelementnode query
         elementvaluenodeJoinelementnode_query = config.get_param('queries', 'elementvaluenodeJoinelementnode')
         logging.info(f"Executing query: {elementvaluenodeJoinelementnode_query}")
         elementvaluenodeJoinelementnode_results = db.execute_query(elementvaluenodeJoinelementnode_query)
-        #logging.debug(f"elementvaluenodeJoinelementnode_results: {elementvaluenodeJoinelementnode_results}")
 
-        # Step 8: Delete the output from aud_elementvaluenode based on the query results
+        # Step 6: Delete records from aud_elementvaluenode based on query results
         aud_elementvaluenode_delete_conditions_batch = [
             {'NameProject': result[0], 'NameJob': result[1], 'aud_componentValue': result[2]}
             for result in elementvaluenodeJoinelementnode_results
@@ -1558,8 +1563,8 @@ def AUD_311_ALIMELEMENTVALUENODE(config: Config, db: Database, parsed_files_data
         logging.error(f"An error occurred: {str(e)}", exc_info=True)
     finally:
         if db:
-            #db.close()  # Ensure the database connection is closed
             logging.info("done!")
+
 
 
 def AUD_312_ALIMJOBFILS(config: Config, db: Database, parsed_files_data: List[Tuple[str, str, dict]],execution_date : str,batch_size=100):
@@ -2008,8 +2013,7 @@ def AUD_319_ALIMDOCCONTEXTGROUP(config: Config, db: Database, parsed_files_data:
         logging.info(f"Starting to process {len(parsed_files_data)} files.")
         for nameproject, job_name,version, parsed_data in parsed_files_data:
             # #logging.debug(f"Processing project: {nameproject}, job: {job_name}")
-            for data in parsed_data['TalendProperties']:
-                for prop in data['properties']:
+            for prop in parsed_data['contexts']:
                     # Extract values from properties
                     namecontextgroup = prop['label']
                     purpose = prop['purpose']
@@ -2017,8 +2021,8 @@ def AUD_319_ALIMDOCCONTEXTGROUP(config: Config, db: Database, parsed_files_data:
                     version = prop['version']
                     statusCode = prop['statusCode']
                     item = prop['item']
-                    displayName = prop['displayName']
-                    id= prop ['id']
+                    displayName = prop['display_name']
+                    id= prop ['property_id']
 
                     # Create the tuple of values to insert
                     params = (namecontextgroup, nameproject, purpose, description, version, statusCode, item, displayName, id)
