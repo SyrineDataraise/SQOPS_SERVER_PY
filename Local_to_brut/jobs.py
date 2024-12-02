@@ -1533,7 +1533,7 @@ def AUD_311_ALIMELEMENTVALUENODE(
                                 aud_elementRef, aud_valueElementRef, cmpt, context["value"], 
                                 aud_componentValue, NameProject, NameJob, execution_date
                             )
-                            logging.debug(f": {params} row")
+                            # logging.debug(f": {params} row")
 
                             batch_insert.append(params)
 

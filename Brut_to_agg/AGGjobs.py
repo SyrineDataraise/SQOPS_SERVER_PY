@@ -117,7 +117,6 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
         # ==============================================================================================
         #     write into  aud_inputtable.csv & outputtable.csv  
         # ==============================================================================================
-        batch_size = 100
         # Step 1: Clean the directory by deleting existing files
         directory_path = config.get_param('Directories', 'delete_files')
         delete_files_in_directory(directory_path)
@@ -156,588 +155,817 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
             writer.writerows(outputtable_results)
 
         logging.info(f"Output table results written to {output_csv_path}")
-
-        # Step 4: Read the CSVs
-        input_data = []
-        output_data = []
-
-        # Read input CSV
-        with open(input_csv_path, mode='r', encoding='utf-8') as input_csvfile:
-            reader = csv.DictReader(input_csvfile)
-            input_data = list(reader)
-
-        # Read output CSV
-        with open(output_csv_path, mode='r', encoding='utf-8') as output_csvfile:
-            reader = csv.DictReader(output_csvfile)
-            output_data = list(reader)
-
         # ==============================================================================================
-        #  Join aud_aud_inputtable.csv & outputtable.csv for `aud_agg_tmapinputinoutput`
+        #  Join aud_aud_inputtable.csv & unique outputtable.csv for `aud_agg_tmapinputinoutput`
         # ==============================================================================================
-        joined_data_output_table = []
+        logging.info("Reading input and output CSV files...")
 
-        for input_row in input_data:
-            for output_row in output_data:
-                if (input_row['composant'] == output_row['aud_componentValue'] and
-                    input_row['NameJob'] == output_row['NameJob'] and
-                    input_row['NameProject'] == output_row['NameProject']):
-                    
-                    # Prepare the row for insertion into the first table
-                    joined_row = (
-                        input_row['rowName'],
-                        input_row['nameColumnInput'],
-                        input_row['composant'],
-                        output_row['aud_expressionOutput'],  # Assuming 'expression' represents 'expressionOutput'
-                        output_row['aud_nameColumnOutput'],  # output_aud_nameColumnInput
-                        output_row['aud_OutputName'],
-                        output_row['aud_reject'],
-                        output_row['aud_rejectInnerJoin'],
-                        output_row['NameProject'],
-                        output_row['NameJob']
-                    )
+        # Read CSV files
+        input_df = pd.read_csv(input_csv_path, encoding='utf-8')
+        output_df = pd.read_csv(output_csv_path, encoding='utf-8')
+        logging.info(len(output_df))
 
-                    joined_data_output_table.append(joined_row)
+        logging.info(f"Input DataFrame columns: {input_df.columns}")
+        logging.info(f"Output DataFrame columns: {output_df.columns}")
 
-        # Insert joined data into `aud_agg_tmapinputinoutput`
-        insert_query_output_table = config.get_param('insert_agg_queries', 'aud_agg_tmapinputinoutput')
+        logging.info("Successfully read CSV files. Performing inner join...")
+
+        # Perform inner join
+        joined_df = pd.merge(
+            input_df,
+            output_df,
+            left_on=['composant', 'NameJob', 'NameProject'],
+            right_on=['aud_componentValue', 'NameJob', 'NameProject'],
+            how='inner'
+        )
+        logging.info(f"Joined DataFrame columns: {joined_df.columns}")
+        logging.info(f"Inner join resulted in {len(joined_df)} rows.")
+
+        # Apply the condition and filter the rows before mapping
+        filtered_df = joined_df[
+            joined_df['aud_expressionOutput'].notna() &  # Ensure aud_expressionOutput is not NaN
+            joined_df.apply(
+                lambda row: isinstance(row['aud_expressionOutput'], str) and  # Check if it's a string
+                            f"{row['rowName']}.{row['nameColumnInput']}" in row['aud_expressionOutput'], axis=1  # Check if expression contains the specific rowName.NameColumnInput
+            )
+        ]
+
+        #Log the filtered rows
+        logging.info(f"Filtered DataFrame has {len(filtered_df)} rows.")
+        if len(filtered_df) > 0:
+            logging.info(f"Sample of filtered rows:\n{filtered_df.head()}")
+
+        # Map each column to its source for insertion into 'aud_agg_tmapinputinoutput' table
+        mapped_df = pd.DataFrame({
+            'rowName': filtered_df['rowName'],  # From input_df
+            'NameRowInput': filtered_df['nameColumnInput'],  # From input_df
+            'composant': filtered_df['composant'],  # From input_df
+            'expressionOutput': filtered_df['aud_expressionOutput'].apply(lambda x: x.replace("\n", " ") if pd.notna(x) else x),  # From output_df
+            'nameColumnOutput': filtered_df['aud_nameColumnOutput'],  # From output_df
+            'OutputName': filtered_df['aud_OutputName'],  # From output_df
+            'reject': filtered_df['aud_reject'],  # From output_df
+            'rejectInnerJoin': filtered_df['aud_rejectInnerJoin'].map(
+                lambda x: 1 if x == 'True' else 0 if x == 'False' else None
+            ),  # Mapping to bit(1)
+            'NameProject': filtered_df['NameProject'],  # Common column
+            'NameJob': filtered_df['NameJob']  # Common column
+        })
+
+        logging.info(f"Mapped DataFrame has {len(mapped_df)} rows.")
+
+        # Drop rows with NaN in critical columns
+        critical_columns = [
+            'rowName', 'NameRowInput', 'composant', 'expressionOutput',
+            'nameColumnOutput', 'OutputName', 'reject',
+            'rejectInnerJoin', 'NameProject', 'NameJob'
+        ]
+        # Fill NaN values in critical columns with None (NULL in MySQL)
+        for column in critical_columns:
+            mapped_df[column] = mapped_df[column].where(pd.notna(mapped_df[column]), None)
+        logging.info(f"Rows after removing NaN values: {len(mapped_df)}.")
+
+        # Prepare rows for database insertion
+        data_for_insertion = mapped_df.values.tolist()
+        logging.info(f"Prepared {len(data_for_insertion)} rows for database insertion.")
+
+        # Insert rows into the database in batches
+        insert_query = config.get_param('insert_agg_queries', 'aud_agg_tmapinputinoutput')
         data_batch = []
-        for row in joined_data_output_table:
+
+
+        for row in data_for_insertion:
             data_batch.append(row)
+            logging.debug(f"Adding row to batch: {row}")
             if len(data_batch) == batch_size:
-                db.insert_data_batch(insert_query_output_table, 'aud_agg_tmapinputinoutput', data_batch)
+                try:
+                    db.insert_data_batch(insert_query, 'aud_agg_tmapinputinoutput', data_batch)
+                    logging.info(f"Inserted batch of {batch_size} rows.")
+                except Exception as e:
+                    logging.warning(f"Error inserting batch: {str(e)}")
                 data_batch.clear()
 
-        if data_batch:
-            db.insert_data_batch(insert_query_output_table, 'aud_agg_tmapinputinoutput', data_batch)
+   
 
-        logging.info("Joined data inserted into `aud_agg_tmapinputinoutput`.")
+        # Insert remaining rows
+        if data_batch:
+            try:
+                db.insert_data_batch(insert_query, 'aud_agg_tmapinputinoutput', data_batch)
+                logging.info(f"Inserted final batch of {len(data_batch)} rows.")
+            except Exception as e:
+                logging.warning(f"Error inserting remaining batch: {str(e)}")
+
+        logging.info("Data successfully inserted into `aud_agg_tmapinputinoutput` table.")
+
 
         # ==============================================================================================
         #  Join aud_aud_inputtable.csv & unique outputtable.csv for `aud_agg_tmapinputinfilteroutput`
         # ==============================================================================================
-        filtered_joined_data = []
-        unique_rows = set()  # Track uniqueness based on (NameJob, NameProject, composant, aud_componentValue)
+        Ensure unique rows in output_df based on the combination of columns
+        Drop duplicate rows based on the specified columns, keeping only the first occurrence
+        unique_output_df = output_df.drop_duplicates(subset=['aud_OutputName', 'aud_componentValue', 'NameProject', 'NameJob'], keep='first')
 
-        for input_row in input_data:
-            for output_row in output_data:
-                if (input_row['composant'] == output_row['aud_componentValue'] and
-                    input_row['NameJob'] == output_row['NameJob'] and
-                    input_row['NameProject'] == output_row['NameProject']):
-                    
-                    # Check expression filter
-                    search_string = input_row['nameColumnInput'] + "." + input_row['rowName']
-                    if search_string in (output_row['aud_expressionFilterOutput'] or "") and output_row['aud_expressionFilterOutput'] != None :
-                        expression_filter_output = output_row['aud_expressionFilterOutput'].replace("\n", " ") if output_row['aud_expressionFilterOutput'] else None
-                        
-                        # Prepare the row for insertion into the second table
-                        row_key = (output_row['NameJob'], output_row['NameProject'], input_row['composant'], output_row['aud_componentValue'])
-                        if row_key not in unique_rows:
-                            joined_row = (
-                                input_row['rowName'],
-                                input_row['nameColumnInput'],
-                                input_row['composant'],
-                                expression_filter_output,
-                                output_row['aud_nameRowOutput'],
-                                output_row['innerJoin'],  # aud_reject
-                                0 if output_row['rejectInnerJoin']== 'false' else 1 if output_row['rejectInnerJoin']== 'true' else None,  # aud_rejectInnerJoin
-                                output_row['NameProject'],
-                                output_row['NameJob']
-                            )
-                            filtered_joined_data.append(joined_row)
-                            unique_rows.add(row_key)
+        # Print or inspect the unique DataFrame
+        logging.info("Unique rows in output DataFrame:")
+        logging.info(len(unique_output_df))
+        logging.info(unique_output_df.head(200))
+        # Perform inner join
+        joined_df = pd.merge(
+            input_df,
+            unique_output_df,
+            left_on=['composant', 'NameJob', 'NameProject'],
+            right_on=['aud_componentValue', 'NameJob', 'NameProject'],
+            how='inner'
+        )
+        logging.info(f"Joined DataFrame columns: {joined_df.columns}")
+        logging.info(f"Inner join resulted in {len(joined_df)} rows.")
 
-        # Insert joined data into `aud_agg_tmapinputinfilteroutput`
-        insert_query_filter_output_table = config.get_param('insert_agg_queries', 'aud_agg_tmapinputinfilteroutput')
+        # Apply the condition and filter the rows before mapping
+        filtered_df = joined_df[
+            joined_df['aud_expressionFilterOutput'].notna() &  # Ensure aud_expressionFilterOutput is not NaN
+            joined_df.apply(
+                lambda row: isinstance(row['aud_expressionFilterOutput'], str) and  # Check if it's a string
+                            f"{row['rowName']}.{row['nameColumnInput']}" in row['aud_expressionFilterOutput'], axis=1  # Check if expression contains the specific rowName.NameColumnInput
+            )
+        ]
+
+        # Log the filtered rows
+        logging.info(f"Filtered DataFrame has {len(filtered_df)} rows.")
+        if len(filtered_df) > 0:
+            logging.info(f"Sample of filtered rows:\n{filtered_df.head(5)}")
+
+        # Map each column to its source for insertion into 'aud_agg_tmapinputinoutput' table
+        mapped_df = pd.DataFrame({
+            'rowName': filtered_df['rowName'],  # From input_df
+            'NameRowInput': filtered_df['nameColumnInput'],  # From input_df
+            'composant': filtered_df['composant'],  # From input_df
+            'expressionFilterOutput': filtered_df['aud_expressionFilterOutput'].apply(lambda x: x.replace("\n", " ") if pd.notna(x) else x),  # From output_df
+            'OutputName': filtered_df['aud_OutputName'],  # From output_df
+            'reject': filtered_df['aud_reject'],  # From output_df
+            'rejectInnerJoin': filtered_df['aud_rejectInnerJoin'],  # Mapping to bit(1)
+            'NameProject': filtered_df['NameProject'],  # Common column
+            'NameJob': filtered_df['NameJob']  # Common column
+        })
+
+        logging.info(f"Mapped DataFrame has {len(mapped_df)} rows.")
+
+        # Drop rows with NaN in critical columns
+        critical_columns = [
+            'rowName', 'NameRowInput', 'composant', 'expressionFilterOutput',
+             'OutputName', 'reject',
+            'rejectInnerJoin', 'NameProject', 'NameJob'
+        ]
+        # Fill NaN values in critical columns with None (NULL in MySQL)
+        for column in critical_columns:
+            mapped_df[column] = mapped_df[column].where(pd.notna(mapped_df[column]), None)
+        logging.info(f"Rows after removing NaN values: {len(mapped_df)}.")
+
+        # Prepare rows for database insertion
+        data_for_insertion = mapped_df.values.tolist()
+        logging.info(f"Prepared {len(data_for_insertion)} rows for database insertion.")
+
+        # Insert rows into the database in batches
+        insert_query = config.get_param('insert_agg_queries', 'aud_agg_tmapinputinfilteroutput')
         data_batch = []
-        for row in filtered_joined_data:
+
+
+        for row in data_for_insertion:
             data_batch.append(row)
-            if len(data_batch) >= batch_size:
-                db.insert_data_batch(insert_query_filter_output_table, 'aud_agg_tmapinputinfilteroutput', data_batch)
+            logging.debug(f"Adding row to batch: {row}")
+            if len(data_batch) == batch_size:
+                try:
+                    db.insert_data_batch(insert_query, 'aud_agg_tmapinputinfilteroutput', data_batch)
+                    logging.info(f"Inserted batch of {batch_size} rows.")
+                except Exception as e:
+                    logging.warning(f"Error inserting batch: {str(e)}")
                 data_batch.clear()
 
+   
+
+        # Insert remaining rows
         if data_batch:
-            db.insert_data_batch(insert_query_filter_output_table, 'aud_agg_tmapinputinfilteroutput', data_batch)
+            try:
+                db.insert_data_batch(insert_query, 'aud_agg_tmapinputinfilteroutput', data_batch)
+                logging.info(f"Inserted final batch of {len(data_batch)} rows.")
+            except Exception as e:
+                logging.warning(f"Error inserting remaining batch: {str(e)}")
 
-        logging.info("Filtered joined data inserted into `aud_agg_tmapinputinfilteroutput`.")
+        logging.info("Data successfully inserted into `aud_agg_tmapinputinfilteroutput` table.")
 
-        # ==============================================================================================
-        #  Join aud_aud_inputtable.csv & aud_aud_inputtable.csv for `aud_agg_tmapinputinjoininput`
-        # ==============================================================================================
 
-        # Step 1: Read the input CSV file
-        input_data = []
-        with open(input_csv_path, mode='r', encoding='utf-8') as input_csvfile:
-            reader = csv.DictReader(input_csvfile)
-            input_data = list(reader)
 
-        # Step 2: Initialize a list to hold the rows to be inserted
-        filtered_data = []
 
-        # Step 3: Apply rules to filter and format the data
-        for row in input_data:
-            # Apply the rule: !Relational.ISNULL(row8.expressionJoin) && !row8.expressionJoin.isEmpty()
-            if row['expressionJoin'] is not None and row['expressionJoin'].strip():
-                
-                # Apply the rule: routines.Utils.containsElementExpression(row8.expressionJoin, row7.rowName + "." + row7.nameColumnInput) == 1
-                search_string = row['rowName'] + "." + row['nameColumnInput']
-                if search_string in row['expressionJoin']:
-                    
-                    # Prepare the expressionJoin: replace newlines if expressionJoin is not NULL
-                    expression_join = row['expressionJoin'].replace("\n", " ") if row['expressionJoin'] else None
-                    
-                    # Set the is_columnjoined flag based on the rule
-                    is_columnjoined = 1 if row['expressionJoin'] is not None and row['expressionJoin'].strip() else 0
-                    
-                    # Prepare the data for insertion
-                    filtered_row = (
-                        row['rowName'],  # rowName
-                        row['nameColumnInput'],  # NameColumnInput
-                        expression_join,  # expressionJoin
-                        row['composant'],  # composant
-                        row['innerJoin'],  # innerJoin
-                        row['NameProject'],  # NameProject
-                        row['NameJob'],  # NameJob
-                        is_columnjoined,  # is_columnjoined
-                        row['rowName_join'],  # rowName_join
-                        row['NameColumnInput']  # NameColumnInput_join
-                    )
-                    
-                    # Add the row to the list
-                    filtered_data.append(filtered_row)
+#         # ==============================================================================================
+#         #  Join aud_aud_inputtable.csv & aud_aud_inputtable.csv for `aud_agg_tmapinputinjoininput`
+#         # ==============================================================================================
+        # Filter the input DataFrame for valid rows where expressionJoin is not NaN or empty
+        filtered_input_df = input_df[
+        input_df['expressionJoin'].notna() &  # Ensure expressionJoin is not NaN
+        input_df['expressionJoin'].apply(lambda x: isinstance(x, str) and len(x.strip()) != 0)  # Ensure expressionJoin is not empty
+    ]
 
-        # Step 4: Insert filtered data into 'aud_agg_tmapinputinjoininput'
+
+        logging.info(f"Filtered input DataFrame has {len(filtered_input_df)} rows before merging.")
+
+
+         # Merge the input DataFrames
+        joined_df = pd.merge(
+            input_df,
+            filtered_input_df,
+            left_on=['composant', 'NameJob', 'NameProject'],
+            right_on=['composant', 'NameJob', 'NameProject'],
+            how='inner'
+        )
+        logging.info(f"Joined DataFrame columns: {joined_df.columns}")
+        logging.info(f"Inner join resulted in {len(joined_df)} rows.")
+
+        # Apply the condition and filter the rows before mapping
+        filtered_df = joined_df[
+            joined_df['expressionJoin_x'].notna() &  # Ensure expressionJoin_x is not NaN
+            joined_df.apply(
+                lambda row: isinstance(row['expressionJoin_x'], str) and len(row['expressionJoin_x']) != 0 , axis=1  # Corrected check
+            )
+        ]
+
+        # Log the filtered rows
+        logging.info(f"Filtered DataFrame has {len(filtered_df)} rows.")
+        if len(filtered_df) > 0:
+            logging.info(f"Sample of filtered rows:\n{filtered_df.head()}")
+
+        # Map each column to its source for insertion into 'aud_agg_tmapinputinoutput' table
+        mapped_df = pd.DataFrame({
+            'rowName': filtered_df['rowName_x'],  # From input_df
+            'NameColumnInput': filtered_df['nameColumnInput_x'],  # From input_df
+            'expressionJoin': filtered_df['expressionJoin_x'].apply(lambda x: x.replace("\n", " ") if pd.notna(x) else x),  # From output_df
+            'composant': filtered_df['composant'],  # From input_df
+            'InnerJoin': filtered_df['innerJoin_x'],  # From output_df
+            'NameProject': filtered_df['NameProject'],  # Common column
+            'NameJob': filtered_df['NameJob'],  # Common column
+            'is_columnjoined': filtered_df.apply(
+                lambda row: 1 if pd.notna(row['expressionJoin_y']) and f"{row['rowName_x']}.{row['nameColumnInput_x']}" in row['expressionJoin_y'] else 0, axis=1
+            ),  # Conditional check for column join based on expressionJoin_x
+            'rowName_join': filtered_df['rowName_y'], 
+            'NameColumnInput_join': filtered_df['nameColumnInput_y'],  
+        })
+
+        logging.info(f"Mapped DataFrame has {len(mapped_df)} rows.")
+
+        # Drop rows with NaN in critical columns
+        critical_columns = [
+            'rowName', 'NameColumnInput', 'expressionJoin', 'composant',
+            'InnerJoin', 'NameProject', 'NameJob',
+            'is_columnjoined', 'rowName_join', 'NameColumnInput_join'
+        ]
+
+        # Fill NaN values in critical columns with None (NULL in MySQL)
+        for column in critical_columns:
+            mapped_df[column] = mapped_df[column].where(pd.notna(mapped_df[column]), None)
+        logging.info(f"Rows after removing NaN values: {len(mapped_df)}.")
+
+        # Prepare rows for database insertion
+        data_for_insertion = mapped_df.values.tolist()
+        logging.info(f"Prepared {len(data_for_insertion)} rows for database insertion.")
+
+        # Insert rows into the database in batches
         insert_query = config.get_param('insert_agg_queries', 'aud_agg_tmapinputinjoininput')
         data_batch = []
-        for row in filtered_data:
+
+        for row in data_for_insertion:
             data_batch.append(row)
-            if len(data_batch) >= batch_size:
-                # Insert data in batches
-                db.insert_data_batch(insert_query, 'aud_agg_tmapinputinjoininput', data_batch)
+            logging.debug(f"Adding row to batch: {row}")
+            if len(data_batch) == batch_size:
+                try:
+                    db.insert_data_batch(insert_query, 'aud_agg_tmapinputinjoininput', data_batch)
+                    logging.info(f"Inserted batch of {len(data_batch)} rows.")
+                except Exception as e:
+                    logging.warning(f"Error inserting batch: {str(e)}")
                 data_batch.clear()
 
-        # Insert any remaining data
+        # Insert remaining rows
         if data_batch:
-            db.insert_data_batch(insert_query, 'aud_agg_tmapinputinjoininput', data_batch)
-
+            try:
+                db.insert_data_batch(insert_query, 'aud_agg_tmapinputinjoininput', data_batch)
+                logging.info(f"Inserted final batch of {len(data_batch)} rows.")
+            except Exception as e:
+                logging.warning(f"Error inserting remaining batch: {str(e)}")
         logging.info("Data successfully inserted into `aud_agg_tmapinputinjoininput` table.")
-        # ==============================================================================================
-        # insert aud_aud_inputtable.csv in `aud_agg_tmapinputinfilterinput`
-        # ==============================================================================================
-    # Initialize a list to hold the rows to be inserted
-        filtered_data = []
 
-        # Step 3: Apply rules to filter and format the data
-        for row in input_data:
-            # Apply the rule: !Relational.ISNULL(row9.expressionFilterInput) && !row9.expressionFilterInput.isEmpty()
-            if row['expressionFilterInput'] is not None and row['expressionFilterInput'].strip():
-                
-                # Apply the rule: routines.Utils.containsElementExpression(row9.expressionFilterInput, row9.rowName + "." + row9.NameColumnInput) == 1
-                search_string = row['rowName'] + "." + row['nameColumnInput']
-                if search_string in row['expressionFilterInput']:
-                    
-                    # Prepare the expressionFilterInput: replace newlines if expressionFilterInput is not NULL
-                    expression_filter_input = row['expressionFilterInput'].replace("\n", " ") if row['expressionFilterInput'] else None
-                    
-                    # Prepare the data for insertion
-                    filtered_row = (
-                        row['rowName'],  # rowName
-                        row['nameColumnInput'],  # NameColumnInput
-                        expression_filter_input,  # expressionFilterInput
-                        row['composant'],  # composant
-                        row['NameProject'],  # NameProject
-                        row['NameJob']  # NameJob
-                    )
-                    
-                    # Add the row to the list
-                    filtered_data.append(filtered_row)
+#         # ==============================================================================================
+#         # insert aud_aud_inputtable.csv in `aud_agg_tmapinputinfilterinput`
+#         # ==============================================================================================
+        # Filter the input DataFrame for valid rows where expressionFilterInput is not NaN or empty
+        filtered_input_df = input_df[
+            input_df['expressionFilterInput'].notna() &  # Ensure expressionFilterInput is not NaN
+            input_df.apply(
+                lambda row: f"{row['rowName']}.{row['nameColumnInput']}" in str(row['expressionFilterInput']), axis=1
+            )  # Ensure expressionFilterInput contains the required pattern
+        ]
 
-        # Step 4: Insert filtered data into 'aud_agg_tmapinputinfilterinput'
+        logging.info(f"Filtered input DataFrame has {len(filtered_input_df)} rows before merging.")
+
+        # Apply the condition and filter rows for mapping
+        filtered_df = filtered_input_df[
+            filtered_input_df['expressionFilterInput'].notna() &  # Ensure expressionFilterInput is not NaN
+            filtered_input_df['expressionFilterInput'].apply(
+                lambda x: isinstance(x, str) and len(x.strip()) > 0  # Ensure expressionFilterInput is not empty
+            )
+        ]
+
+        logging.info(f"Filtered DataFrame has {len(filtered_df)} rows.")
+        if len(filtered_df) > 0:
+            logging.info(f"Sample of filtered rows:\n{filtered_df.head()}")
+
+        # Map each column to its source for insertion into the target table
+        mapped_df = pd.DataFrame({
+            'rowName': filtered_df['rowName'],  # From input_df
+            'NameColumnInput': filtered_df['nameColumnInput'],  # From input_df
+            'expressionFilterInput': filtered_df['expressionFilterInput'].apply(
+                lambda x: x.replace("\n", " ") if pd.notna(x) else x
+            ),  # Clean up line breaks
+            'composant': filtered_df['composant'],  # From input_df
+            'NameProject': filtered_df['NameProject'],  # Common column
+            'NameJob': filtered_df['NameJob'],  # Common column
+        })
+
+        logging.info(f"Mapped DataFrame has {len(mapped_df)} rows.")
+
+        # Drop rows with NaN in critical columns
+        critical_columns = [
+            'rowName', 'NameColumnInput', 'expressionFilterInput', 'composant',
+            'NameProject', 'NameJob'
+        ]
+
+        for column in critical_columns:
+            mapped_df[column] = mapped_df[column].where(pd.notna(mapped_df[column]), None)
+
+        # Prepare rows for database insertion
+        data_for_insertion = mapped_df.values.tolist()
+        logging.info(f"Prepared {len(data_for_insertion)} rows for database insertion.")
+
+        # Insert rows into the database in batches
         insert_query = config.get_param('insert_agg_queries', 'aud_agg_tmapinputinfilterinput')
         data_batch = []
-        for row in filtered_data:
+
+        for row in data_for_insertion:
             data_batch.append(row)
-            if len(data_batch) >= batch_size:
-                # Insert data in batches
-                db.insert_data_batch(insert_query, 'aud_agg_tmapinputinfilterinput', data_batch)
+            logging.debug(f"Adding row to batch: {row}")
+            if len(data_batch) == batch_size:
+                try:
+                    db.insert_data_batch(insert_query, 'aud_agg_tmapinputinfilterinput', data_batch)
+                    logging.info(f"Inserted batch of {len(data_batch)} rows.")
+                except Exception as e:
+                    logging.warning(f"Error inserting batch: {str(e)}")
                 data_batch.clear()
 
-        # Insert any remaining data
+        # Insert remaining rows
         if data_batch:
-            db.insert_data_batch(insert_query, 'aud_agg_tmapinputinfilterinput', data_batch)
+            try:
+                db.insert_data_batch(insert_query, 'aud_agg_tmapinputinfilterinput', data_batch)
+                logging.info(f"Inserted final batch of {len(data_batch)} rows.")
+            except Exception as e:
+                logging.warning(f"Error inserting remaining batch: {str(e)}")
 
         logging.info("Data successfully inserted into `aud_agg_tmapinputinfilterinput` table.")
-        # ==============================================================================================
-        # Join aud_aud_inputtable.csv &  aud_vartable for `aud_agg_tmapinputinvar`
-        # ==============================================================================================
-    # Step 1: Execute aud_vartable query
+  # ==============================================================================================
+#         # Join aud_aud_inputtable.csv &  aud_vartable for aud_agg_tmapinputinvar
+#         # ==============================================================================================
+        # Step 1: Execute aud_vartable query to retrieve data
         aud_vartable_query = config.get_param('agg_queries', 'aud_vartable')
         logging.info(f"Executing query: {aud_vartable_query}")
         aud_vartable_results = db.execute_query(aud_vartable_query)
 
-        logging.info(f"aud_vartable_results: {aud_vartable_results}")
+        # Convert the query results into a DataFrame
+        vartable_df = pd.DataFrame(aud_vartable_results, columns=[
+            'aud_componentValue', 'aud_Var', 'aud_nameVar', 'aud_expressionVar', 'NameProject', 'NameJob'
+        ])
+        logging.info(f"Retrieved {len(vartable_df)} rows from aud_vartable.")
+        logging.debug(f"Sample from aud_vartable DataFrame:\n{vartable_df.head()}")
 
-        # Step 2: Load aud_outputtable.csv
-        directory_path = config.get_param('Directories', 'delete_files')
-        output_csv_path = os.path.join(directory_path, "aud_outputtable.csv")
+        
 
-        output_data = []
-        with open(output_csv_path, mode='r', encoding='utf-8') as output_csvfile:
-            reader = csv.DictReader(output_csvfile)
-            output_data = list(reader)
-        # Step 4: Join aud_aud_inputtable.csv with aud_vartable based on (NameJob, NameProject, aud_componentValue)
-        filtered_joined_data = []
+        # Step 3: Perform an inner join between input_df and vartable_df
+        joined_df = pd.merge(
+            input_df,
+            vartable_df,
+            left_on=['composant', 'NameJob', 'NameProject'],
+            right_on=['aud_componentValue', 'NameJob', 'NameProject'],
+            how='inner'
+        )
+        logging.info(f"Joined DataFrame has {len(joined_df)} rows.")
+        logging.debug(f"Sample of joined DataFrame:\n{joined_df.head()}")
 
-        # Iterate over each row from aud_vartable results
-        for var_row in aud_vartable_results:
-            for input_row in input_data:
-                # Join condition based on NameJob, NameProject, aud_componentValue
-                if (var_row[5] == input_row['NameJob'] and            # NameJob match
-                    var_row[4] == input_row['NameProject'] and        # NameProject match
-                    var_row[2] == input_row['composant']):            # aud_componentValue match
+        # Step 4: Apply additional filtering on the joined DataFrame
+        filtered_df = joined_df[
+            joined_df['aud_expressionVar'].notna() &
+            joined_df.apply(
+                lambda row: f"{row['rowName']}.{row['nameColumnInput']}" in str(row['aud_expressionVar']),
+                axis=1
+            )
+        ]
+        logging.info(f"Filtered DataFrame has {len(filtered_df)} rows.")
+        if not filtered_df.empty:
+            logging.debug(f"Sample of filtered rows:\n{filtered_df.head()}")
 
-                    # Check if vartable.aud_expressionVar is not null and not empty
-                    if var_row[3] is not None and var_row[3].strip() != "":  # index 3 for aud_expressionVar
-                        # Create search_string
-                        search_string = var_row[1] + "." + var_row[2]  # index 1 for aud_Var and index 2 for aud_nameVar
+        # Map each column for insertion into the 'aud_agg_tmapinputinvar' table
+        mapped_df = pd.DataFrame({
+            'rowName': filtered_df['rowName'],
+            'NameColumnInput': filtered_df['nameColumnInput'],
+            'composant': filtered_df['composant'],
+            'expressionOutput': filtered_df['aud_expressionVar'].apply(lambda x: x.replace("\n", " ") if pd.notna(x) else x),
+            'nameColumnOutput': filtered_df.apply(lambda row: f"{row['aud_Var']}.{row['aud_nameVar']}", axis=1),
+            'NameProject': filtered_df['NameProject'],
+            'NameJob': filtered_df['NameJob']
+        })
+        logging.info(f"Mapped DataFrame has {len(mapped_df)} rows.")
 
-                        # Check if search_string is in input_row['aud_expressionFilterOutput']
-                        if search_string in (input_row['expressionFilterInput'] or ""):
-                            # If aud_expressionVar is not None, replace newlines with spaces
-                            aud_expressionVar_cleaned = var_row[3].replace("\n", " ") if var_row[3] else None
-                            
-                            # Prepare the row for insertion into the aud_agg_tmapinputinvar table
-                            joined_row = (
-                                input_row['rowName'],                 # NameRowInput
-                                input_row['composant'],               # composant
-                                aud_expressionVar_cleaned,            # expressionFilterOutput (aud_expressionVar after newline replacement)
-                                input_row['rowName'],                 # OutputName (rowName used as placeholder)
-                                input_row['reject'],                  # reject
-                                input_row['innerJoin'],               # rejectInnerJoin (assuming innerJoin maps to rejectInnerJoin)
-                                input_row['NameProject'],             # NameProject
-                                input_row['NameJob']                  # NameJob
-                            )
-                            
-                            # Append to filtered data list
-                            filtered_joined_data.append(joined_row)
+        # Handle NaN values in critical columns
+        critical_columns = ['rowName', 'NameColumnInput', 'composant', 'expressionOutput', 'nameColumnOutput', 'NameProject', 'NameJob']
+        for column in critical_columns:
+            mapped_df[column] = mapped_df[column].where(pd.notna(mapped_df[column]), None)
+        logging.info(f"Rows after handling NaN values: {len(mapped_df)}.")
 
-        # Step 5: Insert the filtered and joined data into the aud_agg_tmapinputinvar table
+        # Prepare rows for database insertion
+        data_for_insertion = mapped_df.values.tolist()
+        logging.info(f"Prepared {len(data_for_insertion)} rows for database insertion.")
+
+        # Batch insertion into the database
         insert_query = config.get_param('insert_agg_queries', 'aud_agg_tmapinputinvar')
         data_batch = []
-
-        for row in filtered_joined_data:
+        for row in data_for_insertion:
             data_batch.append(row)
-            if len(data_batch) >= batch_size:
-                # Insert data in batches
+            logging.debug(f"Adding row to batch: {row}")
+            if len(data_batch) == batch_size:
+                try:
+                    db.insert_data_batch(insert_query, 'aud_agg_tmapinputinvar', data_batch)
+                    logging.info(f"Inserted batch of {len(data_batch)} rows.")
+                except Exception as e:
+                    logging.warning(f"Error inserting batch: {str(e)}")
+                data_batch.clear()
+
+        # Insert remaining rows
+        if data_batch:
+            try:
                 db.insert_data_batch(insert_query, 'aud_agg_tmapinputinvar', data_batch)
+                logging.info(f"Inserted final batch of {len(data_batch)} rows.")
+            except Exception as e:
+                logging.warning(f"Error inserting remaining batch: {str(e)}")
+
+        logging.info("Filtered and joined data successfully inserted into the 'aud_agg_tmapinputinvar' table.")
+
+#         # ==============================================================================================
+#         #  Join aud_vartable &  outputtable.csv for `aud_agg_tmapvarinoutput`
+#         # ==============================================================================================
+        # Step 3: Perform an inner join between output_df and vartable_df
+        joined_df = pd.merge(
+            output_df,
+            vartable_df,
+            left_on=['aud_componentValue', 'NameJob', 'NameProject'],
+            right_on=['aud_componentValue', 'NameJob', 'NameProject'],
+            how='inner'
+        )
+        logging.info(f"Joined DataFrame has {len(joined_df)} rows.")
+        logging.debug(f"Sample of joined DataFrame:\n{joined_df.head()}")
+
+        # Step 4: Apply additional filtering on the joined DataFrame
+        filtered_df = joined_df[
+            joined_df['aud_expressionOutput'].notna() & 
+            joined_df.apply(
+                lambda row: f"{row['aud_Var']}.{row['aud_nameVar']}" in str(row['aud_expressionOutput']),
+                axis=1
+            )
+        ]
+        logging.info(f"Filtered DataFrame has {len(filtered_df)} rows.")
+        if not filtered_df.empty:
+            logging.debug(f"Sample of filtered rows:\n{filtered_df.head()}")
+
+        # Map each column for insertion into the 'aud_agg_tmapvarinoutput' table
+        mapped_df = pd.DataFrame({
+            'NameRowInput': filtered_df.apply(lambda row: f"{row['aud_Var']}.{row['aud_nameVar']}", axis=1),
+            'composant': filtered_df['aud_componentValue'],
+            'expressionOutput': filtered_df['aud_expressionOutput'],
+            'nameColumnOutput': filtered_df['aud_nameColumnOutput'],
+            'OutputName': filtered_df['aud_OutputName'],
+            'reject': filtered_df['aud_reject'],
+            'rejectInnerJoin': filtered_df['aud_rejectInnerJoin'],
+            'NameProject': filtered_df['NameProject'],
+            'NameJob': filtered_df['NameJob']
+        })
+        logging.info(f"Mapped DataFrame has {len(mapped_df)} rows.")
+
+        # Handle NaN values in critical columns
+        critical_columns = ['NameRowInput','composant', 'expressionOutput',  'nameColumnOutput','OutputName', 'reject', 'rejectInnerJoin', 'NameProject', 'NameJob']
+        for column in critical_columns:
+            mapped_df[column] = mapped_df[column].where(pd.notna(mapped_df[column]), None)
+        logging.info(f"Rows after handling NaN values: {len(mapped_df)}.")
+
+        # Prepare rows for database insertion
+        data_for_insertion = mapped_df.values.tolist()
+        logging.info(f"Prepared {len(data_for_insertion)} rows for database insertion.")
+
+        # Batch insertion into the database
+        insert_query = config.get_param('insert_agg_queries', 'aud_agg_tmapvarinoutput')
+        data_batch = []
+
+        for row in data_for_insertion:
+            data_batch.append(row)
+            logging.debug(f"Adding row to batch: {row}")
+            if len(data_batch) == batch_size:
+                try:
+                    db.insert_data_batch(insert_query, 'aud_agg_tmapvarinoutput', data_batch)
+                    logging.info(f"Inserted batch of {len(data_batch)} rows.")
+                except Exception as e:
+                    logging.warning(f"Error inserting batch: {str(e)}")
                 data_batch.clear()
 
-        # Insert any remaining data
+        # Insert remaining rows
         if data_batch:
-            db.insert_data_batch(insert_query, 'aud_agg_tmapinputinvar', data_batch)
+            try:
+                db.insert_data_batch(insert_query, 'aud_agg_tmapvarinoutput', data_batch)
+                logging.info(f"Inserted final batch of {len(data_batch)} rows.")
+            except Exception as e:
+                logging.warning(f"Error inserting remaining batch: {str(e)}")
 
-        logging.info("Filtered joined data successfully inserted into aud_agg_tmapinputinvar table.")
-        # ==============================================================================================
-        #  Join aud_vartable &  outputtable.csv for `aud_agg_tmapvarinoutput`
-        # ==============================================================================================
-        filtered_joined_data = []
+        logging.info("Filtered joined data successfully inserted into aud_agg_tmapvarinoutput table.")
 
-        # Iterate over each row from aud_vartable_results
-        for var_row in aud_vartable_results:
-            for output_row in output_data:  # output_data corresponds to outputtable.csv
-                # Join condition based on NameJob, NameProject, aud_componentValue
-                if (var_row[5] == output_row['NameJob'] and            # NameJob match
-                    var_row[4] == output_row['NameProject'] and        # NameProject match
-                    var_row[2] == output_row['aud_componentValue']):   # aud_componentValue match
 
-                    # Check if aud_expressionFilterOutput is not null and contains the appropriate string
-                    if output_row['aud_expressionFilterOutput'] and output_row['aud_expressionFilterOutput'].strip() != "":
-                        search_string = var_row[1] + "." + var_row[2]  # Combine aud_Var + "." + aud_nameVar
-                        
-                        # Check if search_string is contained in aud_expressionFilterOutput
-                        if search_string in output_row['aud_expressionFilterOutput']:
-                            # Replace newlines in aud_expressionFilterOutput with spaces
-                            expression_filter = output_row['aud_expressionFilterOutput'].replace("\n", " ")
-                            
-                            # Prepare the row for insertion into aud_agg_tmapvarinfilter table
-                            joined_row = (
-                                search_string,        # NameRowInput
-                                var_row[2],       # composant
-                                expression_filter,       # expressionFilterOutput
-                                output_row['aud_nameRowOutput'],        # OutputName
-                                output_row['aud_reject'],               # reject
-                                0 if output_row['rejectInnerJoin']== 'false' else 1 if output_row['rejectInnerJoin']== 'true' else None,      # rejectInnerJoin
-                                var_row[4],  # NameProject
-                                var_row[5]                   # NameJob
-                            )
-                            
-                            # Append the joined row to the filtered data list
-                            filtered_joined_data.append(joined_row)
+#         # ==============================================================================================
+#         #  Join aud_vartable &  outputtable.csv for `aud_agg_tmapvarinfilter`
+#         # ==============================================================================================
+#      # Step 4: Apply additional filtering on the joined DataFrame
+        filtered_df = joined_df[
+            joined_df['aud_expressionFilterOutput'].notna() & 
+            joined_df.apply(
+                lambda row: f"{row['aud_Var']}.{row['aud_nameVar']}" in str(row['aud_expressionFilterOutput']),
+                axis=1
+            )
+        ]
+        logging.info(f"Filtered DataFrame has {len(filtered_df)} rows.")
+        if not filtered_df.empty:
+            logging.debug(f"Sample of filtered rows:\n{filtered_df.head()}")
 
-        # Step 7: Insert the filtered and joined data into the aud_agg_tmapvarinfilter table
+        # Map each column for insertion into the 'aud_agg_tmapvarinoutput' table
+        mapped_df = pd.DataFrame({
+            'NameRowInput': filtered_df.apply(lambda row: f"{row['aud_Var']}.{row['aud_nameVar']}", axis=1),
+            'composant': filtered_df['aud_componentValue'],
+            'expressionFilterOutput': filtered_df['aud_expressionFilterOutput'],
+            'OutputName': filtered_df['aud_OutputName'],
+            'reject': filtered_df['aud_reject'],
+            'rejectInnerJoin': filtered_df['aud_rejectInnerJoin'],
+            'NameProject': filtered_df['NameProject'],
+            'NameJob': filtered_df['NameJob']
+        })
+        logging.info(f"Mapped DataFrame has {len(mapped_df)} rows.")
+
+        # Handle NaN values in critical columns
+        critical_columns = ['NameRowInput','composant', 'expressionFilterOutput', 'OutputName',  'reject', 'rejectInnerJoin', 'NameProject', 'NameJob']
+        for column in critical_columns:
+            mapped_df[column] = mapped_df[column].where(pd.notna(mapped_df[column]), None)
+        logging.info(f"Rows after handling NaN values: {len(mapped_df)}.")
+
+        # Prepare rows for database insertion
+        data_for_insertion = mapped_df.values.tolist()
+        logging.info(f"Prepared {len(data_for_insertion)} rows for database insertion.")
+
+        # Batch insertion into the database
         insert_query = config.get_param('insert_agg_queries', 'aud_agg_tmapvarinfilter')
         data_batch = []
 
-        for row in filtered_joined_data:
+        for row in data_for_insertion:
             data_batch.append(row)
-            if len(data_batch) >= batch_size:
-                # Insert data in batches
-                db.insert_data_batch(insert_query, 'aud_agg_tmapvarinfilter', data_batch)
+            logging.debug(f"Adding row to batch: {row}")
+            if len(data_batch) == batch_size:
+                try:
+                    db.insert_data_batch(insert_query, 'aud_agg_tmapvarinfilter', data_batch)
+                    logging.info(f"Inserted batch of {len(data_batch)} rows.")
+                except Exception as e:
+                    logging.warning(f"Error inserting batch: {str(e)}")
                 data_batch.clear()
 
-        # Insert any remaining data
+        # Insert remaining rows
         if data_batch:
-            db.insert_data_batch(insert_query, 'aud_agg_tmapvarinfilter', data_batch)
-
-        logging.info("Filtered joined data successfully inserted into aud_agg_tmapvarinfilter table.")
-
-        # ==============================================================================================
-        #  Join aud_vartable &  outputtable.csv for `aud_agg_tmapvarinfilter`
-        # ==============================================================================================
-        # Step 3: Initialize a list to hold the filtered and joined data
-        filtered_joined_data = []
-
-        # Step 4: Join with aud_outputtable.csv based on (NameJob, NameProject, aud_componentValue)
-        for var_row in aud_vartable_results:
-            for output_row in output_data:
-                if (var_row[2] == output_row['aud_componentValue'] and  # index 2 for aud_nameVar
-                    var_row[5] == output_row['NameJob'] and           # index 5 for NameJob
-                    var_row[4] == output_row['NameProject']):         # index 4 for NameProject
-                    
-                    # Apply the rule: !Relational.ISNULL(row5.aud_expressionFilterOutput)
-                    if output_row['aud_expressionFilterOutput'] is not None:
-                        
-                        # Apply the rule: routines.Utils.containsElementExpression
-                        search_string = var_row[1] + "." + var_row[2]  # index 1 for aud_Var and index 2 for aud_nameVar
-                        if search_string in output_row['aud_expressionFilterOutput']:
-                            
-                            # Prepare the row for insertion into the aud_agg_tmapvarinfilter table
-                            filtered_row = (
-                                search_string,  # NameRowInput (index 2)
-                                var_row[2],  # composant (aud_nameVar)
-                                output_row['aud_expressionFilterOutput'],  # expressionFilterOutput
-                                output_row['aud_nameRowOutput'],  # OutputName
-                                output_row['aud_reject'],  # reject
-                                0 if output_row['rejectInnerJoin']== 'false' else 1 if output_row['rejectInnerJoin']== 'true' else None,  # rejectInnerJoin
-                                var_row[4],  # NameProject
-                                var_row[5]   # NameJob
-                            )
-                            
-                            # Add the row to the list
-                            filtered_joined_data.append(filtered_row)
-
-        # Step 5: Insert filtered and joined data into aud_agg_tmapvarinfilter
-        insert_query = config.get_param('insert_agg_queries', 'aud_agg_tmapvarinfilter')
-        data_batch = []
-        for row in filtered_joined_data:
-            data_batch.append(row)
-            if len(data_batch) >= batch_size:
-                # Insert data in batches
+            try:
                 db.insert_data_batch(insert_query, 'aud_agg_tmapvarinfilter', data_batch)
-                data_batch.clear()
+                logging.info(f"Inserted final batch of {len(data_batch)} rows.")
+            except Exception as e:
+                logging.warning(f"Error inserting remaining batch: {str(e)}")
 
-        # Insert any remaining data
-        if data_batch:
-            db.insert_data_batch(insert_query, 'aud_agg_tmapvarinfilter', data_batch)
 
         logging.info("Data successfully inserted into `aud_agg_tmapvarinfilter` table.")
-# ==========================================================================================================================================================================================================================================================================================
-# Catching lookup inner join reject aud_aud_inputtable.csv & aud_agg_tmapinputinoutput & aud_agg_tmapinputinfilteroutput & aud_agg_tmapinputinjoininput & aud_agg_tmapinputinfilterinput & aud_agg_tmapinputinvar for `aud_agg_tmapcolumunused` on rowName, NameColumnInput, composant, NameProject, NameJob
-# ==========================================================================================================================================================================================================================================================================================
-        # Improved Join Logic with input_df as the main DataFrame
-        # Function to load SQL table data
-        def load_sql_table(query, column_names):
+# =========================================================================================================================
+# Description:
+# This script processes several tables and queries for detecting lookup inner join rejects and aggregations.
+# Each query retrieves specific data, which is then converted into DataFrames for further processing.
+#
+# Tables and Queries:
+# 1. **aud_aud_inputtable.csv**: Input table for the main process.
+# 2. **aud_agg_tmapinputinoutput**: Query to extract mappings between input and output tables, focusing on column expressions.
+# 3. **aud_agg_tmapinputinfilteroutput**: Query to extract filter expressions applied on input-to-output mappings.
+# 4. **aud_agg_tmapinputinjoininput**: Query to capture join conditions and relationships between input tables.
+# 5. **aud_agg_tmapinputinfilterinput**: Query for filtering input columns.
+# 6. **aud_agg_tmapinputinvar**: Query to extract variable expressions and mappings from the aggregation.
+#
+# Key Columns:
+# - `rowName`: Row name identifier.
+# - `NameColumnInput`: Name of the input column.
+# - `composant`: Component associated with the mapping or join.
+# - `NameProject`: Name of the project.
+# - `NameJob`: Name of the job.
+# =========================================================================================================================
+    
+        # Step 1: Execute aud_agg_tmapinputinoutput query to retrieve data
+        aud_agg_tmapinputinoutput_query = config.get_param('agg_queries', 'aud_agg_tmapinputinoutput')
+        logging.info(f"Executing query: {aud_agg_tmapinputinoutput_query}")
+        aud_agg_tmapinputinoutput_results = db.execute_query(aud_agg_tmapinputinoutput_query)
+
+        # Convert the query results into a DataFrame
+        aud_agg_tmapinputinoutput_df = pd.DataFrame(
+            aud_agg_tmapinputinoutput_results,
+            columns=['rowName', 'NameRowInput', 'composant', 'NameJob','NameProject']
+        )
+        logging.info(f"Retrieved {len(aud_agg_tmapinputinoutput_df)} rows from aud_agg_tmapinputinoutput.")
+        logging.debug(f"Sample from aud_agg_tmapinputinoutput DataFrame:\n{aud_agg_tmapinputinoutput_df.head()}")
+
+        # Step 2: Execute aud_agg_tmapinputinfilteroutput query to retrieve data
+        aud_agg_tmapinputinfilteroutput_query = config.get_param('agg_queries', 'aud_agg_tmapinputinfilteroutput')
+        logging.info(f"Executing query: {aud_agg_tmapinputinfilteroutput_query}")
+        aud_agg_tmapinputinfilteroutput_results = db.execute_query(aud_agg_tmapinputinfilteroutput_query)
+
+        # Convert the query results into a DataFrame
+        aud_agg_tmapinputinfilteroutput_df = pd.DataFrame(
+            aud_agg_tmapinputinfilteroutput_results,
+            columns=['rowName', 'NameRowInput', 'composant', 'NameJob','NameProject']
+        )
+        logging.info(f"Retrieved {len(aud_agg_tmapinputinfilteroutput_df)} rows from aud_agg_tmapinputinfilteroutput.")
+        logging.debug(f"Sample from aud_agg_tmapinputinfilteroutput DataFrame:\n{aud_agg_tmapinputinfilteroutput_df.head()}")
+
+        # Step 3: Execute aud_agg_tmapinputinjoininput query to retrieve data
+        aud_agg_tmapinputinjoininput_query = config.get_param('agg_queries', 'aud_agg_tmapinputinjoininput')
+        logging.info(f"Executing query: {aud_agg_tmapinputinjoininput_query}")
+        aud_agg_tmapinputinjoininput_results = db.execute_query(aud_agg_tmapinputinjoininput_query)
+
+        # Convert the query results into a DataFrame
+        aud_agg_tmapinputinjoininput_df = pd.DataFrame(
+            aud_agg_tmapinputinjoininput_results,
+            columns=['rowName', 'NameRowInput', 'composant', 'NameJob','NameProject']
+        )
+        logging.info(f"Retrieved {len(aud_agg_tmapinputinjoininput_df)} rows from aud_agg_tmapinputinjoininput.")
+        logging.debug(f"Sample from aud_agg_tmapinputinjoininput DataFrame:\n{aud_agg_tmapinputinjoininput_df.head()}")
+
+        # Step 4: Execute aud_agg_tmapinputinfilterinput query to retrieve data
+        aud_agg_tmapinputinfilterinput_query = config.get_param('agg_queries', 'aud_agg_tmapinputinfilterinput')
+        logging.info(f"Executing query: {aud_agg_tmapinputinfilterinput_query}")
+        aud_agg_tmapinputinfilterinput_results = db.execute_query(aud_agg_tmapinputinfilterinput_query)
+
+        # Convert the query results into a DataFrame
+        aud_agg_tmapinputinfilterinput_df = pd.DataFrame(
+            aud_agg_tmapinputinfilterinput_results,
+            columns=['rowName', 'NameRowInput', 'composant', 'NameJob','NameProject']
+        )
+        logging.info(f"Retrieved {len(aud_agg_tmapinputinfilterinput_df)} rows from aud_agg_tmapinputinfilterinput.")
+        logging.debug(f"Sample from aud_agg_tmapinputinfilterinput DataFrame:\n{aud_agg_tmapinputinfilterinput_df.head()}")
+
+        # Step 5: Execute aud_agg_tmapinputinvar query to retrieve data
+        aud_agg_tmapinputinvar_query = config.get_param('agg_queries', 'aud_agg_tmapinputinvar')
+        logging.info(f"Executing query: {aud_agg_tmapinputinvar_query}")
+        aud_agg_tmapinputinvar_results = db.execute_query(aud_agg_tmapinputinvar_query)
+
+        # Convert the query results into a DataFrame
+        aud_agg_tmapinputinvar_df = pd.DataFrame(
+            aud_agg_tmapinputinvar_results,
+            columns=['rowName', 'NameRowInput', 'composant', 'NameJob','NameProject']
+        )
+        logging.info(f"Retrieved {len(aud_agg_tmapinputinvar_df)} rows from aud_agg_tmapinputinvar.")
+        logging.debug(f"Sample from aud_agg_tmapinputinfilterinput DataFrame:\n{aud_agg_tmapinputinvar_df.head()}")
+ 
+
+        def catch_inner_join_rejects(left_df, right_df, left_join_keys, right_join_keys):
             """
-            Executes a SQL query and returns the result as a pandas DataFrame.
-            
-            Args:
-                query (str): The SQL query to execute.
-                column_names (list): List of column names for the DataFrame.
-            
+            Detects rows rejected from both left and right DataFrames during an inner join.
+
+            Parameters:
+                left_df (pd.DataFrame): The left DataFrame for the join.
+                right_df (pd.DataFrame): The right DataFrame for the join.
+                left_join_keys (list or str): The columns to use as join keys from the left DataFrame.
+                right_join_keys (list or str): The columns to use as join keys from the right DataFrame.
+
             Returns:
-                pd.DataFrame: DataFrame containing the query results.
+                pd.DataFrame: A DataFrame containing all rejected rows (left and right).
             """
-            try:
-                # Assume db.execute_query returns a list of tuples; create DataFrame directly
-                data = db.execute_query(query)
-                df = pd.DataFrame(data, columns=column_names)
-                return df
-            except Exception as e:
-                logging.error(f"Error loading data from query: {query}. Error: {str(e)}")
-                return pd.DataFrame(columns=column_names)
+            logging.info("Starting inner join rejection detection.")
+            logging.debug(f"Left DataFrame shape: {left_df.head()}")
+            logging.debug(f"Right DataFrame shape: {right_df.head()}")
+            logging.debug(f"Left join keys: {left_join_keys}")
+            logging.debug(f"Right join keys: {right_join_keys}")
 
-        # Function to perform the "catch lookup rejects" logic using left anti join
-        def left_anti_join(left_df, right_df, join_columns):
-            """
-            Perform a left join and return only the rows in left_df that do not have a match in right_df.
-            This mimics Talend's tMap 'catch lookup rejects' functionality.
-            
-            Args:
-                left_df (pd.DataFrame): The left DataFrame.
-                right_df (pd.DataFrame): The right DataFrame.
-                join_columns (list): Columns to join on.
-            
-            Returns:
-                pd.DataFrame: DataFrame containing unmatched rows from the left DataFrame.
-            """
-            logging.info(f"Performing left anti join on columns: {join_columns}")
-            
-            # Perform a full join with an indicator to find unmatched rows
-            merged_df = pd.merge(left_df, right_df, on=join_columns, how='left', indicator=True)
-            
-            # Select rows that did not match in the right DataFrame
-            unmatched_rows = merged_df[merged_df['_merge'] == 'left_only'].drop(columns=['_merge'])
-            
-            logging.info(f"Found {len(unmatched_rows)} unmatched rows after join.")
-            return unmatched_rows
+            # Perform a left join to detect left rejects
+            logging.info("Performing left join to detect rows rejected from the left DataFrame.")
+            left_join_df = pd.merge(
+                left_df,
+                right_df,
+                left_on=left_join_keys,
+                right_on=right_join_keys,
+                how='left',
+                indicator=True  # Adds a '_merge' column to indicate join status
+            )
+            left_rejects = left_join_df[left_join_df['_merge'] == 'left_only'].drop(columns=['_merge'])
+            logging.info(f"Detected {len(left_rejects)} left rejects.")
+            logging.debug(f"Left rejects sample:\n{left_rejects.head()}")
 
-        # SQL Queries to retrieve data from SQL tables
-        sql_tables = {
-            'aud_agg_tmapinputinoutput': "SELECT DISTINCT rowName, NameRowInput, composant, NameProject, NameJob FROM aud_agg_tmapinputinoutput",
-            'aud_agg_tmapinputinfilteroutput': "SELECT DISTINCT rowName, NameRowInput, composant, NameProject, NameJob FROM aud_agg_tmapinputinfilteroutput",
-            'aud_agg_tmapinputinjoininput': "SELECT DISTINCT rowName, NameColumnInput, composant, NameProject, NameJob FROM aud_agg_tmapinputinjoininput",
-            'aud_agg_tmapinputinfilterinput': "SELECT DISTINCT rowName, NameColumnInput, composant, NameProject, NameJob FROM aud_agg_tmapinputinfilterinput",
-            'aud_agg_tmapinputinvar': "SELECT DISTINCT rowName, NameRowInput, composant, NameProject, NameJob FROM aud_agg_tmapinputinvar"
-        }
+            # Perform a right join to detect right rejects
+            logging.info("Performing right join to detect rows rejected from the right DataFrame.")
+            right_join_df = pd.merge(
+                left_df,
+                right_df,
+                left_on=left_join_keys,
+                right_on=right_join_keys,
+                how='right',
+                indicator=True  # Adds a '_merge' column to indicate join status
+            )
+            right_rejects = right_join_df[right_join_df['_merge'] == 'right_only'].drop(columns=['_merge'])
+            logging.info(f"Detected {len(right_rejects)} right rejects.")
+            logging.debug(f"Right rejects sample:\n{right_rejects.head()}")
 
-        # Column mappings for each SQL table
-        column_mapping = {
-            'aud_agg_tmapinputinoutput': ['rowName', 'NameRowInput', 'composant', 'NameProject', 'NameJob'],
-            'aud_agg_tmapinputinfilteroutput': ['rowName', 'NameRowInput', 'composant', 'NameProject', 'NameJob'],
-            'aud_agg_tmapinputinjoininput': ['rowName', 'NameColumnInput', 'composant', 'NameProject', 'NameJob'],
-            'aud_agg_tmapinputinfilterinput': ['rowName', 'NameColumnInput', 'composant', 'NameProject', 'NameJob'],
-            'aud_agg_tmapinputinvar': ['rowName', 'NameRowInput', 'composant', 'NameProject', 'NameJob']
-        }
+            # Combine left and right rejects
+            logging.info("Combining left and right rejects for overall analysis.")
+            all_rejects = pd.concat([left_rejects, right_rejects], ignore_index=True)
 
+            logging.info(f"Total rejects detected: {len(all_rejects)}.")
+            logging.debug(f"Combined rejects sample:\n{all_rejects.head()}")
 
-        # Load the input CSV file into a DataFrame (input_df is the main DataFrame)
-        input_df = pd.read_csv(input_csv_path, usecols=['rowName', 'nameColumnInput', 'composant', 'NameProject', 'NameJob'])
+            logging.info("Finished inner join rejection detection.")
+            return all_rejects
+ # =========================================================================================================================
+# input_df + aud_agg_tmapinputinoutput_df --> rejects + aud_agg_tmapinputinfilteroutput_df --> rejects 
+# + aud_agg_tmapinputinjoininput_df --> rejects + aud_agg_tmapinputinfilterinput_df --> rejects 
+# + aud_agg_tmapinputinvar_df --> insert in aud_agg_tmapcolumunused
+# =========================================================================================================================
 
-        # Rename columns to standardized names based on index
-        input_df.columns = [f"col_{i}" for i in range(len(input_df.columns))]
-        # logging.info(f"Input CSV Headers by index: {input_df.columns.tolist()}")
-        # logging.info(f"Displaying head for 'Input CSV':\n{input_df.head(100)}")
+        # Step 1: Prepare input DataFrame
+        input_df = input_df[['rowName', 'nameColumnInput', 'composant', 'NameJob', 'NameProject']]
+        input_df = input_df.rename(columns={"nameColumnInput": "NameRowInput"})
 
-        # Function to standardize SQL DataFrames by index
-        def load_and_standardize_table(query, num_columns):
-            """
-            Load a SQL table and standardize its column names by index.
-            
-            Args:
-                query (str): SQL query to execute.
-                num_columns (int): Number of columns to rename based on index.
-                
-            Returns:
-                pd.DataFrame: Standardized DataFrame.
-            """
-            data = db.execute_query(query)
-            df = pd.DataFrame(data)
+        # Step 2: Sequential joins to detect rejects
+        logging.info("Starting the sequential reject detection process.")
+        df = catch_inner_join_rejects(
+            input_df, aud_agg_tmapinputinoutput_df, 
+            ['rowName', 'NameRowInput', 'composant', 'NameJob', 'NameProject'], 
+            ['rowName', 'NameRowInput', 'composant', 'NameJob', 'NameProject']
+        )
+        logging.info(f"First join completed. Rejects: {len(df)} rows.")
 
-            # Check if DataFrame is empty
-            if df.empty:
-                # Create empty DataFrame with specified column names if no data is returned
-                df = pd.DataFrame(columns=[f"col_{i}" for i in range(num_columns)])
-            else:
-                # Rename columns if data is present
-                df.columns = [f"col_{i}" for i in range(num_columns)]
+        df1 = catch_inner_join_rejects(
+            df, aud_agg_tmapinputinfilteroutput_df, 
+            ['rowName', 'NameRowInput', 'composant', 'NameProject', 'NameJob'], 
+            ['rowName', 'NameRowInput', 'composant', 'NameProject', 'NameJob']
+        )
+        logging.info(f"Second join completed. Rejects: {len(df1)} rows.")
 
-            return df
+        df2 = catch_inner_join_rejects(
+            df1, aud_agg_tmapinputinjoininput_df, 
+            ['rowName', 'NameRowInput', 'composant', 'NameProject', 'NameJob'], 
+            ['rowName', 'NameRowInput', 'composant', 'NameProject', 'NameJob']
+        )
+        logging.info(f"Third join completed. Rejects: {len(df2)} rows.")
 
+        df3 = catch_inner_join_rejects(
+            df2, aud_agg_tmapinputinfilterinput_df, 
+            ['rowName', 'NameRowInput', 'composant', 'NameProject', 'NameJob'], 
+            ['rowName', 'NameRowInput', 'composant', 'NameProject', 'NameJob']
+        )
+        logging.info(f"Fourth join completed. Rejects: {len(df3)} rows.")
 
-        # SQL Queries and expected column counts for each SQL table
-        sql_queries = {
-            'aud_agg_tmapinputinoutput': ("SELECT DISTINCT rowName, NameRowInput, composant, NameProject, NameJob FROM aud_agg_tmapinputinoutput ", 5),
-            'aud_agg_tmapinputinfilteroutput': ("SELECT DISTINCT rowName, NameRowInput, composant, NameProject, NameJob FROM aud_agg_tmapinputinfilteroutput", 5),
-            'aud_agg_tmapinputinjoininput': ("SELECT DISTINCT rowName, NameColumnInput, composant, NameProject, NameJob FROM aud_agg_tmapinputinjoininput", 5),
-            'aud_agg_tmapinputinfilterinput': ("SELECT DISTINCT rowName, NameColumnInput, composant, NameProject, NameJob FROM aud_agg_tmapinputinfilterinput", 5),
-            'aud_agg_tmapinputinvar': ("SELECT DISTINCT rowName, NameRowInput, composant, NameProject, NameJob FROM aud_agg_tmapinputinvar", 5)
-        }
+        final = catch_inner_join_rejects(
+            df3, aud_agg_tmapinputinvar_df, 
+            ['rowName', 'NameRowInput', 'composant', 'NameProject', 'NameJob'], 
+            ['rowName', 'NameRowInput', 'composant', 'NameProject', 'NameJob']
+        )
+        logging.info(f"Final join completed. Rejects: {len(final)} rows.")
 
-        # Load and standardize each SQL DataFrame
-        sql_dataframes = {table: load_and_standardize_table(query, col_count) for table, (query, col_count) in sql_queries.items()}
-
-        # Display headers of standardized SQL DataFrames
-        # for table_name, df in sql_dataframes.items():
-        #     logging.info(f"Headers for table '{table_name}' by index: {df.columns.tolist()}")
-        #     logging.info(f"Displaying head for '{table_name}':\n{df.head()}")
-
-        # Initialize unmatched_df with input_df (this will hold unmatched rows after each join)
-        unmatched_df = input_df.copy()
-
-        # Iteratively perform left anti join with each SQL DataFrame using standardized columns (col_0, col_1, etc.)
-        for table, right_df in sql_dataframes.items():
-            logging.info(f"Joining input_df with table: {table}")
-            
-            # Use standardized index-based join columns (col_0, col_1, etc.)
-            join_columns = ['col_0', 'col_1', 'col_2', 'col_3', 'col_4']  # Adjust as necessary based on join criteria
-            # Convert unmatched_df and right_df columns to 'object' to prevent dtype mismatches
-            unmatched_df = unmatched_df.astype('object')
-            right_df = right_df.astype('object')
-            unmatched_df = left_anti_join(unmatched_df, right_df, join_columns)
-
-        # After all joins, the remaining unmatched rows are stored in `unmatched_df`
-        unused_data = unmatched_df
-
-        # Insert unmatched rows into the database if there are any
-        if not unused_data.empty:
-            logging.info(f"Inserting {len(unused_data)} unused rows into the database.")
-            
-            insert_query = config.get_param('insert_agg_queries', 'aud_agg_tmapcolumunused')
-            
-            # Prepare the data for insertion
-            insert_data = [tuple(row[f"col_{i}"] for i in range(5)) for _, row in unused_data.iterrows()]
-
-            logging.info(f"Prepared data for insertion: {insert_data[:10]}")  # Log the first 10 rows for inspection
-            
-            # Insert data in batches
-            for i in range(0, len(insert_data), batch_size):
-                batch = insert_data[i:i + batch_size]
-                try:
-                    db.insert_data_batch(insert_query, 'aud_agg_tmapcolumunused', batch)
-                    logging.info(f"Inserted batch {i // batch_size + 1} of size {len(batch)}.")
-                except Exception as e:
-                    logging.error(f"Error inserting batch: {str(e)}")
+        # Step 3: Insert rejects into aud_agg_tmapcolumunused
+        if final.empty:
+            logging.info("No data to insert into aud_agg_tmapcolumunused.")
         else:
-            logging.info("No unused data to insert.")
-
-
-        # Step 2: Execute aud_inputtable_nb query and write to CSV
-        aud_inputtable_nb_query = config.get_param('agg_queries', 'aud_inputtable_nb')
-        logging.info(f"Executing query: {aud_inputtable_nb_query}")
-        aud_inputtable_nb_results = db.execute_query(aud_inputtable_nb_query)
-
-        # Prepare and insert batch results from aud_inputtable_nb query
-        batch_insert = []
-        insert_query = config.get_param('insert_agg_queries', 'aud_agg_tmapinput')
-
-        # Log the total number of results to be processed
-        logging.info(f"Processing {len(aud_inputtable_nb_results)} rows from aud_inputtable_nb query.")
-
-        # Process results in batches
-        for result in aud_inputtable_nb_results:
-            batch_insert.append(result)
-
-            # Insert data in batches
-            if len(batch_insert) >= batch_size:
-                try:
-                    logging.info(f"Inserting batch of size {len(batch_insert)}: {batch_insert[:5]} ...")  # Log the first 5 for inspection
-                    db.insert_data_batch(insert_query, 'aud_agg_tmapinput', batch_insert)
-                    logging.info(f"Successfully inserted batch of size {len(batch_insert)}.")
-                except Exception as e:
-                    logging.error(f"Error inserting batch: {str(e)}")
-                finally:
-                    batch_insert.clear()  # Clear after batch insertion
-
-        # Insert remaining data if any
-        if batch_insert:
             try:
-                logging.info(f"Inserting remaining batch of size {len(batch_insert)}: {batch_insert[:5]} ...")
-                db.insert_data_batch(insert_query, 'aud_agg_tmapinput', batch_insert)
-                logging.info(f"Successfully inserted remaining batch of size {len(batch_insert)}.")
+                # Adjust insert_query as needed
+                insert_query = config.get_param('insert_agg_queries', 'aud_agg_tmapcolumunused')
+                # Convert final DataFrame to list of tuples for batch insertion
+                data_batch = final.to_records(index=False).tolist()
+                
+                db.insert_data_batch(insert_query, 'aud_agg_tmapcolumunused', data_batch)
+                logging.info(f"Inserted final batch of {len(data_batch)} rows into aud_agg_tmapcolumunused.")
             except Exception as e:
-                logging.error(f"Error inserting remaining batch: {str(e)}")
+                logging.warning(f"Error inserting final batch into aud_agg_tmapcolumunused: {str(e)}")
+
+
+    
 
     except Exception as e:
         logging.error(f"An error occurred: {str(e)}", exc_info=True)
+
+
+
+
+
+
 def AUD_405_AGG_TXMLMAP(config: Config, db: Database, execution_date: str, batch_size=100):
     """
     This function:
