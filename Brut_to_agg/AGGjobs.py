@@ -235,7 +235,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
 
         for row in data_for_insertion:
             data_batch.append(row)
-            logging.debug(f"Adding row to batch: {row}")
+            # logging.debug(f"Adding row to batch: {row}")
             if len(data_batch) == batch_size:
                 try:
                     db.insert_data_batch(insert_query, 'aud_agg_tmapinputinoutput', data_batch)
@@ -260,8 +260,8 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
         # ==============================================================================================
         #  Join aud_aud_inputtable.csv & unique outputtable.csv for `aud_agg_tmapinputinfilteroutput`
         # ==============================================================================================
-        Ensure unique rows in output_df based on the combination of columns
-        Drop duplicate rows based on the specified columns, keeping only the first occurrence
+        # Ensure unique rows in output_df based on the combination of columns
+        # Drop duplicate rows based on the specified columns, keeping only the first occurrence
         unique_output_df = output_df.drop_duplicates(subset=['aud_OutputName', 'aud_componentValue', 'NameProject', 'NameJob'], keep='first')
 
         # Print or inspect the unique DataFrame
@@ -330,7 +330,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
 
         for row in data_for_insertion:
             data_batch.append(row)
-            logging.debug(f"Adding row to batch: {row}")
+            # logging.debug(f"Adding row to batch: {row}")
             if len(data_batch) == batch_size:
                 try:
                     db.insert_data_batch(insert_query, 'aud_agg_tmapinputinfilteroutput', data_batch)
@@ -431,7 +431,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
 
         for row in data_for_insertion:
             data_batch.append(row)
-            logging.debug(f"Adding row to batch: {row}")
+            # logging.debug(f"Adding row to batch: {row}")
             if len(data_batch) == batch_size:
                 try:
                     db.insert_data_batch(insert_query, 'aud_agg_tmapinputinjoininput', data_batch)
@@ -507,7 +507,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
 
         for row in data_for_insertion:
             data_batch.append(row)
-            logging.debug(f"Adding row to batch: {row}")
+            # logging.debug(f"Adding row to batch: {row}")
             if len(data_batch) == batch_size:
                 try:
                     db.insert_data_batch(insert_query, 'aud_agg_tmapinputinfilterinput', data_batch)
@@ -592,7 +592,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
         data_batch = []
         for row in data_for_insertion:
             data_batch.append(row)
-            logging.debug(f"Adding row to batch: {row}")
+            # logging.debug(f"Adding row to batch: {row}")
             if len(data_batch) == batch_size:
                 try:
                     db.insert_data_batch(insert_query, 'aud_agg_tmapinputinvar', data_batch)
@@ -667,7 +667,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
 
         for row in data_for_insertion:
             data_batch.append(row)
-            logging.debug(f"Adding row to batch: {row}")
+            # logging.debug(f"Adding row to batch: {row}")
             if len(data_batch) == batch_size:
                 try:
                     db.insert_data_batch(insert_query, 'aud_agg_tmapvarinoutput', data_batch)
@@ -731,7 +731,7 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
 
         for row in data_for_insertion:
             data_batch.append(row)
-            logging.debug(f"Adding row to batch: {row}")
+            # logging.debug(f"Adding row to batch: {row}")
             if len(data_batch) == batch_size:
                 try:
                     db.insert_data_batch(insert_query, 'aud_agg_tmapvarinfilter', data_batch)
@@ -837,6 +837,8 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
         logging.debug(f"Sample from aud_agg_tmapinputinfilterinput DataFrame:\n{aud_agg_tmapinputinvar_df.head()}")
  
 
+      
+
         def catch_inner_join_rejects(left_df, right_df, left_join_keys, right_join_keys):
             """
             Detects rows rejected from both left and right DataFrames during an inner join.
@@ -851,11 +853,9 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
                 pd.DataFrame: A DataFrame containing all rejected rows (left and right).
             """
             logging.info("Starting inner join rejection detection.")
-            logging.debug(f"Left DataFrame shape: {left_df.head()}")
-            logging.debug(f"Right DataFrame shape: {right_df.head()}")
-            logging.debug(f"Left join keys: {left_join_keys}")
-            logging.debug(f"Right join keys: {right_join_keys}")
-
+            logging.debug(f"Left DataFrame shape: {left_df.shape}")
+            logging.debug(f"Right DataFrame shape: {right_df.shape}")
+            
             # Perform a left join to detect left rejects
             logging.info("Performing left join to detect rows rejected from the left DataFrame.")
             left_join_df = pd.merge(
@@ -888,11 +888,15 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
             logging.info("Combining left and right rejects for overall analysis.")
             all_rejects = pd.concat([left_rejects, right_rejects], ignore_index=True)
 
-            logging.info(f"Total rejects detected: {len(all_rejects)}.")
+            # Optionally, remove duplicates if you expect overlaps
+            all_rejects = all_rejects.drop_duplicates()
+
+            logging.debug(f"Total rejects detected: {len(all_rejects)}.")
             logging.debug(f"Combined rejects sample:\n{all_rejects.head()}")
 
             logging.info("Finished inner join rejection detection.")
             return all_rejects
+
  # =========================================================================================================================
 # input_df + aud_agg_tmapinputinoutput_df --> rejects + aud_agg_tmapinputinfilteroutput_df --> rejects 
 # + aud_agg_tmapinputinjoininput_df --> rejects + aud_agg_tmapinputinfilterinput_df --> rejects 
@@ -954,12 +958,64 @@ def AUD_405_AGG_TMAP(config: Config, db: Database, execution_date: str, batch_si
                 logging.info(f"Inserted final batch of {len(data_batch)} rows into aud_agg_tmapcolumunused.")
             except Exception as e:
                 logging.warning(f"Error inserting final batch into aud_agg_tmapcolumunused: {str(e)}")
+# =========================================================================================================================
+# Execute aud_inputtable_nb query and insert into aud_agg_tmapinput
+# =========================================================================================================================
 
+        # Step 1: Execute the query
+        aud_inputtable_nb_query = config.get_param('agg_queries', 'aud_inputtable_nb')
+        logging.info(f"Executing query: {aud_inputtable_nb_query}")
 
-    
+        try:
+            # Execute the query and fetch results
+            aud_inputtable_nb_results = db.execute_query(aud_inputtable_nb_query)
+            logging.info(f"Query executed successfully. Number of rows retrieved: {len(aud_inputtable_nb_results)}")
+        except Exception as e:
+            logging.error(f"Error executing query aud_inputtable_nb: {str(e)}")
+            raise
+
+        # Step 2: Insert query results into aud_agg_tmapinput
+        if len(aud_inputtable_nb_results)==0 :
+            logging.info("No data to insert into aud_agg_tmapinput.")
+        else:
+            try:
+                # Fetch the insert query dynamically
+                insert_query = config.get_param('insert_agg_queries', 'aud_agg_tmapinput')
+                logging.info(f"Using insert query: {insert_query}")
+
+                # Convert the query results to a list of tuples for batch insertion
+                
+                # Perform batch insertion
+                db.insert_data_batch(insert_query, 'aud_agg_tmapinput', aud_inputtable_nb_results)
+                logging.info(f"Inserted {len(aud_inputtable_nb_results)} rows into aud_agg_tmapinput successfully.")
+            except Exception as e:
+                logging.error(f"Error inserting data into aud_agg_tmapinput: {str(e)}")
+
+            
 
     except Exception as e:
         logging.error(f"An error occurred: {str(e)}", exc_info=True)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
