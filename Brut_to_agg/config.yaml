@@ -75,7 +75,6 @@ agg_queries:
   aud_agg_tmapinputinjoininput : "SELECT distinct rowName, NameColumnInput, composant, NameProject, NameJob FROM aud_agg_tmapinputinjoininput "
   aud_agg_tmapinputinfilterinput : "SELECT distinct rowName, NameColumnInput, composant, NameProject, NameJob FROM aud_agg_tmapinputinfilterinput "
   aud_agg_tmapinputinvar : "SELECT distinct rowName, NameRowInput, composant, NameProject, NameJob FROM aud_agg_tmapinputinvar "
-  
   aud_agg_txmlmapinputinoutput : "SELECT distinct aud_nameColumnInput, aud_nameRowInput, aud_componentName,NameProject, NameJob FROM aud_agg_txmlmapinputinoutput "
   aud_agg_txmlmapinputinfilteroutput : "SELECT distinct rowName, NameRowInput, aud_componentName,expressionFilterOutput, NameProject, NameJob FROM aud_agg_txmlmapinputinfilteroutput "
   aud_agg_txmlmapinputinjoininput : "SELECT distinct rowName, NameColumnInput, aud_componentName, NameProject, NameJob FROM aud_agg_txmlmapinputinjoininput"
@@ -83,7 +82,7 @@ agg_queries:
   aud_agg_txmlmapinputinvar : "SELECT distinct rowName, NameRowInput, composant, NameProject, NameJob FROM aud_agg_txmlmapinputinvar"
 
 insert_agg_queries:
-  aud_agg_tmapinputinoutput : "INSERT INTO aud_agg_tmapinputinoutput (rowName, NameRowInput, composant, expressionOutput, nameColumnOutput, OutputName, reject, rejectInnerJoin, NameProject, NameJob) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE expressionOutput = VALUES(expressionOutput), reject = VALUES(reject), rejectInnerJoin = VALUES(rejectInnerJoin)"
+  aud_agg_tmapinputinoutput : "INSERT INTO aud_agg_tmapinputinoutput (aud_nameColumnInput, NameRowInput, composant, expressionOutput, nameColumnOutput, OutputName, reject, rejectInnerJoin, NameProject, NameJob) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE expressionOutput = VALUES(expressionOutput), reject = VALUES(reject), rejectInnerJoin = VALUES(rejectInnerJoin)"
   aud_agg_tmapinputinfilteroutput : "INSERT INTO aud_agg_tmapinputinfilteroutput (rowName, NameRowInput, composant, expressionFilterOutput, aud_OutputName, reject, rejectInnerJoin, NameProject, NameJob) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE expressionFilterOutput = VALUES(expressionFilterOutput), reject = VALUES(reject), rejectInnerJoin = VALUES(rejectInnerJoin)"
   aud_agg_tmapinputinjoininput : "INSERT INTO aud_agg_tmapinputinjoininput (rowName, NameColumnInput, expressionJoin, composant, innerJoin, NameProject, NameJob, is_columnjoined, rowName_join, NameColumnInput_join) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE expressionJoin = VALUES(expressionJoin), innerJoin = VALUES(innerJoin), is_columnjoined = VALUES(is_columnjoined), rowName_join = VALUES(rowName_join), NameColumnInput_join = VALUES(NameColumnInput_join)"
   aud_agg_tmapinputinfilterinput : "INSERT INTO aud_agg_tmapinputinfilterinput (rowName, NameColumnInput, expressionFilterInput, composant, NameProject, NameJob) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE expressionFilterInput = VALUES(expressionFilterInput)"
@@ -92,7 +91,7 @@ insert_agg_queries:
   aud_agg_tmapvarinfilter : "INSERT INTO aud_agg_tmapvarinfilter (NameRowInput, composant, expressionFilterOutput, OutputName, reject, rejectInnerJoin, NameProject, NameJob) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE expressionFilterOutput = VALUES(expressionFilterOutput), reject = VALUES(reject), rejectInnerJoin = VALUES(rejectInnerJoin)"
   aud_agg_tmapcolumunused : "INSERT INTO aud_agg_tmapcolumunused (rowName, NameColumnInput, composant, NameProject, NameJob) VALUES (?, ?, ?, ?, ?)"
   aud_agg_tmapinput : "INSERT INTO aud_agg_tmapinput (nb_input, aud_componentValue, NameJob, NameProject) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE nb_input = VALUES(nb_input) "
-  aud_agg_txmlmapinputinoutput : "INSERT INTO aud_agg_txmlmapinputinoutput (rowName,NameRowInput,composant,expressionOutput,nameColumnOutput,OutputName,reject,rejectInnerJoin,NameProject,NameJob) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+  aud_agg_txmlmapinputinoutput : "INSERT INTO aud_agg_txmlmapinputinoutput (aud_nameColumnInput,aud_nameRowInput,aud_componentName,expressionOutput,output_aud_nameColumnInput,aud_nameRowOutput,output_namejob,output_nameproject) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
   aud_agg_txmlmapinputinfilteroutput : "INSERT INTO aud_agg_txmlmapinputinfilteroutput (rowName, NameRowInput, aud_componentName, expressionFilterOutput, aud_OutputName, NameProject, NameJob) VALUES (?, ?, ?, ?, ?, ?, ?)"
   aud_agg_txmlmapinputinjoininput : "INSERT INTO .aud_agg_txmlmapinputinjoininput (rowName, NameColumnInput, aud_componentName, expressionJoin, NameProject, NameJob, is_columnjoined, rowName_join, NameColumnInput_join) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
   aud_agg_txmlmapinputinfilterinput : "INSERT INTO aud_agg_txmlmapinputinfilterinput (rowName, NameColumnInput, expressionFilterInput, composant, NameProject, NameJob) VALUES (?, ?, ?, ?, ?, ?)"
