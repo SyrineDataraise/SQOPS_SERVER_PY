@@ -8,14 +8,6 @@ Audit_JDBC:
 
 
 queries:
-  # LOCAL_TO_DBBRUT_QUERY: "select distinct PROJECT_NAME, JOB_NAME, JOB_PATH, JOB_VERSION, Talend_Version from audit_jobs_delta where talend_version is not null and niveau is not null"
-  LOCAL_TO_DBBRUT_FILTER_name_elementNode: "where aud_nameElementNode in ('DBNAME','TYPE','QUERY','TABLE','FILENAME','TEMPDIR','sql','query')"
-  LOCAL_TO_DBBRUT_FILTER_columnName_metadata: "where aud_columnName not in ('errorCode','errorMessage')"
-  LOCAL_TO_DBBRUT_QUERY_ROUTINES: "select distinct PROJECT_NAME, ROUTINE_NAME, ROUTINE_PATH, ROUTINE_VERSION, Talend_Version from audit_routines where talend_version is not null"
-  LOCAL_TO_DBBRUT_QUERY_CONTEXTGROUP: "select distinct PROJECT_NAME, CONTEXT_NAME, CONTEXT_PATH, CONTEXT_VERSION, Talend_Version from audit_contextgroup where talend_version is not null"
-  LOCAL_TO_DBBRUT_QUERY_METADATA: "select distinct PROJECT_NAME, METADATA_NAME, METADATA_PATH, METADATA_VERSION, Talend_Version from audit_metadata where talend_version is not null"
-  TRANSVERSE_QUERY_LASTEXECUTIONDATE: "SELECT MAX(lastexecutiondate) as lastexecutiondate FROM executiondate"
-  LOCAL_TO_DBBRUT_QUERY_JOBLETS: "select distinct PROJECT_NAME, JOBLET_NAME, JOBLET_PATH, JOBLET_VERSION, Talend_Version from audit_joblets where talend_version is not null"
   aud_elementnode: "select distinct namejob, nameproject from aud_elementnode where NameJob not in (select job_name from audit_jobs)"
   aud_contextjob: "select distinct namejob, nameproject from aud_contextjob where NameJob not in (select job_name from audit_jobs)"
   aud_node : "select distinct namejob, nameproject from aud_node where NameJob not in (select job_name from audit_jobs)"
@@ -58,26 +50,6 @@ queries:
   aud_screenshot : "select distinct namejob, nameproject from aud_screenshot where NameJob not in (select job_name from audit_jobs)"
   audit_contextgroup : "select PROJECT_NAME, CONTEXT_NAME, CONTEXT_VERSION, Talend_Version, CONTEXT_PATH from audit_contextgroup"
 
-
-
-
-
-agg_queries:
-  aud_agg: "select a.NameProject, a.namejob, a.aud_componentValue, a.aud_valueElementRef as aud_valueElementRef_input, b.aud_valueElementRef as aud_valueElementRef_output, 'GROUPBY' as aud_valueElementRef_function from aud_elementvaluenode a inner join aud_elementvaluenode b on a.aud_id = b.aud_id where a.aud_typeField in ('GROUPBYS') and b.aud_typeField in ('GROUPBYS') and a.aud_elementRef = 'INPUT_COLUMN' and b.aud_elementRef = 'OUTPUT_COLUMN' and a.aud_componentName like 'tAggregate%' and b.aud_componentName like 'tAggregate%' union all select a.NameProject, a.namejob, a.aud_componentValue, a.aud_valueElementRef as aud_valueElementRef_input, b.aud_valueElementRef as aud_valueElementRef_output, c.aud_valueElementRef as aud_valueElementRef_function from aud_elementvaluenode a inner join aud_elementvaluenode b on a.aud_id = b.aud_id inner join aud_elementvaluenode c on a.aud_id = c.aud_id where a.aud_componentName like 'tAggregate%' and a.aud_typeField = 'OPERATIONS' and b.aud_componentName like 'tAggregate%' and b.aud_typeField = 'OPERATIONS' and c.aud_componentName like 'tAggregate%' and c.aud_typeField = 'OPERATIONS' and a.aud_elementRef = 'INPUT_COLUMN' and b.aud_elementRef = 'OUTPUT_COLUMN' and c.aud_elementRef = 'FUNCTION'"
-  aud_inputtable : "SELECT  aud_nameRowInput ,aud_nameColumnInput,aud_expressionJoin,aud_expressionFilterInput,aud_componentValue,aud_innerJoin,NameProject, NameJob FROM aud_inputtable"
-  aud_outputtable : "SELECT aud_componentName,aud_OutputName, aud_sizeState, aud_activateCondensedTool, aud_reject, aud_rejectInnerJoin, aud_expressionOutput, aud_nameColumnOutput, aud_type, aud_nullable, aud_activateExpressionFilter, aud_expressionFilterOutput, aud_componentValue, NameProject,NameJob FROM aud_outputtable"
-  aud_vartable : "SELECT V.aud_componentValue,V.aud_Var,V.aud_nameVar,V.aud_expressionVar,V.NameProject,V.NameJob FROM aud_vartable  V"
-  aud_inputtable_nb : "select count(distinct aud_namerowInput) nb_input, aud_componentValue, namejob, nameproject from aud_inputtable  group by aud_componentValue , namejob, nameproject"
-  aud_inputtable_xml: "SELECT aud_nameColumnInput,aud_type,aud_xpathColumnInput,aud_nameRowInput, aud_componentName, aud_componentValue, filterOutGoingConnections, lookupOutgoingConnections, outgoingConnections, namejob, nameproject, exec_date,lookupIncomingConnections, expression, lookupMode, matchingMode, activateCondensedTool, activateExpressionFilter, activateGlobalMap, expressionFilter, filterIncomingConnections, lookup FROM aud_inputtable_xml"
-  aud_outputtable_xml : "SELECT aud_nameColumnInput, aud_type,aud_xpathColumnInput, aud_nameRowOutput, aud_componentName, aud_componentValue, filterOutGoingConnections, outgoingConnections, namejob, nameproject, exec_date, expression, activateCondensedTool,activateExpressionFilter, expressionFilter, filterIncomingConnections FROM aud_outputtable_xml"
-  aud_inputtable_xml_nb : "select count(distinct aud_nameRowInput) nb_input, aud_componentValue, namejob, nameproject from aud_inputtable_xml  group by aud_componentValue , namejob, nameproject"
-  aud_vartable_xml : "SELECT aud_componentName, aud_componentValue, aud_Var, aud_sizeState, aud_nameVar, aud_expressionVar, aud_type, NameProject, NameJob FROM aud_vartable_xml"
-  aud_agg_txmlmapinputinoutput : "SELECT distinct aud_nameColumnInput, aud_nameRowInput, aud_componentName, output_nameproject, output_namejob FROM aud_agg_txmlmapinputinoutput "
-  aud_agg_txmlmapinputinfilteroutput : "SELECT distinct rowName, NameRowInput, aud_componentName,expressionFilterOutput, NameProject, NameJob FROM aud_agg_txmlmapinputinfilteroutput "
-  aud_agg_txmlmapinputinjoininput : "SELECT distinct rowName, NameColumnInput, aud_componentName, NameProject, NameJob FROM aud_agg_txmlmapinputinjoininput"
-  aud_agg_txmlmapinputinfilterinput : "SELECT distinct rowName, NameColumnInput, composant, NameProject, NameJob FROM aud_agg_txmlmapinputinfilterinput"
-  aud_agg_txmlmapinputinvar : "SELECT distinct rowName, NameRowInput, composant, NameProject, NameJob FROM aud_agg_txmlmapinputinvar"
-  
 insert_queries:
   aud_agg_aggregate: "INSERT INTO aud_agg_aggregate (NameProject, namejob, aud_componentValue, aud_valueElementRef_input, aud_valueElementRef_output, aud_valueElementRef_function) VALUES (?, ?, ?, ?, ?, ?)"
   aud_elementnode : "INSERT INTO aud_elementnode (aud_componentName, aud_field, aud_nameElementNode, aud_show, aud_valueElementNode, aud_ComponementValue, NameProject, NameJob, exec_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE aud_componentName = VALUES(aud_componentName), aud_field = VALUES(aud_field), aud_show = VALUES(aud_show), aud_valueElementNode = VALUES(aud_valueElementNode), exec_date = VALUES(exec_date)"
@@ -108,24 +80,6 @@ insert_queries:
   aud_doccontextgroup : "INSERT INTO aud_doccontextgroup (namecontextgroup, nameproject, purpose, description, version, statusCode, item, displayName, id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE purpose = VALUES(purpose), description = VALUES(description), version = VALUES(version), statusCode = VALUES(statusCode), item = VALUES(item), displayName = VALUES(displayName), id = VALUES(id)"
 
 
-insert_agg_queries:
-  aud_agg_tmapinputinoutput : "INSERT INTO aud_agg_tmapinputinoutput ( rowName, NameRowInput, composant, expressionOutput,  nameColumnOutput, OutputName, reject, rejectInnerJoin,     NameProject, NameJob) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE     expressionOutput = IFNULL(VALUES(expressionOutput), expressionOutput),     reject = IFNULL(VALUES(reject), reject),     rejectInnerJoin = IFNULL(VALUES(rejectInnerJoin), rejectInnerJoin)"
-  aud_agg_tmapinputinfilteroutput : "INSERT INTO aud_agg_tmapinputinfilteroutput (rowName, NameRowInput, composant, expressionFilterOutput, aud_OutputName, reject, rejectInnerJoin, NameProject, NameJob) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE expressionFilterOutput = VALUES(expressionFilterOutput),aud_OutputName = VALUES(aud_OutputName),reject = VALUES(reject),rejectInnerJoin = VALUES(rejectInnerJoin)"
-  aud_agg_tmapinputinjoininput : "INSERT INTO aud_agg_tmapinputinjoininput (rowName, NameColumnInput, expressionJoin, composant, innerJoin, NameProject, NameJob, is_columnjoined, rowName_join, NameColumnInput_join) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE expressionJoin = VALUES(expressionJoin), innerJoin = VALUES(innerJoin), is_columnjoined = VALUES(is_columnjoined), rowName_join = VALUES(rowName_join), NameColumnInput_join = VALUES(NameColumnInput_join)"
-  aud_agg_tmapinputinfilterinput : "INSERT INTO aud_agg_tmapinputinfilterinput (rowName, NameColumnInput, expressionFilterInput, composant, NameProject, NameJob) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE expressionFilterInput = VALUES(expressionFilterInput)"
-  aud_agg_tmapinputinvar : "INSERT INTO aud_agg_tmapinputinvar (rowName, NameRowInput, composant, expressionOutput, nameColumnOutput, NameProject, NameJob) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE expressionOutput = VALUES(expressionOutput)"
-  aud_agg_tmapvarinfilter : "INSERT INTO aud_agg_tmapvarinfilter (NameRowInput, composant, expressionFilterOutput, OutputName, reject, rejectInnerJoin, NameProject, NameJob) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE expressionFilterOutput = VALUES(expressionFilterOutput), reject = VALUES(reject), rejectInnerJoin = VALUES(rejectInnerJoin)"
-  aud_agg_tmapcolumunused : "INSERT INTO aud_agg_tmapcolumunused (rowName, NameColumnInput, composant, NameProject, NameJob) VALUES (?, ?, ?, ?, ?)"
-  aud_agg_tmapinput : "INSERT INTO aud_agg_tmapinput (nb_input, aud_componentValue, namejob, nameproject) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE nb_input = VALUES(nb_input)"
-  aud_agg_txmlmapinputinoutput : "INSERT INTO aud_agg_txmlmapinputinoutput (aud_nameColumnInput, aud_nameRowInput, aud_componentName, expressionOutput, output_aud_nameColumnInput, aud_nameRowOutput, output_namejob, output_nameproject) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-  aud_agg_txmlmapinputinfilteroutput : "INSERT INTO aud_agg_txmlmapinputinfilteroutput (rowName, NameRowInput, aud_componentName, expressionFilterOutput, aud_OutputName, NameProject, NameJob) VALUES (?, ?, ?, ?, ?, ?, ?)"
-  aud_agg_txmlmapinputinjoininput : "INSERT INTO .aud_agg_txmlmapinputinjoininput (rowName, NameColumnInput, aud_componentName, expressionJoin, NameProject, NameJob, is_columnjoined, rowName_join, NameColumnInput_join) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
-  aud_agg_txmlmapinputinfilterinput : "INSERT INTO aud_agg_txmlmapinputinfilterinput (rowName, NameColumnInput, expressionFilterInput, composant, NameProject, NameJob) VALUES (?, ?, ?, ?, ?, ?)"
-  aud_agg_txmlmapinputinvar : "INSERT INTO aud_agg_txmlmapinputinvar (rowName, NameRowInput, composant, expressionOutput, nameColumnOutput, NameProject, NameJob) VALUES (?, ?, ?, ?, ?, ?, ?)"
-  aud_agg_txmlmapcolumunused : "INSERT INTO aud_agg_txmlmapcolumunused (rowName, NameColumnInput, composant, NameProject, NameJob) VALUES (?, ?, ?, ?, ?)"
-  aud_agg_txmlmapinput : "INSERT INTO aud_agg_txmlmapinput (nb_input, aud_componentValue, NameJob, NameProject) VALUES (?, ?, ?, ?)"
-
-
 
 Directories:
   items_directory: "C:/Users/sonia/Desktop/KEOLISTOURS/process"
@@ -149,11 +103,3 @@ database:
   sqlite:
     filepath: "path/to/your/sqlite.db"
  
-ORA_ECH_ADMECH:
-  CTX_ORA_ECH_ADMECH_Server: "echdfr.cfo1dl4btaz7.eu-west-1.rds.amazonaws.com"
-  CTX_ORA_ECH_ADMECH_Password: ""
-  CTX_ORA_ECH_ADMECH_Login: "ADM_ECH"
-  CTX_ORA_ECH_ADMECH_Port: "1521"
-  CTX_ORA_ECH_ADMECH_AdditionalParams: ""
-  CTX_ORA_ECH_ADMECH_Schema: "ADM_ECH"
-  CTX_ORA_ECH_ADMECH_Sid: "echdfr"
