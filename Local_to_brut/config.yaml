@@ -7,6 +7,7 @@ Audit_JDBC:
   AUDIT_JDBC_connection_jdbcUrl: "jdbc:mysql://localhost:3306/sqops_dataraise?allowLoadLocalInfile=true&characterEncoding=utf8"
 
 queries:
+  TRANSVERSE_QUERY_LASTEXECUTIONDATE: "SELECT MAX(lastexecutiondate) as lastexecutiondate FROM executiondate"
   aud_elementnode: "select distinct namejob, nameproject from aud_elementnode where NameJob not in (select job_name from audit_jobs)"
   aud_contextjob: "select distinct namejob, nameproject from aud_contextjob where NameJob not in (select job_name from audit_jobs)"
   aud_node : "select distinct namejob, nameproject from aud_node where NameJob not in (select job_name from audit_jobs)"
