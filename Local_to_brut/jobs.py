@@ -108,15 +108,15 @@ def AUD_302_ALIMCONTEXTJOB(config: Config, db: Database, parsed_files_data: List
 
         for project_name, job_name, version, parsed_data in parsed_files_data:
             for context in parsed_data['contexts']:
-                environementContextName = context['name']
-                for param in context['contextParameters']:
+                environementContextName = context['environment_name']
+                for param in context['parameters']:
                     comment = param['comment']
                     nameContext = param['name']
                     prompt = param['prompt']
                     promptNeeded = 0 if param['promptNeeded'] == 'false' else 1
                     typeContext = param['type']
                     valueContext = param['value']
-                    repositoryContextId = param['repositoryContextId']
+                    repositoryContextId = param['id']
 
                     # Prepare data for insertion into aud_contextjob
                     aud_contextjob_data_batch.append((
