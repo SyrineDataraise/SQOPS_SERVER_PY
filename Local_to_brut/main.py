@@ -45,11 +45,17 @@ def main():
     start_time = time.time()
     logging.info("Starting AUD_301_ALIMELEMENTNODE...")
     AUD_301_ALIMELEMENTNODE(config, db, parsed_files_data, "2024-11-05 15:10:03")
-    log_execution_time("AUD_301_ALIMELEMENTNODE", start_time)
+    log_execution_time("AUD_301_ALIMELEMENTNODE", start_time) 
+    # Get the contexts directory from configuration
+    contexts_directory = config.get_param('Directories', 'contexts_directory')
+    logging.debug(f"contexts_directory: {contexts_directory}")
+    xml_parser = XMLParser()  # Initialize with required arguments if needed
+    parsed_files_items = xml_parser.loop_parse_contexts_items(contexts_directory)
+    # logging.info(parsed_files_items)
 
     start_time = time.time()
     logging.info("Starting AUD_302_ALIMCONTEXTJOB...")
-    AUD_302_ALIMCONTEXTJOB(config, db, parsed_files_data, "2024-11-05 15:10:03")
+    AUD_302_ALIMCONTEXTJOB(config, db, parsed_files_items, "2024-11-05 15:10:03")
     log_execution_time("AUD_302_ALIMCONTEXTJOB", start_time)
 
     # start_time = time.time()
@@ -154,7 +160,7 @@ def main():
     # AUD_318_ALIMCONFQUARTZ(config, db, parsed_files_data, items_directory)
     # log_execution_time("AUD_318_ALIMCONFQUARTZ", start_time)
 
-    parsed_files_properties = xml_parser.loop_parse_properties(items_directory)
+    parsed_files_properties = xml_parser.loop_parse_contexts_properties(items_directory)
     # logging.debug(f"Parsed Files Data: {parsed_files_properties}")
     start_time = time.time()    
     logging.info("Starting AUD_319_ALIMDOCCONTEXTGROUP...")
@@ -182,9 +188,9 @@ def main():
     log_execution_time("AUD_324_ALIMMETADATAFILTER", start_time)
 
     # Step 3: Parse screenshot files from the directory
-    contexts_directory = config.get_param('Directories', 'screenshots_directory')
+    screenshots_directory = config.get_param('Directories', 'screenshots_directory')
     # Assuming the `loop_parse_contexts` method parses all screenshot XMLs in the directory
-    parsed_files_items = xml_parser.loop_parse_contexts(contexts_directory)
+    parsed_files_items = xml_parser.loop_parse_screenshots(screenshots_directory)
     start_time = time.time()
     logging.info("Starting AUD_701_CONVERTSCREENSHOT...")
     AUD_701_CONVERTSCREENSHOT(config, db, parsed_files_items,"2024-11-05 15:10:03")
